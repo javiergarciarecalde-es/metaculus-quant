@@ -1,0 +1,74 @@
+# Bot de pronósticos: cada 20 minutos (como la plantilla oficial) + ejecución manual.
+#
+# INOFENSIVO HASTA QUE EL USUARIO LO ENCIENDA:
+# - Ejecución automática (cada 20 min): solo corre si la VARIABLE ENVIO_REAL vale "true".
+#   Si no, el trabajo aparece como «omitido» (gris, no rojo) y no gasta minutos ni créditos.
+# - Sin el SECRETO METACULUS_TOKEN: el bot termina limpio con un aviso (amarillo, no rojo).
+# - Ejecución manual con ENVIO_REAL apagado: ensayo en la zona de pruebas de Metaculus
+#   (bot-testing-area), sin enviar nada.
+# Dónde se ponen: GitHub → Settings → Secrets and variables → Actions.
+name: Pronosticar en el torneo
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: "tournament = torneo real (solo si ENVIO_REAL=true); test_questions = zona de pruebas"
+        type: choice
+        options: [test_questions, tournament]
+        default: test_questions
+  schedule:
+    - cron: "7,27,47 * * * *" # cada 20 min, desfasado de la hora en punto
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  pronosticar:
+    if: github.event_name == 'workflow_dispatch' || vars.ENVIO_REAL == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Comprobar el token (sin mostrarlo)
+        id: token
+        env:
+          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+        run: |
+          if [ -z "$METACULUS_TOKEN" ]; then
+            echo "::notice::Falta el secreto METACULUS_TOKEN: el bot no hace nada (normal hasta que el usuario lo ponga)."
+            echo "hay=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=si" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Descargar el repositorio
+        if: steps.token.outputs.hay == 'si'
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: steps.token.outputs.hay == 'si'
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Instalar dependencias
+        if: steps.token.outputs.hay == 'si'
+        run: pip install -r requirements.txt
+      - name: Ejecutar el bot
+        if: steps.token.outputs.hay == 'si'
+        run: python main.py --mode "${{ inputs.modo || 'tournament' }}"
+        env:
+          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ASKNEWS_CLIENT_ID: ${{ secrets.ASKNEWS_CLIENT_ID }}
+          ASKNEWS_SECRET: ${{ secrets.ASKNEWS_SECRET }}
+          ENVIO_REAL: ${{ vars.ENVIO_REAL }}
+      - name: Guardar el registro de pronósticos
+        if: always() && steps.token.outputs.hay == 'si'
+        uses: actions/upload-artifact@v4
+        with:
+          name: registro-${{ github.run_id }}
+          path: registro/
+          if-no-files-found: ignore
+          retention-days: 90
