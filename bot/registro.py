@@ -15,7 +15,8 @@ def resumir(texto: str, n: int = 600) -> str:
     return texto if len(texto) <= n else texto[: n - 1] + "…"
 
 
-def anotar(entrada: dict, carpeta: Path = CARPETA) -> Path:
+def anotar(entrada: dict, carpeta: Path | None = None) -> Path:
+    carpeta = carpeta or CARPETA
     carpeta.mkdir(parents=True, exist_ok=True)
     ruta = carpeta / f"pronosticos_{datetime.now(timezone.utc):%Y-%m}.jsonl"
     entrada = {"cuando_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), **entrada}

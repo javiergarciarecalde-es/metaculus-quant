@@ -30,6 +30,7 @@ import dotenv
 warnings.filterwarnings("ignore", message=r".*does not support cost tracking.*")
 
 from forecasting_tools import (  # noqa: E402
+    AskNewsSearcher,
     BinaryQuestion,
     DateQuestion,
     DatePercentile,
@@ -114,7 +115,12 @@ class QuantBot(ForecastBot):
                 """
             )
             try:
-                if isinstance(researcher, GeneralLlm):
+                if cfg.hay("ASKNEWS_CLIENT_ID") and cfg.hay("ASKNEWS_SECRET"):
+                    # AskNews (noticias): lo usa como fuente principal nostreambot
+                    research = await AskNewsSearcher().call_preconfigured_version(
+                        "asknews/news-summaries", prompt
+                    )
+                elif isinstance(researcher, GeneralLlm):
                     research = await researcher.invoke(prompt)
                 else:
                     research = await self.get_llm("researcher", "llm").invoke(prompt)
@@ -419,15 +425,23 @@ def _a_lista(probs: dict[str, float]) -> PredictedOptionList:
 ##################################### EJECUCIÓN #####################################
 
 
+def _crear_llm(nombre: str, esfuerzo: str | None, temp, tmax) -> GeneralLlm:
+    extra = {}
+    if esfuerzo and nombre.startswith("openrouter/"):
+        # campo «reasoning» de la API de OpenRouter (cuánto piensa el modelo)
+        extra["extra_body"] = {"reasoning": {"effort": esfuerzo}}
+    elif esfuerzo:
+        extra["reasoning_effort"] = esfuerzo
+    return GeneralLlm(model=nombre, temperature=temp, timeout=tmax, allowed_tries=2, **extra)
+
+
 def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> QuantBot:
     m = cfg.bloque_modelos(params)
     temp = params["modelos"]["temperatura"]
     tmax = params["modelos"]["tiempo_max_segundos"]
     if llms is None:
-        pronosticadores = [
-            GeneralLlm(model=n, temperature=temp, timeout=tmax, allowed_tries=2)
-            for n in m["pronostico"]
-        ]
+        pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax)
+                           for x in m["pronostico"]]
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(model=m["lector"], temperature=0.3),
@@ -441,6 +455,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         research_reports_per_question=int(p["informes_investigacion"]),
         predictions_per_research_report=int(p["pasadas_por_pregunta"]),
         use_research_summary_to_forecast=False,
+        enable_summarize_research=False,  # no se usa el resumen: ahorra una llamada por pregunta
         publish_reports_to_metaculus=publicar,
         folder_to_save_reports_to=None,
         skip_previously_forecasted_questions=True,
@@ -495,7 +510,12 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
         bot.metaculus_client = cliente
     cliente = bot.metaculus_client
     t = params["torneos"]
-    torneos = [t["temporada"], t["minibench"]] if modo == "tournament" else [t["prueba"]]
+    if envio and modo == "tournament":
+        torneos = [t["temporada"], t["minibench"]]
+    else:
+        # En ensayo NUNCA se tocan preguntas del torneo: las reglas prohíben «previsualizar»
+        # pronósticos en preguntas del torneo. Solo la zona de pruebas oficial.
+        torneos = [t["prueba"]]
     print(f"Modo {modo}. Envío real: {'SÍ' if envio else 'NO (ensayo)'}. Torneos: {torneos}")
 
     total = 0
@@ -510,10 +530,7 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
             bot.skip_previously_forecasted_questions = False
         informes = asyncio.run(bot.forecast_questions(preguntas, return_exceptions=True))
         total += registrar(informes, torneo, publicado=envio)
-        try:
-            bot.log_report_summary(informes)
-        except Exception as e:  # el resumen de la librería lanza si hubo errores
-            logger.warning(f"Resumen con errores en {torneo}: {e}")
+        bot.log_report_summary(informes, raise_errors=False)
     print(f"Terminado: {total} pronósticos {'ENVIADOS' if envio else 'de ensayo (no enviados)'}.")
     return 0
 

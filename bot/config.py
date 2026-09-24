@@ -39,4 +39,4 @@ def es_ejecucion_programada() -> bool:
 
 def bloque_modelos(params: dict) -> dict:
     m = params["modelos"]
-    return m["con_clave_propia"] if hay("OPENROUTER_API_KEY") else m["proxy_metaculus"]
+    return m["openrouter"] if hay("OPENROUTER_API_KEY") else m["proxy_metaculus"]

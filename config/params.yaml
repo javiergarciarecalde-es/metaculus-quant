@@ -23,28 +23,39 @@ torneos:
   prueba: "bot-testing-area"   # zona de pruebas oficial de Metaculus
 
 # --- Modelos ---
-# Por defecto: los del «proxy» de Metaculus (intermediario que paga Metaculus con los
-# créditos gratuitos; prefijo "metaculus/"). Si el usuario pone su propia clave de
-# OpenRouter (OPENROUTER_API_KEY), se usa el bloque "con_clave_propia".
-# Varios modelos = conjunto (ensemble): se reparten las pasadas entre ellos.
+# Los créditos gratuitos de Metaculus llegan como una clave de OpenRouter (OpenRouter = una
+# tienda que da acceso a modelos de varias empresas con una sola clave). Esa clave solo sirve
+# para modelos de OpenAI, Anthropic y Google (según las notas de nostreambot).
+# - Si hay OPENROUTER_API_KEY (la de los créditos o una propia): bloque "openrouter".
+# - Si solo hay METACULUS_TOKEN: bloque "proxy_metaculus" (intermediario de Metaculus,
+#   prefijo "metaculus/"; qué modelos sirve NO está verificado).
+# Tres modelos de tres empresas, una pasada cada uno (lo que usa nostreambot, ~10.º de 173
+# en primavera 2026). "esfuerzo" = cuánto «piensa» el modelo antes de responder: el informe
+# de primavera dice que es de lo que más pesa en el puesto final.
+# NOMBRES SIN VERIFICAR EN VIVO: comprobarlos en la primera ejecución de ensayo.
 modelos:
-  proxy_metaculus:
-    pronostico: ["metaculus/anthropic/claude-sonnet-4-5", "metaculus/openai/gpt-5", "metaculus/openai/o3"]
-    investigacion: "metaculus/gpt-4o-search-preview"
-    lector: "metaculus/gpt-4o-mini"
-  con_clave_propia:
-    pronostico: ["openrouter/anthropic/claude-sonnet-4.5", "openrouter/openai/gpt-5", "openrouter/openai/o3"]
+  openrouter:
+    pronostico:
+      - {nombre: "openrouter/openai/gpt-5.6-sol", esfuerzo: "high"}
+      - {nombre: "openrouter/anthropic/claude-opus-4.8", esfuerzo: "high"}
+      - {nombre: "openrouter/google/gemini-3.5-flash", esfuerzo: null}
     investigacion: "openrouter/openai/gpt-4o-search-preview"
     lector: "openrouter/openai/gpt-4o-mini"
-  temperatura: 0.3
-  tiempo_max_segundos: 180
+  proxy_metaculus:
+    pronostico:
+      - {nombre: "metaculus/gpt-5", esfuerzo: "high"}
+      - {nombre: "metaculus/claude-sonnet-4-5", esfuerzo: null}
+    investigacion: "metaculus/gpt-4o-search-preview"
+    lector: "metaculus/gpt-4o-mini"
+  temperatura: null           # null = la que decida el modelo (lo recomendado en modelos que razonan)
+  tiempo_max_segundos: 600
 
 # --- Pronóstico ---
 pronostico:
-  pasadas_por_pregunta: 5        # veces que se pregunta al modelo (se reparten entre modelos)
-  informes_investigacion: 1      # búsquedas de noticias por pregunta
-  factor_extremizar: 1.15        # 1.0 = nada. Moderado a propósito (ver HALLAZGOS)
-  prob_min: 0.02                 # nunca por debajo del 2 %
+  pasadas_por_pregunta: 3        # veces que se pregunta a un modelo; se reparten en rueda entre los modelos
+  informes_investigacion: 1      # búsquedas de noticias por pregunta (compartidas por todos los modelos)
+  factor_extremizar: 1.0         # 1.0 = APAGADO. nostreambot lo probó y lo descartó (ver HALLAZGOS)
+  prob_min: 0.02                 # nunca por debajo del 2 % (igual que nostreambot)
   prob_max: 0.98                 # nunca por encima del 98 %
   minimo_por_opcion: 0.01        # en preguntas de opciones, ninguna por debajo del 1 %
-  max_preguntas_ensayo: 3        # en ensayo manual con token, solo estas preguntas (ahorra créditos)
+  max_preguntas_ensayo: 3        # en ensayo manual, solo estas preguntas (ahorra créditos)
