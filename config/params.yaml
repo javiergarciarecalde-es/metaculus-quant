@@ -13,3 +13,38 @@ puerta_fase0:
   condicion_1: "suma de peer score > suma del mejor bot de Metaculus del momento"
   condicion_2: "proyección dentro del top 20 de la temporada"
   fijada_el: "2026-09-24"
+
+# --- Torneos (identificadores de la API de Metaculus) ---
+# 33121 = fall-futureeval-2026 según la librería forecasting-tools 0.3.1
+# (MetaculusClient.FE_FALL_2026_ID). "minibench" = la MiniBench vigente.
+torneos:
+  temporada: 33121
+  minibench: "minibench"
+  prueba: "bot-testing-area"   # zona de pruebas oficial de Metaculus
+
+# --- Modelos ---
+# Por defecto: los del «proxy» de Metaculus (intermediario que paga Metaculus con los
+# créditos gratuitos; prefijo "metaculus/"). Si el usuario pone su propia clave de
+# OpenRouter (OPENROUTER_API_KEY), se usa el bloque "con_clave_propia".
+# Varios modelos = conjunto (ensemble): se reparten las pasadas entre ellos.
+modelos:
+  proxy_metaculus:
+    pronostico: ["metaculus/anthropic/claude-sonnet-4-5", "metaculus/openai/gpt-5", "metaculus/openai/o3"]
+    investigacion: "metaculus/gpt-4o-search-preview"
+    lector: "metaculus/gpt-4o-mini"
+  con_clave_propia:
+    pronostico: ["openrouter/anthropic/claude-sonnet-4.5", "openrouter/openai/gpt-5", "openrouter/openai/o3"]
+    investigacion: "openrouter/openai/gpt-4o-search-preview"
+    lector: "openrouter/openai/gpt-4o-mini"
+  temperatura: 0.3
+  tiempo_max_segundos: 180
+
+# --- Pronóstico ---
+pronostico:
+  pasadas_por_pregunta: 5        # veces que se pregunta al modelo (se reparten entre modelos)
+  informes_investigacion: 1      # búsquedas de noticias por pregunta
+  factor_extremizar: 1.15        # 1.0 = nada. Moderado a propósito (ver HALLAZGOS)
+  prob_min: 0.02                 # nunca por debajo del 2 %
+  prob_max: 0.98                 # nunca por encima del 98 %
+  minimo_por_opcion: 0.01        # en preguntas de opciones, ninguna por debajo del 1 %
+  max_preguntas_ensayo: 3        # en ensayo manual con token, solo estas preguntas (ahorra créditos)
