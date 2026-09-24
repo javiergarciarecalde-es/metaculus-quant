@@ -1,0 +1,15 @@
+# Parámetros de metaculus-quant.
+# NO se ponen aquí claves ni tokens: van como secretos de GitHub.
+
+# --- Puerta de la fase 0 (texto fijado ANTES de competir; NO CAMBIAR) ---
+puerta_fase0:
+  texto: >-
+    Se suma la puntuación de pares de todas las rondas de la fase 0: las MiniBench
+    de octubre a diciembre de 2026 y la temporada de otoño. El bot sigue solo si
+    supera al mejor bot de Metaculus del momento Y su proyección cae entre los 20
+    primeros de la temporada. Si no, se cierra.
+  referencia: "1.º ~3.600 $/temporada, 10.º ~1.700 $, 20.º ~1.000-1.100 $, media tabla ~0"
+  rondas: ["MiniBench octubre-diciembre 2026", "Temporada otoño 2026 (FutureEval)"]
+  condicion_1: "suma de peer score > suma del mejor bot de Metaculus del momento"
+  condicion_2: "proyección dentro del top 20 de la temporada"
+  fijada_el: "2026-09-24"
