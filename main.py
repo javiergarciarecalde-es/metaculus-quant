@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import itertools
 import logging
 import sys
+import time
 import warnings
 from datetime import datetime
 
@@ -65,7 +65,6 @@ class QuantBot(ForecastBot):
     """Bot de metaculus-quant. Misma estructura que SummerTemplateBot2026."""
 
     _max_concurrent_questions = 1
-    _concurrency_limiter = asyncio.Semaphore(_max_concurrent_questions)
     _structure_output_validation_samples = 2
 
     def __init__(self, *args, params: dict, modelos_pronostico: list, respaldos: list | None = None,
@@ -79,15 +78,47 @@ class QuantBot(ForecastBot):
         self.minimo_por_opcion = float(p["minimo_por_opcion"])
         self._modelos = list(modelos_pronostico)
         respaldos = respaldos or [None] * len(self._modelos)
-        self._rueda = itertools.cycle(list(zip(self._modelos, respaldos)))
-        self._miembros: dict[str, list[dict]] = {}  # pronósticos individuales por pregunta
+        self._puestos = list(zip(self._modelos, respaldos))
+        self._pasadas: dict[tuple, int] = {}  # cuántas pasadas lleva cada pregunta
+        self._miembros: dict[tuple, list[dict]] = {}  # pronósticos individuales por pregunta
+        t = params.get("tiempos", {})
+        self._tope_pasada = float(t.get("tope_pasada_segundos", 900))
+        self._tope_busqueda = float(t.get("tope_busqueda_segundos", 180))
+        self._limite_ejecucion = float(t.get("dejar_de_empezar_tras_minutos", 28)) * 60
+        self._inicio = time.monotonic()
+        self._torneo_actual = None  # para registrar cada pregunta en cuanto termina
+        self._publicado = False
         conf_max = params.get("investigacion", {}).get("claude_max", {})
         self._claude_max = (claude_max.InvestigadorClaudeMax(conf_max, claude_ejecutar)
                             if claude_ejecutar else claude_max.InvestigadorClaudeMax(conf_max))
 
-    # Rueda de puestos: cada pasada usa el siguiente puesto (modelo + respaldo).
-    async def _pensar(self, prompt: str) -> tuple[str, str]:
-        llm, respaldo = next(self._rueda)
+    def _semaforo(self) -> asyncio.Semaphore:
+        """Turno para investigar de una en una. La plantilla lo crea una vez para toda la clase, y
+        falla («bound to a different event loop») en la segunda tanda (MiniBench tras temporada):
+        aquí se crea uno por cada bucle de eventos."""
+        bucle = asyncio.get_running_loop()
+        if getattr(self, "_sem_bucle", None) is not bucle:
+            self._sem_bucle = bucle
+            self._sem = asyncio.Semaphore(self._max_concurrent_questions)
+        return self._sem
+
+    def _comprobar_presupuesto_tiempo(self) -> None:
+        """No empezar preguntas nuevas si la ejecución va a pasarse del límite del flujo (60 min):
+        la pregunta queda sin tocar y la recoge la siguiente ejecución (20 min después)."""
+        # «>=» y no «>»: en Windows el reloj avanza a saltos de ~15 ms y con límite 0 fallaba
+        if time.monotonic() - self._inicio >= self._limite_ejecucion:
+            raise TimeoutError("sin tiempo en esta ejecución: se deja para la siguiente")
+
+    # Puestos: la pasada n de CADA pregunta usa el puesto n (modelo + respaldo), sin depender de
+    # lo que pasara en otras preguntas.
+    async def _pensar(self, prompt: str, question: MetaculusQuestion) -> tuple[str, str]:
+        k = _clave(question)
+        n = self._pasadas.get(k, 0)
+        self._pasadas[k] = n + 1
+        llm, respaldo = self._puestos[n % len(self._puestos)]
+        return await asyncio.wait_for(self._pedir(llm, respaldo, prompt), timeout=self._tope_pasada)
+
+    async def _pedir(self, llm, respaldo, prompt: str) -> tuple[str, str]:
         try:
             texto = await llm.invoke(prompt)
             if texto and texto.strip():
@@ -105,13 +136,24 @@ class QuantBot(ForecastBot):
             raise ValueError(f"{llm.model} y su respaldo {respaldo.model} sin respuesta")
         return texto, respaldo.model
 
+    async def _run_individual_question(self, question: MetaculusQuestion):
+        """Igual que la librería, pero apunta la pregunta en el registro en cuanto termina
+        (si la ejecución se corta, lo ya hecho queda apuntado)."""
+        try:
+            informe = await super()._run_individual_question(question)
+        finally:
+            self._pasadas.pop(_clave(question), None)
+        if self._torneo_actual is not None:
+            registrar([informe], self._torneo_actual, self._publicado, bot=self)
+        return informe
+
     @classmethod
     def _llm_config_defaults(cls):
         base = super()._llm_config_defaults()
         return {**base, "director": base["default"], "buscador": base["researcher"]}
 
     def _anotar_miembro(self, question: MetaculusQuestion, modelo: str, valor) -> None:
-        self._miembros.setdefault(question.page_url, []).append({"modelo": modelo, "valor": valor})
+        self._miembros.setdefault(_clave(question), []).append({"modelo": modelo, "valor": valor})
 
     ##################################### INVESTIGACIÓN #####################################
 
@@ -126,7 +168,8 @@ class QuantBot(ForecastBot):
         return research
 
     async def _investigacion_base(self, question: MetaculusQuestion) -> str:
-        async with self._concurrency_limiter:
+        async with self._semaforo():
+            self._comprobar_presupuesto_tiempo()
             researcher = self.get_llm("researcher")
             if not researcher or researcher in ("None", "no_research"):
                 return ""
@@ -154,24 +197,26 @@ class QuantBot(ForecastBot):
                     research = await AskNewsSearcher().call_preconfigured_version(
                         "asknews/news-summaries", prompt
                     )
-                elif isinstance(researcher, GeneralLlm):
-                    research = await researcher.invoke(prompt)
                 else:
-                    research = await self.get_llm("researcher", "llm").invoke(prompt)
-            except Exception as e:  # sin investigación se sigue pronosticando
-                logger.warning(f"Investigación fallida en {question.page_url}: {e}")
+                    research = await asyncio.wait_for(
+                        self.get_llm("researcher", "llm").invoke(prompt),
+                        timeout=self._tope_busqueda,
+                    )
+            except Exception as e:  # sin investigación (o sin tiempo) se sigue pronosticando
+                logger.warning(f"Investigación fallida en {question.page_url}: {e!r}")
                 research = ""
-            ci = self.params.get("investigacion", {})
-            if ci.get("modo") == "ampliada":
-                research = await inv.ampliar(
-                    research, question.question_text, question.resolution_criteria or "",
-                    director=self.get_llm("director", "llm"),
-                    buscador=self.get_llm("buscador", "llm"),
-                    n=int(ci.get("max_datos_clave", 2)),
-                    tope_segundos=float(ci.get("tope_total_segundos", 240)),
-                )
-            logger.info(f"Investigación para {question.page_url}:\n{research[:2000]}")
-            return research
+        # La ampliada va FUERA del semáforo: las de varias preguntas no hacen cola entre sí.
+        ci = self.params.get("investigacion", {})
+        if ci.get("modo") == "ampliada":
+            research = await inv.ampliar(
+                research, question.question_text, question.resolution_criteria or "",
+                director=self.get_llm("director", "llm"),
+                buscador=self.get_llm("buscador", "llm"),
+                n=int(ci.get("max_datos_clave", 2)),
+                tope_segundos=float(ci.get("tope_total_segundos", 240)),
+            )
+        logger.info(f"Investigación para {question.page_url}:\n{research[:2000]}")
+        return research
 
     ##################################### BINARIAS #####################################
 
@@ -212,7 +257,7 @@ class QuantBot(ForecastBot):
             The last thing you write is your final answer as: "Probability: ZZ%", 0-100
             """
         )
-        texto, modelo = await self._pensar(prompt)
+        texto, modelo = await self._pensar(prompt, question)
         p = ag.leer_probabilidad(texto)
         if p is None:
             pred: BinaryPrediction = await structure_output(
@@ -269,7 +314,7 @@ class QuantBot(ForecastBot):
             Option_N: Probability_N
             """
         )
-        texto, modelo = await self._pensar(prompt)
+        texto, modelo = await self._pensar(prompt, question)
         leidas = ag.leer_opciones(texto, question.options)
         if leidas is None:
             lista: PredictedOptionList = await structure_output(
@@ -346,7 +391,7 @@ class QuantBot(ForecastBot):
             "
             """
         )
-        texto, modelo = await self._pensar(prompt)
+        texto, modelo = await self._pensar(prompt, question)
         leidos = ag.leer_percentiles(texto)
         if leidos is not None:
             leidos = ag.monotono(leidos)
@@ -406,7 +451,7 @@ class QuantBot(ForecastBot):
             Percentile 90: YYYY-MM-DD
             """
         )
-        texto, modelo = await self._pensar(prompt)
+        texto, modelo = await self._pensar(prompt, question)
         fechas: list[DatePercentile] = await structure_output(
             texto,
             list[DatePercentile],
@@ -460,6 +505,11 @@ class QuantBot(ForecastBot):
         return await super()._aggregate_predictions(predictions, question)
 
 
+def _clave(question: MetaculusQuestion) -> tuple:
+    """Identifica una pregunta concreta: las subpreguntas de un grupo comparten page_url."""
+    return (question.id_of_question or question.page_url, question.conditional_type)
+
+
 def _a_lista(probs: dict[str, float]) -> PredictedOptionList:
     opciones = [PredictedOption(option_name=k, probability=v) for k, v in probs.items()]
     # ajuste final para que sume exactamente 1 (validación de la librería)
@@ -471,14 +521,14 @@ def _a_lista(probs: dict[str, float]) -> PredictedOptionList:
 ##################################### EJECUCIÓN #####################################
 
 
-def _crear_llm(nombre: str, esfuerzo: str | None, temp, tmax) -> GeneralLlm:
+def _crear_llm(nombre: str, esfuerzo: str | None, temp, tmax, intentos: int = 2) -> GeneralLlm:
     extra = {}
     if esfuerzo and nombre.startswith("openrouter/"):
         # campo «reasoning» de la API de OpenRouter (cuánto piensa el modelo)
         extra["extra_body"] = {"reasoning": {"effort": esfuerzo}}
     elif esfuerzo:
         extra["reasoning_effort"] = esfuerzo
-    return GeneralLlm(model=nombre, temperature=temp, timeout=tmax, allowed_tries=2, **extra)
+    return GeneralLlm(model=nombre, temperature=temp, timeout=tmax, allowed_tries=intentos, **extra)
 
 
 def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> QuantBot:
@@ -486,18 +536,23 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     temp = params["modelos"]["temperatura"]
     tmax = params["modelos"]["tiempo_max_segundos"]
     claude_ejecutar = None
+    tmax_busqueda = params.get("tiempos", {}).get("tope_busqueda_segundos", 180)
     if llms is None:
         puestos = cfg.lista_pronosticadores(params)
-        pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax) for x in puestos]
+        # con respaldo, el principal tiene 1 intento: si falla, entra el respaldo sin esperar otro
+        pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax,
+                                      intentos=1 if x.get("respaldo") else 2) for x in puestos]
         respaldos = [_crear_llm(x["respaldo"], x.get("esfuerzo"), temp, tmax) if x.get("respaldo")
                      else None for x in puestos]
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(model=m["lector"], temperature=0.3),
-            "researcher": _crear_llm(m["investigacion"], m.get("investigacion_esfuerzo"), None, tmax),
+            "researcher": _crear_llm(m["investigacion"], m.get("investigacion_esfuerzo"), None,
+                                    tmax_busqueda, intentos=1),
             "parser": GeneralLlm(model=m["lector"], temperature=0.0),
             "director": GeneralLlm(model=m["director"], temperature=temp, timeout=tmax),
-            "buscador": _crear_llm(m["buscador"], m.get("investigacion_esfuerzo"), None, tmax),
+            "buscador": _crear_llm(m["buscador"], m.get("investigacion_esfuerzo"), None,
+                                  tmax_busqueda, intentos=1),
         }
     else:  # pruebas: modelos simulados
         pronosticadores = llms.get("_puestos") or [llms["default"]]
@@ -544,7 +599,7 @@ def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) 
             "razonamiento": registro.resumir(r.explanation),
             "modo": bot.params["pronostico"].get("modo") if bot else None,
             "investigacion_modo": bot.params.get("investigacion", {}).get("modo") if bot else None,
-            "miembros": bot._miembros.pop(q.page_url, []) if bot else [],
+            "miembros": bot._miembros.pop(_clave(q), []) if bot else [],
             # lo que habría costado por API la investigación con Claude Max (mide el cupo usado)
             "claude_max_usd_equivalente": bot._claude_max.costes.pop(q.page_url, None) if bot else None,
         })
@@ -591,8 +646,12 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
             preguntas = preguntas[: int(params["pronostico"]["max_preguntas_ensayo"])]
         if modo == "test_questions":
             bot.skip_previously_forecasted_questions = False
+        bot._torneo_actual, bot._publicado = torneo, envio
         informes = asyncio.run(bot.forecast_questions(preguntas, return_exceptions=True))
-        total += registrar(informes, torneo, publicado=envio, bot=bot)
+        bot._torneo_actual = None
+        # las buenas ya se apuntaron al terminar cada una; aquí solo los errores
+        registrar([r for r in informes if isinstance(r, BaseException)], torneo, envio, bot=bot)
+        total += sum(not isinstance(r, BaseException) for r in informes)
         bot.log_report_summary(informes, raise_errors=False)
     print(f"Terminado: {total} pronósticos {'ENVIADOS' if envio else 'de ensayo (no enviados)'}.")
     return 0

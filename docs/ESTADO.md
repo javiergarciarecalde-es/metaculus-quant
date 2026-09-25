@@ -10,7 +10,7 @@ un céntimo: no hay token ni claves puestas.
 
 | Pieza | Estado |
 |---|---|
-| Pruebas automáticas (programa que comprueba el bot solo) | **35 de 35 en verde** |
+| Pruebas automáticas (programa que comprueba el bot solo) | **42 de 42 en verde** (hoy se encontraron y arreglaron 5 fallos, uno de ellos heredado de la plantilla oficial que habría tumbado la MiniBench) |
 | Modelos de IA | **ya cambiados a GPT-6 + Opus 5.5 + Gemini Flash** (la opción recomendada), cada uno con un modelo de respaldo por si falla |
 | Fallo arreglado hoy | el modelo que buscaba noticias **había desaparecido**: el bot habría pronosticado sin noticias, sin avisar. Cambiado por uno que existe, y ahora cada ejecución comprueba los nombres y avisa |
 | Flujo de GitHub Actions (el «reloj» que lanza el bot cada 20 min) | listo; **apagado** hasta que pongas secretos e interruptor |

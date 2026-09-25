@@ -154,3 +154,60 @@ def test_ampliada_integrada_en_el_bot(llms, modelo):
     assert director.llamadas == 1
     assert modelo.llamadas == 1 + 2 + 3  # búsqueda base + 2 buscadores + 3 pasadas
     assert r.prediction == pytest.approx(0.72)
+
+
+def test_puestos_por_pregunta_sin_desalinear(llms):
+    """La pasada n de cada pregunta usa el puesto n aunque otras preguntas fallen o sean de grupo."""
+    a, b = ModeloFalso(), ModeloFalso()
+    bot = _bot_con_puestos(llms, [a, b], [None, None])
+    asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1] * 1))
+    asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1]))
+    assert (a.llamadas, b.llamadas) == (4, 2)  # 3 pasadas por pregunta: a, b, a  (+ la 2.ª igual)
+
+
+def test_proxy_tiene_respaldo_en_cada_puesto():
+    puestos = cfg.lista_pronosticadores(cfg.cargar_params())  # sin OPENROUTER_API_KEY -> proxy
+    assert puestos and all(p.get("respaldo") for p in puestos)
+
+
+def test_subpreguntas_de_grupo_no_mezclan_miembros(monkeypatch, llms, tmp_path):
+    from forecasting_tools import BinaryQuestion
+    monkeypatch.setenv("METACULUS_TOKEN", "t")
+    grupo = [BinaryQuestion(question_text=f"sub {i}", id_of_post=50, id_of_question=500 + i,
+                            page_url="https://ejemplo/50") for i in range(3)]
+    main.ejecutar("test_questions", cliente=MetaculusFalso(grupo), llms=llms)
+    [f] = list((tmp_path / "registro").glob("*.jsonl"))
+    assert [len(json.loads(l)["miembros"]) for l in f.read_text(encoding="utf-8").splitlines()] == [3, 3, 3]
+
+
+def test_pasada_colgada_se_corta(llms):
+    class Colgado(ModeloFalso):
+        async def invoke(self, prompt):  # type: ignore[override]
+            await asyncio.sleep(10)
+    params = cfg.cargar_params()
+    params["tiempos"]["tope_pasada_segundos"] = 0.05
+    bot = main.construir_bot(params, publicar=False,
+                             llms={**llms, "_puestos": [Colgado(), ModeloFalso(), ModeloFalso()],
+                                   "_respaldos": [None] * 3})
+    bot.metaculus_client = MetaculusFalso([])
+    [r] = asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1]))
+    assert r.prediction == pytest.approx(0.72)  # sale con 2 de 3
+
+
+def test_sin_tiempo_no_empieza_preguntas(llms, modelo):
+    params = cfg.cargar_params()
+    params["tiempos"]["dejar_de_empezar_tras_minutos"] = 0
+    bot = main.construir_bot(params, publicar=False, llms=llms)
+    bot.metaculus_client = MetaculusFalso([])
+    [r] = asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1], return_exceptions=True))
+    assert isinstance(r, BaseException) and modelo.llamadas == 0
+
+
+def test_registro_por_pregunta_aunque_la_tanda_no_termine(monkeypatch, llms, tmp_path):
+    """Cada pregunta se apunta al acabar, no al final de la tanda."""
+    monkeypatch.setenv("METACULUS_TOKEN", "t")
+    apuntadas = []
+    orig = main.registrar
+    monkeypatch.setattr(main, "registrar", lambda inf, *a, **k: apuntadas.append(len(inf)) or orig(inf, *a, **k))
+    main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()), llms=llms)
+    assert apuntadas[:3] == [1, 1, 1]

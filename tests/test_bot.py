@@ -156,3 +156,10 @@ def test_modelos_reales_se_configuran_sin_llamar(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY")
     bot = main.construir_bot(params, publicar=False)
     assert all(m.model.startswith("metaculus/") for m in bot._modelos)
+
+
+def test_dos_tandas_seguidas_no_fallan(monkeypatch, llms):
+    """Temporada y MiniBench van en dos asyncio.run seguidos: la segunda no debe fallar."""
+    _, falso = _ejecutar(monkeypatch, llms, envio=True, evento="schedule", modo="tournament")
+    tipos = [t for t, _ in falso.envios]
+    assert tipos.count("binaria") == 2 and tipos.count("numerica") == 2
