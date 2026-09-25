@@ -186,3 +186,42 @@ Cambios hechos (código probado con modelos simulados; 35 pruebas en verde):
    2 buscadores los comprueban a la vez; lo encontrado se AÑADE al final del informe, con tope de
    240 s; si algo falla, se sigue con el informe normal. Coste extra estimado: +0,05-0,35 $/pregunta.
 5. El comprobador de modelos (`python -m bot.modelos`) revisa también respaldos, director y buscador.
+
+## 25/09/2026 — Sesión 2 (cont.): la sesión de la nube y la local trabajaron a la vez
+- La sesión de la nube subió 4 commits a `main` (05:24-05:26 UTC) mientras la local trabajaba;
+  la local los integró sin conflictos (mezcla limpia, **35 de 35 pruebas en verde** en Windows).
+  La nota «gpt-6-sol y claude-opus-5.5 NO comprobados» de `params.yaml` estaba desfasada: la
+  sesión local los comprobó en vivo el 25/09. Corregida.
+
+## 25/09/2026 — Respuesta del usuario: «Opus 5.5 ultracode con mi cuenta de Claude Max»
+Qué dicen las fuentes oficiales (leídas hoy; «ultracode» = modo de Claude Code que reparte el
+trabajo entre muchos agentes):
+| Punto | Fuente oficial | Qué dice |
+|---|---|---|
+| ¿Se puede usar la suscripción en GitHub Actions? | code.claude.com/docs/en/github-actions | **Sí**: secreto `CLAUDE_CODE_OAUTH_TOKEN` (lo genera el usuario con `claude setup-token`); «runs use your Claude subscription instead of API billing». Vale también en ejecución programada |
+| ¿De qué cupo tira? | support.claude.com, artículo 15036540 | `claude -p`, Agent SDK y **GitHub Actions gastan el mismo cupo de la suscripción** que claude.ai y Claude Code interactivo. Anthropic anunció un crédito aparte (100-200 $/mes en Max) para el 15/06/2026 y lo **pausó**: puede cambiar en cualquier momento |
+| Límites de Max | support.claude.com, artículo 11049741 | límite por sesión de 5 h y **límite semanal** para todos los modelos; se reinicia a una hora fija por semana |
+| Condiciones | code.claude.com/docs/en/legal-and-compliance | Max va con las Condiciones de consumidor. El inicio de sesión con suscripción es para el «uso ordinario» de Claude Code; «los límites anunciados de Pro y Max suponen un uso ordinario, individual». Lo prohibido expresamente es que terceros enruten peticiones de otros por credenciales de Max; el uso propio del titular no está prohibido expresamente. Anthropic se reserva actuar «sin previo aviso» |
+| Coste de «ultracode» | code.claude.com/docs/en/workflows (vía agente) | «un flujo lanza muchos agentes, así que puede gastar bastante más» que hacerlo en una conversación |
+
+Consecuencias para metaculus-quant:
+- **Dinero:** 0 € extra si el usuario ya paga Max: elimina la dependencia de los ~100 $ de créditos.
+- **Cupo compartido:** el bot competiría por el mismo cupo semanal que usan cripto-quant,
+  bolsa-quant, mando-quant y estas sesiones. Las rondas de MiniBench sacan ~60 preguntas en pocos
+  días: en esos picos el bot (o las sesiones del usuario) podría quedarse sin cupo. Pregunta sin
+  pronóstico = 0 puntos.
+- **Uso automático cada 20 min durante 3 meses** no es claramente «uso ordinario individual»: zona
+  gris. Riesgo: que Anthropic limite la cuenta, que es la que usa el usuario para todo lo demás.
+- **Evidencia de acierto:** no cambia: solo Opus = sin GPT (la señal más fuerte de la encuesta) y
+  un solo proveedor. «Ultracode» con agentes que debaten o juzgan es justo lo que nostreambot probó
+  y rechazó; donde los agentes sí ayudan es en la **investigación** compartida.
+- Técnicamente factible: instalar Claude Code en el ejecutor de GitHub y llamarlo con `claude -p`
+  desde el bot. No construido: espera la confirmación del usuario tras conocer estos riesgos.
+
+## 25/09/2026 — GitHub público: el reloj se apaga tras 60 días sin actividad
+- Documentación de GitHub (citada en la página oficial de Claude Code GitHub Actions): en
+  repositorios públicos, **GitHub desactiva el reloj tras 60 días sin actividad** en el repositorio.
+  La temporada dura hasta el 06/01/2027 (~100 días). Mientras haya sesiones con commits al menos
+  una vez al mes no pasa; si no, hay que añadir un commit automático mensual. Anotado en «Pendiente».
+- Al hacerlo público, el primer commit (creado desde la web de GitHub) deja ver el correo personal
+  del usuario. No hay claves en ningún commit (revisado todo el historial).
