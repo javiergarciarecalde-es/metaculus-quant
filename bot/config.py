@@ -5,6 +5,7 @@ Interruptores (variables de entorno; en GitHub se ponen en Settings → Secrets 
 - ENVIO_REAL (variable): solo con el valor exacto "true" se envían pronósticos. Por defecto: apagado.
 - OPENROUTER_API_KEY (secreto, opcional): si está, se usan modelos con clave propia.
 """
+
 from __future__ import annotations
 
 import os

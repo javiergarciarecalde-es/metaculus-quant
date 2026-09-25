@@ -23,7 +23,9 @@ def test_opciones_suman_1_y_suelo():
 
 
 def test_percentiles_mediana_y_monotonos():
-    r = ag.agregar_percentiles([{0.1: 1, 0.5: 5, 0.9: 9}, {0.1: 3, 0.5: 3, 0.9: 20}, {0.1: 2, 0.5: 4, 0.9: 10}])
+    r = ag.agregar_percentiles(
+        [{0.1: 1, 0.5: 5, 0.9: 9}, {0.1: 3, 0.5: 3, 0.9: 20}, {0.1: 2, 0.5: 4, 0.9: 10}]
+    )
     assert list(r.values()) == sorted(r.values())
     assert r[0.5] == 4
 

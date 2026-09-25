@@ -6,6 +6,7 @@ Por eso se comprueba al empezar cada ejecución y se avisa en amarillo.
 
 Uso: python -m bot.modelos
 """
+
 from __future__ import annotations
 
 import sys
@@ -42,8 +43,10 @@ def main() -> int:
         return 0
     perdidos = faltan(params, disponibles)
     if perdidos:
-        print(f"::warning::Modelos que ya NO existen en OpenRouter: {', '.join(perdidos)}. "
-              "Hay que cambiarlos en config/params.yaml.")
+        print(
+            f"::warning::Modelos que ya NO existen en OpenRouter: {', '.join(perdidos)}. "
+            "Hay que cambiarlos en config/params.yaml."
+        )
     else:
         print(f"Modelos comprobados en OpenRouter: {', '.join(nombres_openrouter(params))}")
     return 0

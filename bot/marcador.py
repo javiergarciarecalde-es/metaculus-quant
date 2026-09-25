@@ -11,6 +11,7 @@ Pasos:
 
 Uso: python -m bot.marcador [--descargas carpeta]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,6 +36,7 @@ ANULADAS = {"annulled", "ambiguous"}
 
 
 # ------------------------------------------------------------------ registros
+
 
 def leer_jsonl(carpeta: Path) -> list[dict]:
     """Lee todas las líneas JSON de una carpeta (y subcarpetas) o de un solo fichero."""
@@ -83,6 +85,7 @@ def id_post(fila: dict) -> int | None:
 
 # ------------------------------------------------------------------ Metaculus
 
+
 def pedir_post(pid: int, token: str | None) -> dict:
     cab = {"Authorization": f"Token {token}"} if token else {}
     r = requests.get(API.format(pid), headers=cab, timeout=30)
@@ -91,8 +94,11 @@ def pedir_post(pid: int, token: str | None) -> dict:
 
 
 def pregunta_del_post(post: dict, id_pregunta) -> dict | None:
-    qs = [post["question"]] if post.get("question") else list(
-        (post.get("group_of_questions") or {}).get("questions") or [])
+    qs = (
+        [post["question"]]
+        if post.get("question")
+        else list((post.get("group_of_questions") or {}).get("questions") or [])
+    )
     if id_pregunta is not None:
         for q in qs:
             if q.get("id") == id_pregunta:
@@ -112,6 +118,7 @@ def resumen_pregunta(q: dict) -> dict:
 
 
 # ------------------------------------------------------------------ puntuaciones propias
+
 
 def _prob_binaria(valor) -> float | None:
     try:
@@ -150,6 +157,7 @@ def puntos(tipo: str, valor, resolucion) -> dict | None:
 
 # ------------------------------------------------------------------ cálculo del marcador
 
+
 def calcular(filas: list[dict], resueltas: dict) -> dict:
     preguntas, modelos, calib = [], {}, {}
     for f in filas:
@@ -158,9 +166,17 @@ def calcular(filas: list[dict], resueltas: dict) -> dict:
             continue
         tipo = f.get("tipo")
         agregado = puntos(tipo, f.get("valor"), info.get("resolucion"))
-        preguntas.append({"pregunta": f.get("pregunta"), "url": f.get("url"), "tipo": tipo,
-                          "torneo": f.get("torneo"), "resolucion": info.get("resolucion"),
-                          "spot_peer": info.get("spot_peer"), "agregado": agregado})
+        preguntas.append(
+            {
+                "pregunta": f.get("pregunta"),
+                "url": f.get("url"),
+                "tipo": tipo,
+                "torneo": f.get("torneo"),
+                "resolucion": info.get("resolucion"),
+                "spot_peer": info.get("spot_peer"),
+                "agregado": agregado,
+            }
+        )
         for m in f.get("miembros") or []:
             pm = puntos(tipo, m.get("valor"), info.get("resolucion"))
             if pm is None:
@@ -184,51 +200,83 @@ def calcular(filas: list[dict], resueltas: dict) -> dict:
         "spot_peer_suma": round(sum(spot), 2),
         "spot_peer_media": round(sum(spot) / len(spot), 2) if spot else None,
         "spot_peer_n": len(spot),
-        "por_modelo": {m: {k: {"n": len(v), "media": round(sum(v) / len(v), 4)} for k, v in d.items()}
-                       for m, d in modelos.items()},
-        "calibracion": {f"{t * 10}-{t * 10 + 10} %": {
-            "n": c["n"], "dijimos": round(100 * c["suma_p"] / c["n"], 1),
-            "paso": round(100 * c["si"] / c["n"], 1)} for t, c in sorted(calib.items())},
-        "peores": sorted([p for p in preguntas if isinstance(p["spot_peer"], (int, float))],
-                         key=lambda p: p["spot_peer"])[:5],
+        "por_modelo": {
+            m: {k: {"n": len(v), "media": round(sum(v) / len(v), 4)} for k, v in d.items()}
+            for m, d in modelos.items()
+        },
+        "calibracion": {
+            f"{t * 10}-{t * 10 + 10} %": {
+                "n": c["n"],
+                "dijimos": round(100 * c["suma_p"] / c["n"], 1),
+                "paso": round(100 * c["si"] / c["n"], 1),
+            }
+            for t, c in sorted(calib.items())
+        },
+        "peores": sorted(
+            [p for p in preguntas if isinstance(p["spot_peer"], (int, float))],
+            key=lambda p: p["spot_peer"],
+        )[:5],
     }
 
 
 def informe_md(m: dict, fecha: str) -> str:
     l = [
-        "# Marcador del bot (se actualiza solo cada lunes)", "",
-        f"**Actualizado:** {fecha}. Lo genera `bot/marcador.py`; no se toca a mano.", "",
+        "# Marcador del bot (se actualiza solo cada lunes)",
+        "",
+        f"**Actualizado:** {fecha}. Lo genera `bot/marcador.py`; no se toca a mano.",
+        "",
         "Qué es cada cosa:",
         "- **Puntuación de pares** (spot peer): la que da Metaculus y cuenta en el torneo. Positiva = mejor",
         "  que la media de los demás bots en esa pregunta; negativa = peor.",
         "- **Log** (por modelo): logaritmo de la probabilidad que el modelo dio a lo que pasó. 0 es",
         "  perfecto; cuanto más negativo, peor. Sirve para comparar a los 3 modelos entre sí.",
         "- **Brier**: error al cuadrado en preguntas de sí/no. 0 es perfecto; 0,25 es decir siempre 50 %.",
-        "- Con pocas preguntas resueltas todo esto es **ruido**: no sacar conclusiones con menos de ~50.", "",
-        "## Resumen", "",
-        "| Dato | Valor |", "|---|---|",
+        "- Con pocas preguntas resueltas todo esto es **ruido**: no sacar conclusiones con menos de ~50.",
+        "",
+        "## Resumen",
+        "",
+        "| Dato | Valor |",
+        "|---|---|",
         f"| Pronósticos enviados (cerrados) | {m['pronosticos_enviados']} |",
         f"| Preguntas ya resueltas | {m['resueltas']} |",
         f"| Suma de puntuación de pares | {m['spot_peer_suma']} (en {m['spot_peer_n']} preguntas) |",
-        f"| Media por pregunta | {m['spot_peer_media'] if m['spot_peer_media'] is not None else '—'} |", "",
-        "## Cada modelo por separado", "",
-        "| Modelo | Tipo:medida | Preguntas | Media |", "|---|---|---|---|",
+        f"| Media por pregunta | {m['spot_peer_media'] if m['spot_peer_media'] is not None else '—'} |",
+        "",
+        "## Cada modelo por separado",
+        "",
+        "| Modelo | Tipo:medida | Preguntas | Media |",
+        "|---|---|---|---|",
     ]
     for mod, d in sorted(m["por_modelo"].items()):
         for k, v in sorted(d.items()):
             l.append(f"| {mod} | {k} | {v['n']} | {v['media']} |")
-    l += ["", "## Calibración (preguntas de sí/no)", "",
-          "Si el bot está bien calibrado, «pasó» se parece a «dijimos» en cada tramo.", "",
-          "| Tramo | Preguntas | Dijimos (media) | Pasó de verdad |", "|---|---|---|---|"]
+    l += [
+        "",
+        "## Calibración (preguntas de sí/no)",
+        "",
+        "Si el bot está bien calibrado, «pasó» se parece a «dijimos» en cada tramo.",
+        "",
+        "| Tramo | Preguntas | Dijimos (media) | Pasó de verdad |",
+        "|---|---|---|---|",
+    ]
     for tramo, c in m["calibracion"].items():
         l.append(f"| {tramo} | {c['n']} | {c['dijimos']} % | {c['paso']} % |")
-    l += ["", "## Las 5 peores preguntas", "", "| Puntuación | Pregunta | Resolución |", "|---|---|---|"]
+    l += [
+        "",
+        "## Las 5 peores preguntas",
+        "",
+        "| Puntuación | Pregunta | Resolución |",
+        "|---|---|---|",
+    ]
     for p in m["peores"]:
-        l.append(f"| {round(p['spot_peer'], 1)} | [{(p['pregunta'] or '')[:90]}]({p['url']}) | {p['resolucion']} |")
+        l.append(
+            f"| {round(p['spot_peer'], 1)} | [{(p['pregunta'] or '')[:90]}]({p['url']}) | {p['resolucion']} |"
+        )
     return "\n".join(l) + "\n"
 
 
 # ------------------------------------------------------------------ programa
+
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
@@ -237,9 +285,13 @@ def main(argv=None) -> int:
     ahora = datetime.now(timezone.utc)
     historico = leer_jsonl(HISTORICO) if HISTORICO.exists() else []
     historico = [f for f in historico if f.get("url")]
-    filas = juntar(historico, leer_jsonl(Path(args.descargas)) if Path(args.descargas).exists() else [], ahora)
+    filas = juntar(
+        historico, leer_jsonl(Path(args.descargas)) if Path(args.descargas).exists() else [], ahora
+    )
     HISTORICO.parent.mkdir(parents=True, exist_ok=True)
-    HISTORICO.write_text("".join(json.dumps(f, ensure_ascii=False) + "\n" for f in filas), encoding="utf-8")
+    HISTORICO.write_text(
+        "".join(json.dumps(f, ensure_ascii=False) + "\n" for f in filas), encoding="utf-8"
+    )
 
     resueltas = json.loads(RESUELTAS.read_text(encoding="utf-8")) if RESUELTAS.exists() else {}
     token = (os.getenv("METACULUS_TOKEN") or "").strip() or None
@@ -262,10 +314,14 @@ def main(argv=None) -> int:
     RESUELTAS.write_text(json.dumps(resueltas, ensure_ascii=False, indent=1), encoding="utf-8")
 
     m = calcular(filas, resueltas)
-    SALIDA_JSON.write_text(json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    SALIDA_JSON.write_text(
+        json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8"
+    )
     SALIDA_MD.write_text(informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC"), encoding="utf-8")
-    print(f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "
-          f"suma de pares {m['spot_peer_suma']}. Preguntas que no cargaron: {fallos}.")
+    print(
+        f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "
+        f"suma de pares {m['spot_peer_suma']}. Preguntas que no cargaron: {fallos}."
+    )
     return 0
 
 

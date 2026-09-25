@@ -15,6 +15,7 @@ Modos:
   python main.py                      -> torneo de temporada + MiniBench
   python main.py --mode test_questions -> zona de pruebas de Metaculus (bot-testing-area)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -67,8 +68,15 @@ class QuantBot(ForecastBot):
     _max_concurrent_questions = 1
     _structure_output_validation_samples = 2
 
-    def __init__(self, *args, params: dict, modelos_pronostico: list, respaldos: list | None = None,
-                 claude_ejecutar=None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        params: dict,
+        modelos_pronostico: list,
+        respaldos: list | None = None,
+        claude_ejecutar=None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.params = params
         p = params["pronostico"]
@@ -89,8 +97,11 @@ class QuantBot(ForecastBot):
         self._torneo_actual = None  # para registrar cada pregunta en cuanto termina
         self._publicado = False
         conf_max = params.get("investigacion", {}).get("claude_max", {})
-        self._claude_max = (claude_max.InvestigadorClaudeMax(conf_max, claude_ejecutar)
-                            if claude_ejecutar else claude_max.InvestigadorClaudeMax(conf_max))
+        self._claude_max = (
+            claude_max.InvestigadorClaudeMax(conf_max, claude_ejecutar)
+            if claude_ejecutar
+            else claude_max.InvestigadorClaudeMax(conf_max)
+        )
 
     def _semaforo(self) -> asyncio.Semaphore:
         """Turno para investigar de una en una. La plantilla lo crea una vez para toda la clase, y
@@ -162,8 +173,11 @@ class QuantBot(ForecastBot):
         if self.params.get("investigacion", {}).get("modo") == "claude_max":
             # fuera del turno de preguntas: puede tardar minutos y va con su propio límite
             research = await self._claude_max.ampliar(
-                research, question.question_text, question.resolution_criteria or "",
-                question.fine_print or "", clave=question.page_url,
+                research,
+                question.question_text,
+                question.resolution_criteria or "",
+                question.fine_print or "",
+                clave=question.page_url,
             )
         return research
 
@@ -209,7 +223,9 @@ class QuantBot(ForecastBot):
         ci = self.params.get("investigacion", {})
         if ci.get("modo") == "ampliada":
             research = await inv.ampliar(
-                research, question.question_text, question.resolution_criteria or "",
+                research,
+                question.question_text,
+                question.resolution_criteria or "",
                 director=self.get_llm("director", "llm"),
                 buscador=self.get_llm("buscador", "llm"),
                 n=int(ci.get("max_datos_clave", 2)),
@@ -470,8 +486,16 @@ class QuantBot(ForecastBot):
             lo = question.lower_bound.date().isoformat()
             unidad = ""
         else:
-            hi = question.nominal_upper_bound if question.nominal_upper_bound is not None else question.upper_bound
-            lo = question.nominal_lower_bound if question.nominal_lower_bound is not None else question.lower_bound
+            hi = (
+                question.nominal_upper_bound
+                if question.nominal_upper_bound is not None
+                else question.upper_bound
+            )
+            lo = (
+                question.nominal_lower_bound
+                if question.nominal_lower_bound is not None
+                else question.lower_bound
+            )
             unidad = question.unit_of_measure or ""
         sup = (
             f"The question creator thinks the number is likely not higher than {hi} {unidad}."
@@ -496,8 +520,7 @@ class QuantBot(ForecastBot):
             )
         if isinstance(question, MultipleChoiceQuestion):
             listas = [
-                {o.option_name: o.probability for o in p.predicted_options}
-                for p in predictions
+                {o.option_name: o.probability for o in p.predicted_options} for p in predictions
             ]
             probs = ag.agregar_opciones(listas, question.options, self.minimo_por_opcion)
             return _a_lista(probs)
@@ -540,19 +563,27 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     if llms is None:
         puestos = cfg.lista_pronosticadores(params)
         # con respaldo, el principal tiene 1 intento: si falla, entra el respaldo sin esperar otro
-        pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax,
-                                      intentos=1 if x.get("respaldo") else 2) for x in puestos]
-        respaldos = [_crear_llm(x["respaldo"], x.get("esfuerzo"), temp, tmax) if x.get("respaldo")
-                     else None for x in puestos]
+        pronosticadores = [
+            _crear_llm(
+                x["nombre"], x.get("esfuerzo"), temp, tmax, intentos=1 if x.get("respaldo") else 2
+            )
+            for x in puestos
+        ]
+        respaldos = [
+            _crear_llm(x["respaldo"], x.get("esfuerzo"), temp, tmax) if x.get("respaldo") else None
+            for x in puestos
+        ]
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(model=m["lector"], temperature=0.3),
-            "researcher": _crear_llm(m["investigacion"], m.get("investigacion_esfuerzo"), None,
-                                    tmax_busqueda, intentos=1),
+            "researcher": _crear_llm(
+                m["investigacion"], m.get("investigacion_esfuerzo"), None, tmax_busqueda, intentos=1
+            ),
             "parser": GeneralLlm(model=m["lector"], temperature=0.0),
             "director": GeneralLlm(model=m["director"], temperature=temp, timeout=tmax),
-            "buscador": _crear_llm(m["buscador"], m.get("investigacion_esfuerzo"), None,
-                                  tmax_busqueda, intentos=1),
+            "buscador": _crear_llm(
+                m["buscador"], m.get("investigacion_esfuerzo"), None, tmax_busqueda, intentos=1
+            ),
         }
     else:  # pruebas: modelos simulados
         pronosticadores = llms.get("_puestos") or [llms["default"]]
@@ -587,26 +618,32 @@ def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) 
             continue
         ok += 1
         q = r.question
-        registro.anotar({
-            "torneo": torneo,
-            "enviado": publicado,
-            "url": q.page_url,
-            "tipo": getattr(q, "question_type", type(q).__name__),
-            "pregunta": q.question_text,
-            "pronostico": r.make_readable_prediction(r.prediction),
-            # para el marcador: identificadores y el valor exacto (no solo el texto legible)
-            "id_post": getattr(q, "id_of_post", None),
-            "id_pregunta": getattr(q, "id_of_question", None),
-            "valor": _valor_legible_por_maquina(r.prediction),
-            "coste_usd": r.price_estimate,
-            "minutos": r.minutes_taken,
-            "razonamiento": registro.resumir(r.explanation),
-            "modo": bot.params["pronostico"].get("modo") if bot else None,
-            "investigacion_modo": bot.params.get("investigacion", {}).get("modo") if bot else None,
-            "miembros": bot._miembros.pop(_clave(q), []) if bot else [],
-            # lo que habría costado por API la investigación con Claude Max (mide el cupo usado)
-            "claude_max_usd_equivalente": bot._claude_max.costes.pop(q.page_url, None) if bot else None,
-        })
+        registro.anotar(
+            {
+                "torneo": torneo,
+                "enviado": publicado,
+                "url": q.page_url,
+                "tipo": getattr(q, "question_type", type(q).__name__),
+                "pregunta": q.question_text,
+                "pronostico": r.make_readable_prediction(r.prediction),
+                # para el marcador: identificadores y el valor exacto (no solo el texto legible)
+                "id_post": getattr(q, "id_of_post", None),
+                "id_pregunta": getattr(q, "id_of_question", None),
+                "valor": _valor_legible_por_maquina(r.prediction),
+                "coste_usd": r.price_estimate,
+                "minutos": r.minutes_taken,
+                "razonamiento": registro.resumir(r.explanation),
+                "modo": bot.params["pronostico"].get("modo") if bot else None,
+                "investigacion_modo": bot.params.get("investigacion", {}).get("modo")
+                if bot
+                else None,
+                "miembros": bot._miembros.pop(_clave(q), []) if bot else [],
+                # lo que habría costado por API la investigación con Claude Max (mide el cupo usado)
+                "claude_max_usd_equivalente": bot._claude_max.costes.pop(q.page_url, None)
+                if bot
+                else None,
+            }
+        )
     return ok
 
 
@@ -633,7 +670,9 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
     """Devuelve el código de salida (0 = limpio)."""
     params = params or cfg.cargar_params()
     if not cfg.hay("METACULUS_TOKEN"):
-        aviso("Falta METACULUS_TOKEN: el bot no hace nada (esto es normal hasta que el usuario lo ponga).")
+        aviso(
+            "Falta METACULUS_TOKEN: el bot no hace nada (esto es normal hasta que el usuario lo ponga)."
+        )
         return 0
 
     envio = cfg.envio_real_encendido()
@@ -654,8 +693,10 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
         torneos = [t["prueba"]]
     print(f"Modo {modo}. Envío real: {'SÍ' if envio else 'NO (ensayo)'}. Torneos: {torneos}")
     if not cfg.hay("OPENROUTER_API_KEY"):
-        aviso("Falta OPENROUTER_API_KEY (la clave de los créditos): se prueban los modelos de "
-              "Metaculus sin clave, que el 25/09/2026 no tenían cupo. Lo normal es que falle.")
+        aviso(
+            "Falta OPENROUTER_API_KEY (la clave de los créditos): se prueban los modelos de "
+            "Metaculus sin clave, que el 25/09/2026 no tenían cupo. Lo normal es que falle."
+        )
 
     total = fallos = 0
     for torneo in torneos:
@@ -678,10 +719,14 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
     print(f"Terminado: {total} pronósticos {'ENVIADOS' if envio else 'de ensayo (no enviados)'}.")
     if fallos and not total:
         # antes acababa en verde con 0 pronósticos (25/09/2026): un fallo total tiene que verse
-        print(f"::error::Fallaron las {fallos} preguntas y no salió ningún pronóstico. Mira los avisos de arriba.")
+        print(
+            f"::error::Fallaron las {fallos} preguntas y no salió ningún pronóstico. Mira los avisos de arriba."
+        )
         return 1
     if fallos:
-        print(f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba.")
+        print(
+            f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba."
+        )
     return 0
 
 
@@ -691,7 +736,9 @@ def _es_falta_de_tiempo(error: BaseException) -> bool:
 
 
 def main(argv=None) -> int:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     parser = argparse.ArgumentParser(description="Bot de metaculus-quant")
     parser.add_argument("--mode", choices=["tournament", "test_questions"], default="tournament")
     args = parser.parse_args(argv)

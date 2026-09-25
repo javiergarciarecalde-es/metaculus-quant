@@ -6,6 +6,7 @@ error del director no sustituye a la información buena (los peores fallos de no
 vinieron de un dato erróneo que se creyeron todos los modelos).
 Cualquier fallo o falta de tiempo -> se devuelve el informe base intacto.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -48,18 +49,29 @@ async def _comprobar(buscador, dato: dict) -> str:
     return await buscador.invoke(prompt)
 
 
-async def ampliar(informe_base: str, pregunta: str, criterios: str, director, buscador,
-                  n: int = 2, tope_segundos: float = 240) -> str:
+async def ampliar(
+    informe_base: str,
+    pregunta: str,
+    criterios: str,
+    director,
+    buscador,
+    n: int = 2,
+    tope_segundos: float = 240,
+) -> str:
     async def _todo() -> str:
         datos = leer_datos_clave(
             await director.invoke(_prompt_director(pregunta, criterios, informe_base, n)), n
         )
         if not datos:
             return informe_base
-        res = await asyncio.gather(*[_comprobar(buscador, d) for d in datos],
-                                   return_exceptions=True)
-        partes = [f"### {d.get('dato', d['busqueda'])}\n{r}"
-                  for d, r in zip(datos, res) if isinstance(r, str) and r.strip()]
+        res = await asyncio.gather(
+            *[_comprobar(buscador, d) for d in datos], return_exceptions=True
+        )
+        partes = [
+            f"### {d.get('dato', d['busqueda'])}\n{r}"
+            for d, r in zip(datos, res)
+            if isinstance(r, str) and r.strip()
+        ]
         return informe_base + CABECERA + "\n\n".join(partes) if partes else informe_base
 
     try:

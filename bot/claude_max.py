@@ -10,6 +10,7 @@ Reglas (las mismas que la investigación ampliada):
 - Si se agota el cupo de Max, se deja de llamar durante el resto de la ejecución (no insiste).
 - Nunca puede tocar ficheros ni ejecutar órdenes: solo buscar y leer páginas web.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -26,12 +27,19 @@ SECRETO = "CLAUDE_CODE_OAUTH_TOKEN"
 ORDEN_CORTA = "Follow the research brief given on stdin. Reply only with the final research notes."
 PALABRAS_CUPO = ("usage limit", "rate limit", "limit reached", "quota")
 # Claves que Claude Code no necesita: no se le pasan (aunque no puede ejecutar órdenes).
-OTRAS_CLAVES = ("METACULUS_TOKEN", "OPENROUTER_API_KEY", "ASKNEWS_CLIENT_ID", "ASKNEWS_SECRET",
-                "OPENAI_API_KEY", "ANTHROPIC_API_KEY")
+OTRAS_CLAVES = (
+    "METACULUS_TOKEN",
+    "OPENROUTER_API_KEY",
+    "ASKNEWS_CLIENT_ID",
+    "ASKNEWS_SECRET",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+)
 
 
-def prompt_investigacion(pregunta: str, criterios: str, letra_pequena: str, informe: str,
-                         agentes: int) -> str:
+def prompt_investigacion(
+    pregunta: str, criterios: str, letra_pequena: str, informe: str, agentes: int
+) -> str:
     return (
         "You lead a small research team for a superforecaster. Do NOT forecast.\n"
         f"Launch up to {agentes} research subagents IN PARALLEL (Agent tool), each on a different "
@@ -49,13 +57,27 @@ def prompt_investigacion(pregunta: str, criterios: str, letra_pequena: str, info
 
 def orden(conf: dict) -> list[str]:
     return [
-        "claude", "-p", ORDEN_CORTA,
-        "--model", str(conf.get("modelo", "claude-opus-5-5")),
-        "--output-format", "json",
-        "--max-turns", str(int(conf.get("max_turnos", 30))),
-        "--max-budget-usd", str(conf.get("tope_usd_por_pregunta", 3)),
-        "--allowedTools", "WebSearch", "WebFetch", "Agent", "Task",
-        "--disallowedTools", "Bash", "Edit", "Write", "NotebookEdit",
+        "claude",
+        "-p",
+        ORDEN_CORTA,
+        "--model",
+        str(conf.get("modelo", "claude-opus-5-5")),
+        "--output-format",
+        "json",
+        "--max-turns",
+        str(int(conf.get("max_turnos", 30))),
+        "--max-budget-usd",
+        str(conf.get("tope_usd_por_pregunta", 3)),
+        "--allowedTools",
+        "WebSearch",
+        "WebFetch",
+        "Agent",
+        "Task",
+        "--disallowedTools",
+        "Bash",
+        "Edit",
+        "Write",
+        "NotebookEdit",
         "--no-session-persistence",
     ]
 
@@ -77,8 +99,12 @@ async def _ejecutar_de_verdad(args: list[str], entrada: str, env: dict, tope: fl
         raise FileNotFoundError("no está instalado el programa «claude» (Claude Code)")
     with tempfile.TemporaryDirectory() as carpeta:  # carpeta vacía: no lee el CLAUDE.md del repo
         proc = await asyncio.create_subprocess_exec(
-            ejecutable, *args[1:], cwd=carpeta, env=env,
-            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+            ejecutable,
+            *args[1:],
+            cwd=carpeta,
+            env=env,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
         try:
@@ -110,13 +136,20 @@ class InvestigadorClaudeMax:
     def disponible(self) -> bool:
         return bool((os.getenv(SECRETO) or "").strip()) and not self.sin_cupo
 
-    async def ampliar(self, informe_base: str, pregunta: str, criterios: str,
-                      letra_pequena: str = "", clave: str = "") -> str:
+    async def ampliar(
+        self,
+        informe_base: str,
+        pregunta: str,
+        criterios: str,
+        letra_pequena: str = "",
+        clave: str = "",
+    ) -> str:
         if not self.disponible():
             return informe_base
         tope = float(self.conf.get("tope_segundos", 420))
-        entrada = prompt_investigacion(pregunta, criterios, letra_pequena, informe_base,
-                                       int(self.conf.get("agentes", 3)))
+        entrada = prompt_investigacion(
+            pregunta, criterios, letra_pequena, informe_base, int(self.conf.get("agentes", 3))
+        )
         try:
             async with self._turno():
                 if self.sin_cupo:
@@ -133,6 +166,8 @@ class InvestigadorClaudeMax:
             logger.warning(f"Investigación con Claude Max descartada: {e!r}"[:500])
             return informe_base
         self.costes[clave] = coste
-        logger.info(f"Investigación con Claude Max: {len(notas)} caracteres; "
-                    f"{coste} $ equivalentes de API. Empieza así: {notas[:600]}")
+        logger.info(
+            f"Investigación con Claude Max: {len(notas)} caracteres; "
+            f"{coste} $ equivalentes de API. Empieza así: {notas[:600]}"
+        )
         return informe_base + CABECERA + notas

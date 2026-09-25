@@ -13,7 +13,9 @@ from tests.conftest import MetaculusFalso, preguntas_ejemplo
 RAIZ = Path(__file__).resolve().parent.parent
 
 
-def _ejecutar(monkeypatch, llms, envio: bool, evento: str = "workflow_dispatch", modo="test_questions"):
+def _ejecutar(
+    monkeypatch, llms, envio: bool, evento: str = "workflow_dispatch", modo="test_questions"
+):
     monkeypatch.setenv("METACULUS_TOKEN", "token-de-prueba")
     monkeypatch.setenv("GITHUB_EVENT_NAME", evento)
     if envio:
@@ -51,6 +53,7 @@ def test_varias_pasadas_por_pregunta(llms, modelo):
     bot = main.construir_bot(params, publicar=False, llms=llms)
     bot.metaculus_client = MetaculusFalso([])
     import asyncio
+
     asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1]))
     # 1 investigación + N pasadas
     assert modelo.llamadas == 1 + params["pronostico"]["pasadas_por_pregunta"]
@@ -84,10 +87,15 @@ def test_sin_token_termina_limpio(capsys, llms, modelo):
 def test_sin_token_proceso_real_sale_con_0():
     """Como en GitHub Actions: se lanza main.py de verdad, sin secretos."""
     import os
-    env = {k: v for k, v in os.environ.items()
-           if k not in ("METACULUS_TOKEN", "ENVIO_REAL", "OPENROUTER_API_KEY")}
-    r = subprocess.run([sys.executable, "main.py"], cwd=RAIZ, env=env,
-                       capture_output=True, text=True, timeout=120)
+
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in ("METACULUS_TOKEN", "ENVIO_REAL", "OPENROUTER_API_KEY")
+    }
+    r = subprocess.run(
+        [sys.executable, "main.py"], cwd=RAIZ, env=env, capture_output=True, text=True, timeout=120
+    )
     assert r.returncode == 0, r.stderr
     assert "::notice::" in r.stdout
 
@@ -117,6 +125,7 @@ def test_puerta_intacta():
 
 def test_no_hay_claves_en_el_repo():
     import re
+
     patron = re.compile(r"(sk-[A-Za-z0-9]{20,}|sk-or-v1-[a-f0-9]{20,}|Token [a-f0-9]{30,})")
     for f in RAIZ.rglob("*"):
         if ".venv" in f.parts or ".git" in f.parts or not f.is_file() or f.suffix in (".pyc",):
@@ -141,6 +150,7 @@ def test_extremizar_configurable(llms):
     bot = main.construir_bot(params, publicar=False, llms=llms)
     bot.metaculus_client = MetaculusFalso([])
     import asyncio
+
     [r] = asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1]))
     assert 0.72 < r.prediction <= params["pronostico"]["prob_max"]
 

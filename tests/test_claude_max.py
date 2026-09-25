@@ -1,4 +1,5 @@
 """Investigación con agentes de Opus 5.5 vía Claude Max (Claude Code simulado: no gasta cupo)."""
+
 import asyncio
 import json
 
@@ -13,8 +14,7 @@ from tests.conftest import MetaculusFalso, preguntas_ejemplo
 class ClaudeFalso:
     """Hace de `claude -p`: apunta cómo se le llamó y devuelve lo que se le diga."""
 
-    def __init__(self, resultado="NOTAS DE OPUS", is_error=False, codigo=0, lento=0.0,
-                 salida=None):
+    def __init__(self, resultado="NOTAS DE OPUS", is_error=False, codigo=0, lento=0.0, salida=None):
         self.llamadas = []
         self.resultado, self.is_error, self.codigo = resultado, is_error, codigo
         self.lento, self.salida = lento, salida
@@ -25,8 +25,18 @@ class ClaudeFalso:
             await asyncio.wait_for(asyncio.sleep(self.lento), tope)
         if self.salida is not None:
             return self.codigo, self.salida, ""
-        return self.codigo, json.dumps({"type": "result", "is_error": self.is_error,
-                                        "result": self.resultado, "total_cost_usd": 0.8}), ""
+        return (
+            self.codigo,
+            json.dumps(
+                {
+                    "type": "result",
+                    "is_error": self.is_error,
+                    "result": self.resultado,
+                    "total_cost_usd": 0.8,
+                }
+            ),
+            "",
+        )
 
 
 def _ampliar(inv, clave="q1"):
@@ -61,7 +71,7 @@ def test_orden_segura_y_texto_largo_por_la_entrada(con_secreto, monkeypatch):
     args = llamada["args"]
     assert args[:2] == ["claude", "-p"] and "claude-opus-5-5" in args
     # sin poder tocar ficheros ni ejecutar órdenes
-    assert {"Bash", "Edit", "Write"} <= set(args[args.index("--disallowedTools"):])
+    assert {"Bash", "Edit", "Write"} <= set(args[args.index("--disallowedTools") :])
     # el texto de la pregunta va por la entrada, no en la orden (límite de longitud de Windows)
     assert "¿X?" in llamada["entrada"] and all("¿X?" not in a for a in args)
     # solo recibe su propio secreto, no el resto de claves
@@ -69,12 +79,15 @@ def test_orden_segura_y_texto_largo_por_la_entrada(con_secreto, monkeypatch):
     assert "METACULUS_TOKEN" not in llamada["env"] and "OPENROUTER_API_KEY" not in llamada["env"]
 
 
-@pytest.mark.parametrize("falso", [
-    ClaudeFalso(is_error=True, resultado="Error interno"),
-    ClaudeFalso(resultado="   "),
-    ClaudeFalso(codigo=1, salida=""),
-    ClaudeFalso(salida="esto no es JSON"),
-])
+@pytest.mark.parametrize(
+    "falso",
+    [
+        ClaudeFalso(is_error=True, resultado="Error interno"),
+        ClaudeFalso(resultado="   "),
+        ClaudeFalso(codigo=1, salida=""),
+        ClaudeFalso(salida="esto no es JSON"),
+    ],
+)
 def test_cualquier_fallo_devuelve_el_informe_base(con_secreto, falso):
     assert _ampliar(cm.InvestigadorClaudeMax({}, falso)) == "INFORME BASE"
 

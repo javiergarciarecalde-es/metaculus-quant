@@ -3,6 +3,7 @@
 Todo lo que decide cómo combinar varias pasadas del modelo vive aquí para poder
 probarlo sin llamar a ninguna API.
 """
+
 from __future__ import annotations
 
 import math
@@ -42,8 +43,9 @@ def extremizar(p: float, factor: float) -> float:
     return sigmoide(logit(p) * factor)
 
 
-def agregar_binaria(probs: list[float], factor_extremizar: float = 1.0,
-                    lo: float = PROB_MIN, hi: float = PROB_MAX) -> float:
+def agregar_binaria(
+    probs: list[float], factor_extremizar: float = 1.0, lo: float = PROB_MIN, hi: float = PROB_MAX
+) -> float:
     """Mediana de las pasadas -> extremizar con cuidado -> acotar."""
     validas = [float(p) for p in probs if p is not None and 0 <= p <= 1]
     if not validas:
@@ -51,8 +53,9 @@ def agregar_binaria(probs: list[float], factor_extremizar: float = 1.0,
     return acotar(extremizar(median(validas), factor_extremizar), lo, hi)
 
 
-def agregar_opciones(listas: list[dict[str, float]], opciones: list[str],
-                     minimo: float = MC_MIN) -> dict[str, float]:
+def agregar_opciones(
+    listas: list[dict[str, float]], opciones: list[str], minimo: float = MC_MIN
+) -> dict[str, float]:
     """Mediana por opción, suelo mínimo por opción y renormalizado a 1."""
     if not listas:
         raise ValueError("sin pronósticos de opciones")
@@ -136,7 +139,9 @@ def leer_percentiles(texto: str) -> dict[float, float] | None:
 def leer_opciones(texto: str, opciones: list[str]) -> dict[str, float] | None:
     res = {}
     for op in opciones:
-        pat = re.compile(r"(?:option[_ ]?)?" + re.escape(op) + r"\s*[:=]\s*([0-9]+(?:\.[0-9]+)?)\s*%?", re.I)
+        pat = re.compile(
+            r"(?:option[_ ]?)?" + re.escape(op) + r"\s*[:=]\s*([0-9]+(?:\.[0-9]+)?)\s*%?", re.I
+        )
         m = pat.findall(texto or "")
         if not m:
             return None

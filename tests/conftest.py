@@ -1,4 +1,5 @@
 """Piezas simuladas: un modelo falso (no llama a ninguna IA) y un Metaculus falso (no envía nada)."""
+
 import os
 import sys
 from pathlib import Path
@@ -67,14 +68,30 @@ class MetaculusFalso:
 
 def preguntas_ejemplo():
     return [
-        BinaryQuestion(question_text="¿Pasará X antes de 2027?", id_of_post=1,
-                       id_of_question=11, page_url="https://ejemplo/1"),
-        MultipleChoiceQuestion(question_text="¿Qué color ganará?", id_of_post=2,
-                               id_of_question=12, page_url="https://ejemplo/2",
-                               options=["Rojo", "Verde", "Azul"]),
-        NumericQuestion(question_text="¿Cuántos serán?", id_of_post=3, id_of_question=13,
-                        page_url="https://ejemplo/3", upper_bound=100, lower_bound=0,
-                        open_upper_bound=True, open_lower_bound=False, unit_of_measure="unidades"),
+        BinaryQuestion(
+            question_text="¿Pasará X antes de 2027?",
+            id_of_post=1,
+            id_of_question=11,
+            page_url="https://ejemplo/1",
+        ),
+        MultipleChoiceQuestion(
+            question_text="¿Qué color ganará?",
+            id_of_post=2,
+            id_of_question=12,
+            page_url="https://ejemplo/2",
+            options=["Rojo", "Verde", "Azul"],
+        ),
+        NumericQuestion(
+            question_text="¿Cuántos serán?",
+            id_of_post=3,
+            id_of_question=13,
+            page_url="https://ejemplo/3",
+            upper_bound=100,
+            lower_bound=0,
+            open_upper_bound=True,
+            open_lower_bound=False,
+            unit_of_measure="unidades",
+        ),
     ]
 
 
@@ -90,10 +107,19 @@ def llms(modelo):
 
 @pytest.fixture(autouse=True)
 def entorno_limpio(monkeypatch, tmp_path):
-    for v in ["METACULUS_TOKEN", "ENVIO_REAL", "OPENROUTER_API_KEY", "GITHUB_EVENT_NAME",
-              "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ASKNEWS_CLIENT_ID", "ASKNEWS_SECRET",
-              "CLAUDE_CODE_OAUTH_TOKEN"]:
+    for v in [
+        "METACULUS_TOKEN",
+        "ENVIO_REAL",
+        "OPENROUTER_API_KEY",
+        "GITHUB_EVENT_NAME",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "ASKNEWS_CLIENT_ID",
+        "ASKNEWS_SECRET",
+        "CLAUDE_CODE_OAUTH_TOKEN",
+    ]:
         monkeypatch.delenv(v, raising=False)
     import bot.registro as r
+
     monkeypatch.setattr(r, "CARPETA", tmp_path / "registro")
     yield

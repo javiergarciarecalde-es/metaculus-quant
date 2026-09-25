@@ -1,4 +1,5 @@
 """Registro de cada pronóstico (una línea JSON por pregunta) para medir la puerta después."""
+
 from __future__ import annotations
 
 import json
