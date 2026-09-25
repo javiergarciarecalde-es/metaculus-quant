@@ -27,6 +27,7 @@ from pathlib import Path
 
 import requests
 
+from . import params as ajustes
 from .config import RAIZ
 
 HISTORICO = RAIZ / "datos" / "registro_historico.jsonl"
@@ -58,9 +59,9 @@ def clave(fila: dict) -> tuple:
     return (fila.get("url"), fila.get("id_pregunta"))
 
 
-def juntar(historico: list[dict], nuevas: list[dict], ahora: datetime) -> list[dict]:
-    """Añade al histórico los pronósticos ENVIADOS de hace más de 24 h, sin repetir preguntas."""
-    limite = ahora - timedelta(hours=24)
+def juntar(historico: list[dict], nuevas: list[dict], ahora: datetime, horas: float) -> list[dict]:
+    """Añade al histórico los pronósticos ENVIADOS de hace más de `horas`, sin repetir preguntas."""
+    limite = ahora - timedelta(hours=horas)
     vistos = {clave(f) for f in historico}
     salida = list(historico)
     for f in sorted(nuevas, key=lambda f: f.get("cuando_utc", "")):
@@ -86,9 +87,9 @@ def id_post(fila: dict) -> int | None:
 # ------------------------------------------------------------------ Metaculus
 
 
-def pedir_post(pid: int, token: str | None) -> dict:
+def pedir_post(pid: int, token: str | None, espera: float) -> dict:
     cab = {"Authorization": f"Token {token}"} if token else {}
-    r = requests.get(API.format(pid), headers=cab, timeout=30)
+    r = requests.get(API.format(pid), headers=cab, timeout=espera)
     r.raise_for_status()
     return r.json()
 
@@ -295,9 +296,8 @@ def main(argv=None) -> int:
     ahora = datetime.now(UTC)
     historico = leer_jsonl(HISTORICO) if HISTORICO.exists() else []
     historico = [f for f in historico if f.get("url")]
-    filas = juntar(
-        historico, leer_jsonl(Path(args.descargas)) if Path(args.descargas).exists() else [], ahora
-    )
+    nuevas = leer_jsonl(Path(args.descargas)) if Path(args.descargas).exists() else []
+    filas = juntar(historico, nuevas, ahora, float(ajustes.p("marcador.horas_de_espera")))
     HISTORICO.parent.mkdir(parents=True, exist_ok=True)
     HISTORICO.write_text(
         "".join(json.dumps(f, ensure_ascii=False) + "\n" for f in filas), encoding="utf-8"
@@ -305,6 +305,8 @@ def main(argv=None) -> int:
 
     resueltas = json.loads(RESUELTAS.read_text(encoding="utf-8")) if RESUELTAS.exists() else {}
     token = (os.getenv("METACULUS_TOKEN") or "").strip() or None
+    espera = float(ajustes.p("red.tiempo_espera_segundos"))
+    pausa = float(ajustes.p("marcador.pausa_entre_preguntas_segundos"))
     fallos = 0
     for f in filas:
         k = str(clave(f))
@@ -314,13 +316,13 @@ def main(argv=None) -> int:
         if pid is None:
             continue
         try:
-            q = pregunta_del_post(pedir_post(pid, token), f.get("id_pregunta"))
+            q = pregunta_del_post(pedir_post(pid, token, espera), f.get("id_pregunta"))
             if q:
                 resueltas[k] = resumen_pregunta(q)
         except Exception as e:  # una pregunta que no carga no para el marcador
             fallos += 1
             print(f"::warning::No se pudo leer la pregunta {pid}: {e}"[:300])
-        time.sleep(0.5)  # sin prisas con la API de Metaculus
+        time.sleep(pausa)  # sin prisas con la API de Metaculus
     RESUELTAS.write_text(json.dumps(resueltas, ensure_ascii=False, indent=1), encoding="utf-8")
 
     m = calcular(filas, resueltas)

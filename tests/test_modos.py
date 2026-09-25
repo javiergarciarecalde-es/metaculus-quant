@@ -109,7 +109,16 @@ JSON_OK = (
 
 def _ampliar(director, buscador, tope=5):
     return asyncio.run(
-        inv.ampliar("INFORME BASE", "¿X?", "criterios", director, buscador, n=2, tope_segundos=tope)
+        inv.ampliar(
+            "INFORME BASE",
+            "¿X?",
+            "criterios",
+            director,
+            buscador,
+            n=2,
+            tope_segundos=tope,
+            max_caracteres=6000,
+        )
     )
 
 

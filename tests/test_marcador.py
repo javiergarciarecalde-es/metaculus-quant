@@ -33,7 +33,7 @@ def test_juntar_solo_enviados_de_hace_mas_de_un_dia_y_sin_repetir():
         _fila("https://m/questions/3", "binary", 0.3, [], enviado=False),  # ensayo
         _fila("https://m/questions/4", "binary", 0.4, []),
     ]
-    urls = [f["url"] for f in mc.juntar(viejas, nuevas, AHORA)]
+    urls = [f["url"] for f in mc.juntar(viejas, nuevas, AHORA, horas=24)]
     assert urls == ["https://m/questions/1", "https://m/questions/4"]
 
 
@@ -117,7 +117,7 @@ def test_programa_completo_con_metaculus_simulado(tmp_path, monkeypatch):
     monkeypatch.setattr(
         mc,
         "pedir_post",
-        lambda pid, token: (
+        lambda pid, token, espera: (
             pedidas.append(pid)
             or {
                 "question": {

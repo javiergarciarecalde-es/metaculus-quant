@@ -40,7 +40,12 @@ OTRAS_CLAVES = (
 
 
 def prompt_investigacion(
-    pregunta: str, criterios: str, letra_pequena: str, informe: str, agentes: int
+    pregunta: str,
+    criterios: str,
+    letra_pequena: str,
+    informe: str,
+    agentes: int,
+    max_caracteres: int,
 ) -> str:
     return (
         "You lead a small research team for a superforecaster. Do NOT forecast.\n"
@@ -54,7 +59,7 @@ def prompt_investigacion(
         "Return brief notes: each fact with its date and source URL. Mark anything uncertain.\n\n"
         f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\n"
         f"Fine print: {letra_pequena}\n\n"
-        f"Current research report:\n{informe[:6000]}"
+        f"Current research report:\n{informe[:max_caracteres]}"
     )
 
 
@@ -64,13 +69,13 @@ def orden(conf: dict) -> list[str]:
         "-p",
         ORDEN_CORTA,
         "--model",
-        str(conf.get("modelo", "claude-opus-5-5")),
+        str(conf["modelo"]),
         "--output-format",
         "json",
         "--max-turns",
-        str(int(conf.get("max_turnos", 30))),
+        str(int(conf["max_turnos"])),
         "--max-budget-usd",
-        str(conf.get("tope_usd_por_pregunta", 3)),
+        str(conf["tope_usd_por_pregunta"]),
         "--allowedTools",
         "WebSearch",
         "WebFetch",
@@ -128,8 +133,21 @@ async def _ejecutar_de_verdad(args: list[str], entrada: str, env: dict, tope: fl
 
 
 class InvestigadorClaudeMax:
-    def __init__(self, conf: dict, ejecutar=_ejecutar_de_verdad):
-        self.conf = conf or {}
+    """`conf` = `investigacion.claude_max` de config/params.yaml, completo (sin valores por
+    defecto).
+
+    `max_caracteres` = `investigacion.max_caracteres_informe`: cuánto del informe base se le pasa.
+    """
+
+    CAMPOS = ("modelo", "agentes", "max_turnos", "tope_segundos", "simultaneas")
+    CAMPOS += ("tope_usd_por_pregunta",)
+
+    def __init__(self, conf: dict, max_caracteres: int, ejecutar=_ejecutar_de_verdad):
+        faltan = [c for c in self.CAMPOS if c not in conf]
+        if faltan:
+            raise KeyError(f"a investigacion.claude_max le falta {faltan} en config/params.yaml")
+        self.conf = conf
+        self.max_caracteres = max_caracteres
         self._ejecutar = ejecutar
         self._turnos: dict = {}  # un semáforo por bucle (el bot abre uno por torneo)
         self.sin_cupo = False
@@ -138,7 +156,7 @@ class InvestigadorClaudeMax:
     def _turno(self) -> asyncio.Semaphore:
         bucle = asyncio.get_running_loop()
         if bucle not in self._turnos:
-            self._turnos = {bucle: asyncio.Semaphore(int(self.conf.get("simultaneas", 2)))}
+            self._turnos = {bucle: asyncio.Semaphore(int(self.conf["simultaneas"]))}
         return self._turnos[bucle]
 
     def disponible(self) -> bool:
@@ -154,9 +172,14 @@ class InvestigadorClaudeMax:
     ) -> str:
         if not self.disponible():
             return informe_base
-        tope = float(self.conf.get("tope_segundos", 420))
+        tope = float(self.conf["tope_segundos"])
         entrada = prompt_investigacion(
-            pregunta, criterios, letra_pequena, informe_base, int(self.conf.get("agentes", 3))
+            pregunta,
+            criterios,
+            letra_pequena,
+            informe_base,
+            int(self.conf["agentes"]),
+            self.max_caracteres,
         )
         try:
             async with self._turno():

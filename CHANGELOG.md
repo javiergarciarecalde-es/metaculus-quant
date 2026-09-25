@@ -6,6 +6,22 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-25 (tarde, orden 14 del mando: el código a las reglas comunes)
+
+Ningún valor cambia: son números que estaban escritos dentro del código y pasan al fichero de
+parámetros con el mismo valor. Lo demuestra la prueba `tests/test_configuracion_igual.py`.
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `modelos.intentos.*` | fijos en `main.py`: 1 (principal con respaldo), 2 (sin respaldo), 2 (respaldo), 1 (búsqueda) | los mismos, en el fichero | Reglas comunes §6: ningún número elegido escondido en el código |
+| `modelos.temperatura_lector` / `temperatura_resumidor` / `lector_validaciones` | fijos en `main.py`: 0,0 / 0,3 / 2 | los mismos | Idem (valores de la plantilla oficial) |
+| `modelos.proxy_metaculus.investigacion_esfuerzo` | faltaba (el código lo daba por vacío) | `null` (vacío) | Idem: sin valores por defecto |
+| `investigacion.busquedas_a_la_vez` / `max_caracteres_informe` | fijos en el código: 1 / 6.000 letras | los mismos | Idem |
+| `registro.max_caracteres_razonamiento` / `max_caracteres_error` | fijos: 600 / 300 letras | los mismos | Idem |
+| `marcador.horas_de_espera` / `pausa_entre_preguntas_segundos` | fijos: 24 h / 0,5 s | los mismos | Idem |
+| `red.tiempo_espera_segundos` | fijo: 30 s | el mismo | Idem |
+| Flujos de GitHub: versión de Python | 3.11 | 3.12 | Reglas comunes §6 (decisión del usuario del 25/09) |
+
 ## 2026-09-25
 
 | Parámetro | Antes | Después | Motivo |

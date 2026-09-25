@@ -10,14 +10,12 @@ import math
 import re
 from statistics import median
 
-# Límites para no dar nunca 0 % ni 100 % (con peer score logarítmico, un 0 % o 100 %
-# equivocado es catastrófico). Metaculus acepta 0.001-0.999; somos más prudentes.
-PROB_MIN = 0.02
-PROB_MAX = 0.98
-MC_MIN = 0.01  # mínimo por opción en preguntas de opciones
+# Los límites (nunca 0 % ni 100 %: con peer score logarítmico, un 0 % o 100 % equivocado es
+# catastrófico) y el mínimo por opción viven en config/params.yaml (`pronostico.prob_min`,
+# `pronostico.prob_max`, `pronostico.minimo_por_opcion`): aquí se reciben siempre de fuera.
 
 
-def acotar(p: float, lo: float = PROB_MIN, hi: float = PROB_MAX) -> float:
+def acotar(p: float, lo: float, hi: float) -> float:
     if p is None or math.isnan(p):
         raise ValueError("probabilidad inválida")
     return max(lo, min(hi, float(p)))
@@ -35,7 +33,7 @@ def extremizar(p: float, factor: float) -> float:
     """Extremiza en escala log-odds (factor 1.0 = sin cambio).
 
     Se aplica a la mediana de varias pasadas: la media de pronósticos independientes
-    tiende a quedarse demasiado cerca del 50 %. Factor por defecto moderado (ver params).
+    tiende a quedarse demasiado cerca del 50 %. El factor está en params (hoy 1.0: apagado).
     """
     if factor == 1.0:
         return p
@@ -43,9 +41,7 @@ def extremizar(p: float, factor: float) -> float:
     return sigmoide(logit(p) * factor)
 
 
-def agregar_binaria(
-    probs: list[float], factor_extremizar: float = 1.0, lo: float = PROB_MIN, hi: float = PROB_MAX
-) -> float:
+def agregar_binaria(probs: list[float], factor_extremizar: float, lo: float, hi: float) -> float:
     """Mediana de las pasadas -> extremizar con cuidado -> acotar."""
     validas = [float(p) for p in probs if p is not None and 0 <= p <= 1]
     if not validas:
@@ -54,7 +50,7 @@ def agregar_binaria(
 
 
 def agregar_opciones(
-    listas: list[dict[str, float]], opciones: list[str], minimo: float = MC_MIN
+    listas: list[dict[str, float]], opciones: list[str], minimo: float
 ) -> dict[str, float]:
     """Mediana por opción, suelo mínimo por opción y renormalizado a 1."""
     if not listas:
@@ -66,7 +62,7 @@ def agregar_opciones(
     return normalizar_opciones(res, minimo)
 
 
-def normalizar_opciones(probs: dict[str, float], minimo: float = MC_MIN) -> dict[str, float]:
+def normalizar_opciones(probs: dict[str, float], minimo: float) -> dict[str, float]:
     total = sum(max(v, 0.0) for v in probs.values())
     n = len(probs)
     if total <= 0:

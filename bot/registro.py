@@ -11,7 +11,7 @@ from .config import RAIZ
 CARPETA = RAIZ / "registro"
 
 
-def resumir(texto: str, n: int = 600) -> str:
+def resumir(texto: str, n: int) -> str:
     texto = " ".join((texto or "").split())
     return texto if len(texto) <= n else texto[: n - 1] + "…"
 

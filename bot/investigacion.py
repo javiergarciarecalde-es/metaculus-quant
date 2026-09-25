@@ -19,14 +19,17 @@ logger = logging.getLogger(__name__)
 CABECERA = "\n\n## Datos clave comprobados (añadido; puede contener errores)\n"
 
 
-def _prompt_director(pregunta: str, criterios: str, informe: str, n: int) -> str:
+def _prompt_director(
+    pregunta: str, criterios: str, informe: str, n: int, max_caracteres: int
+) -> str:
     return (
         "You direct research for a forecaster. Given the question, its resolution criteria and the "
         f"current research report, choose at most {n} KEY facts whose verification would most "
         "change the forecast. One of them MUST be: "
         "what the resolution source currently says/shows. "
         'Answer ONLY with JSON: [{"dato": "...", "busqueda": "search query"}]\n\n'
-        f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\nReport:\n{informe[:6000]}"
+        f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\n"
+        f"Report:\n{informe[:max_caracteres]}"
     )
 
 
@@ -56,12 +59,16 @@ async def ampliar(
     criterios: str,
     director,
     buscador,
-    n: int = 2,
-    tope_segundos: float = 240,
+    n: int,
+    tope_segundos: float,
+    max_caracteres: int,
 ) -> str:
     async def _todo() -> str:
         datos = leer_datos_clave(
-            await director.invoke(_prompt_director(pregunta, criterios, informe_base, n)), n
+            await director.invoke(
+                _prompt_director(pregunta, criterios, informe_base, n, max_caracteres)
+            ),
+            n,
         )
         if not datos:
             return informe_base

@@ -14,16 +14,18 @@ import sys
 import requests
 
 from bot import config as cfg
+from bot import params as ajustes
 
 URL_MODELOS = "https://openrouter.ai/api/v1/models"
 
 
 def nombres_openrouter(params: dict) -> list[str]:
     """Modelos del bloque «openrouter», sin el prefijo `openrouter/` ni sufijos como `:online`."""
-    m = params["modelos"]["openrouter"]
-    nombres = [m["investigacion"], m["lector"], m.get("director"), m.get("buscador")]
-    for x in m["pronostico"] + [m.get("un_modelo") or {}]:
-        nombres += [x.get("nombre"), x.get("respaldo")]
+    m = ajustes.p("modelos.openrouter", params)
+    nombres = [m["investigacion"], m["lector"], m["director"], m["buscador"]]
+    for x in [*m["pronostico"], m["un_modelo"]]:
+        puesto = cfg.puesto(x)
+        nombres += [puesto["nombre"], puesto["respaldo"]]
     limpios = [n.removeprefix("openrouter/").split(":")[0] for n in nombres if n]
     return list(dict.fromkeys(limpios))  # sin repetidos, en orden
 
@@ -35,7 +37,9 @@ def faltan(params: dict, disponibles: set[str]) -> list[str]:
 def main() -> int:
     params = cfg.cargar_params()
     try:
-        r = requests.get(URL_MODELOS, timeout=30)
+        r = requests.get(
+            URL_MODELOS, timeout=float(ajustes.p("red.tiempo_espera_segundos", params))
+        )
         r.raise_for_status()
         disponibles = {x["id"] for x in r.json()["data"]}
     except Exception as e:  # sin red no se bloquea el bot: solo se avisa

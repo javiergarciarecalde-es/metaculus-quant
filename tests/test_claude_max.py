@@ -39,6 +39,23 @@ class ClaudeFalso:
         )
 
 
+def _inv(ejecutar=None, **cambios):
+    """Investigador con los parámetros reales de config/params.yaml, retocados con `cambios`."""
+    params = cfg.cargar_params()
+    conf = {**params["investigacion"]["claude_max"], **cambios}
+    caracteres = params["investigacion"]["max_caracteres_informe"]
+    if ejecutar is None:
+        return cm.InvestigadorClaudeMax(conf, caracteres)
+    return cm.InvestigadorClaudeMax(conf, caracteres, ejecutar)
+
+
+def test_sin_un_parametro_falla_diciendo_cual():
+    conf = dict(cfg.cargar_params()["investigacion"]["claude_max"])
+    del conf["simultaneas"]
+    with pytest.raises(KeyError, match="simultaneas"):
+        cm.InvestigadorClaudeMax(conf, 6000)
+
+
 def _ampliar(inv, clave="q1"):
     return asyncio.run(inv.ampliar("INFORME BASE", "¿X?", "criterios", "letra", clave=clave))
 
@@ -50,13 +67,13 @@ def con_secreto(monkeypatch):
 
 def test_sin_secreto_no_llama_y_deja_el_informe():
     falso = ClaudeFalso()
-    assert _ampliar(cm.InvestigadorClaudeMax({}, falso)) == "INFORME BASE"
+    assert _ampliar(_inv(falso)) == "INFORME BASE"
     assert falso.llamadas == []
 
 
 def test_anade_al_final_y_apunta_el_coste(con_secreto):
     falso = ClaudeFalso()
-    inv = cm.InvestigadorClaudeMax({"agentes": 3}, falso)
+    inv = _inv(falso, agentes=3)
     out = _ampliar(inv)
     assert out == "INFORME BASE" + cm.CABECERA + "NOTAS DE OPUS"
     assert inv.costes["q1"] == 0.8
@@ -66,7 +83,7 @@ def test_orden_segura_y_texto_largo_por_la_entrada(con_secreto, monkeypatch):
     monkeypatch.setenv("METACULUS_TOKEN", "no-debe-pasar")
     monkeypatch.setenv("OPENROUTER_API_KEY", "tampoco")
     falso = ClaudeFalso()
-    _ampliar(cm.InvestigadorClaudeMax({"modelo": "claude-opus-5-5"}, falso))
+    _ampliar(_inv(falso, modelo="claude-opus-5-5"))
     [llamada] = falso.llamadas
     args = llamada["args"]
     assert args[:2] == ["claude", "-p"] and "claude-opus-5-5" in args
@@ -89,17 +106,17 @@ def test_orden_segura_y_texto_largo_por_la_entrada(con_secreto, monkeypatch):
     ],
 )
 def test_cualquier_fallo_devuelve_el_informe_base(con_secreto, falso):
-    assert _ampliar(cm.InvestigadorClaudeMax({}, falso)) == "INFORME BASE"
+    assert _ampliar(_inv(falso)) == "INFORME BASE"
 
 
 def test_sin_tiempo_devuelve_el_informe_base(con_secreto):
     falso = ClaudeFalso(lento=1)
-    assert _ampliar(cm.InvestigadorClaudeMax({"tope_segundos": 0.01}, falso)) == "INFORME BASE"
+    assert _ampliar(_inv(falso, tope_segundos=0.01)) == "INFORME BASE"
 
 
 def test_cupo_agotado_no_vuelve_a_llamar(con_secreto):
     falso = ClaudeFalso(is_error=True, resultado="Claude AI usage limit reached|1759000000")
-    inv = cm.InvestigadorClaudeMax({}, falso)
+    inv = _inv(falso)
     assert _ampliar(inv) == "INFORME BASE" and inv.sin_cupo
     assert _ampliar(inv, "q2") == "INFORME BASE"
     assert len(falso.llamadas) == 1
@@ -119,4 +136,4 @@ def test_integrado_en_el_bot(con_secreto, llms, modelo):
 
 def test_sin_programa_claude_se_sigue(con_secreto, monkeypatch):
     monkeypatch.setattr(cm.shutil, "which", lambda _: None)
-    assert _ampliar(cm.InvestigadorClaudeMax({})) == "INFORME BASE"
+    assert _ampliar(_inv()) == "INFORME BASE"
