@@ -105,6 +105,7 @@ investigacion:
   # Estos dos estaban fijos en el código hasta el 25/09/2026 (orden 14); mismos valores.
   busquedas_a_la_vez: 1          # búsquedas de noticias a la vez, en la plantilla oficial también 1
   max_caracteres_informe: 6000   # letras del informe de noticias que se pasan al director y a Claude
+  max_enlaces_resolucion: 5      # enlaces de las condiciones de resolución que se dan a la búsqueda «para consultar primero» (25/09/2026)
   claude_max:
     modelo: "claude-opus-5-5"
     agentes: 3                   # investigadores en paralelo por pregunta
@@ -112,6 +113,7 @@ investigacion:
     tope_segundos: 300           # por pregunta; si se pasa, se sigue sin ella
     simultaneas: 3               # preguntas investigadas a la vez
     tope_usd_por_pregunta: 3     # freno de Claude Code (en $ equivalentes de API)
+    minutos_minimos_antes_del_cierre: 30  # si la pregunta cierra antes, se salta esta investigación (25/09/2026)
 
 # --- Tiempos (el flujo de GitHub corta a los 60 min; la investigación con Claude Max suma hasta 5) ---
 tiempos:

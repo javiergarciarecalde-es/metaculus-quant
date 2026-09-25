@@ -6,6 +6,21 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-25 (noche, mejoras A, B y C: decisión del usuario, antes de que abra el torneo)
+
+Motivo: estudio de bots rivales (`docs/ESTUDIO_BOTS.md`). Cambian los textos que reciben los modelos
+(C), el orden de las preguntas (B) y lo que se guarda (A). Los límites, modelos y pasadas no cambian.
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `investigacion.max_enlaces_resolucion` | no existía | 5 | C: enlaces de las condiciones de resolución, «consultar primero» |
+| `investigacion.claude_max.minutos_minimos_antes_del_cierre` | no existía | 30 min | B: sin investigación de Claude si la pregunta cierra antes |
+| Orden de las preguntas | el que da Metaculus | primero las que cierran antes | B |
+| Texto de la búsqueda de noticias | sin enlaces | con enlaces de resolución y «fecha y volumen al citar un mercado» | C (4a, 4b) |
+| Texto de Claude | 3 ángulos | «verificar primero» 2-3 datos clave, cita literal de la fuente, fechas | C (5) |
+| Textos de los 3 pronosticadores | — | + 3 reglas de lectura (mercados con poco volumen, escaleras de tramos, «RESUELTO») | C (4c) |
+| Registro | razonamiento recortado | investigación entera y su estado, criterios, cierre, fecha, razonamiento de cada modelo | A |
+
 ## 2026-09-25 (tarde, orden 14 del mando: el código a las reglas comunes)
 
 Ningún valor cambia: son números que estaban escritos dentro del código y pasan al fichero de

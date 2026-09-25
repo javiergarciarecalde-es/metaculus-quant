@@ -18,6 +18,39 @@ logger = logging.getLogger(__name__)
 
 CABECERA = "\n\n## Datos clave comprobados (añadido; puede contener errores)\n"
 
+_ENLACE = re.compile(r"https?://[^\s<>\"'\)\]]+")
+
+# Reglas para quien CITA mercados en la investigación (mejora 4b, 25/09/2026, de nostreambot)
+REGLA_CITAR_MERCADOS = (
+    "If you cite a prediction-market price (Polymarket, Kalshi, Manifold, etc.), give the date "
+    "you saw it and its trading volume or liquidity."
+)
+
+
+def enlaces_de(*textos: str, maximo: int) -> list[str]:
+    """Enlaces de las condiciones de resolución y la letra pequeña, sin repetir, en orden.
+
+    Mejora 4a (25/09/2026): se dan a la búsqueda y a Claude con «consulta estos primero», porque
+    los peores fallos de los bots vienen de leer mal cómo se resuelve la pregunta.
+    """
+    vistos: list[str] = []
+    for texto in textos:
+        for enlace in _ENLACE.findall(texto or ""):
+            enlace = enlace.rstrip(".,;:")
+            if enlace not in vistos:
+                vistos.append(enlace)
+    return vistos[:maximo]
+
+
+def bloque_enlaces(enlaces: list[str]) -> str:
+    if not enlaces:
+        return ""
+    lista = "\n".join(f"- {e}" for e in enlaces)
+    return (
+        "The resolution criteria cite these sources. Consult them FIRST and report what they "
+        f"currently say (with dates):\n{lista}\n"
+    )
+
 
 def _prompt_director(
     pregunta: str, criterios: str, informe: str, n: int, max_caracteres: int

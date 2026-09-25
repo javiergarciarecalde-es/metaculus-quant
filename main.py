@@ -60,6 +60,15 @@ dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
 logging.getLogger("LiteLLM").setLevel(logging.WARNING)
 
+# Reglas de lectura para los 3 modelos (25/09/2026, decisión del usuario; mejora 4c de
+# docs/ESTUDIO_BOTS.md, de nostreambot y GreeneiBot2). Van en todos los prompts de pronóstico.
+REGLAS_LECTURA = (
+    "How to read the research: a prediction-market price with low volume or liquidity is weak "
+    "evidence, do not just copy it; a ladder of price/date brackets must be read as a whole "
+    "distribution, not bracket by bracket; a market or item marked RESOLVED is an outcome, not a "
+    "forecast."
+)
+
 
 class QuantBot(ForecastBot):
     """Bot de metaculus-quant. Misma estructura que SummerTemplateBot2026."""
@@ -89,6 +98,8 @@ class QuantBot(ForecastBot):
         self._puestos = list(zip(self._modelos, respaldos, strict=True))
         self._pasadas: dict[tuple, int] = {}  # cuántas pasadas lleva cada pregunta
         self._miembros: dict[tuple, list[dict]] = {}  # pronósticos individuales por pregunta
+        # investigación de cada pregunta, entera y con su estado (mejora 2: registro completo)
+        self._investigacion: dict[tuple, dict] = {}
         self._tope_pasada = float(ajustes.p("tiempos.tope_pasada_segundos", params))
         self._tope_busqueda = float(ajustes.p("tiempos.tope_busqueda_segundos", params))
         minutos = float(ajustes.p("tiempos.dejar_de_empezar_tras_minutos", params))
@@ -164,21 +175,64 @@ class QuantBot(ForecastBot):
         base = super()._llm_config_defaults()
         return {**base, "director": base["default"], "buscador": base["researcher"]}
 
-    def _anotar_miembro(self, question: MetaculusQuestion, modelo: str, valor) -> None:
-        self._miembros.setdefault(_clave(question), []).append({"modelo": modelo, "valor": valor})
+    def _anotar_miembro(
+        self, question: MetaculusQuestion, modelo: str, valor, texto: str = ""
+    ) -> None:
+        # «modelo» es el que contestó de verdad (el principal o su respaldo)
+        self._miembros.setdefault(_clave(question), []).append(
+            {"modelo": modelo, "valor": valor, "razonamiento": texto}
+        )
 
     ##################################### INVESTIGACIÓN #####################################
 
+    def _enlaces(self, question: MetaculusQuestion) -> list[str]:
+        return inv.enlaces_de(
+            question.resolution_criteria or "",
+            question.fine_print or "",
+            maximo=int(ajustes.p("investigacion.max_enlaces_resolucion", self.params)),
+        )
+
+    def _minutos_para_cerrar(self, question: MetaculusQuestion) -> float | None:
+        cierre = getattr(question, "close_time", None)
+        if cierre is None:
+            return None
+        if cierre.tzinfo is None:
+            cierre = cierre.replace(tzinfo=UTC)
+        return (cierre - datetime.now(UTC)).total_seconds() / 60
+
     async def run_research(self, question: MetaculusQuestion) -> str:
-        research = await self._investigacion_base(question)
+        base = await self._investigacion_base(question)
+        research = base
+        k = _clave(question)
+        datos = self._investigacion.setdefault(k, {})
+        datos.update({"base": base, "claude": "", "claude_estado": "no_usada"})
         if ajustes.p("investigacion.modo", self.params) == "claude_max":
-            # fuera del turno de preguntas: puede tardar minutos y va con su propio límite
-            research = await self._claude_max.ampliar(
-                research,
-                question.question_text,
-                question.resolution_criteria or "",
-                question.fine_print or "",
-                clave=question.page_url,
+            minimo = float(
+                ajustes.p("investigacion.claude_max.minutos_minimos_antes_del_cierre", self.params)
+            )
+            quedan = self._minutos_para_cerrar(question)
+            if quedan is not None and quedan < minimo:
+                # mejora 1b: con poco margen, la investigación lenta pondría en riesgo la pregunta
+                datos["claude_estado"] = "saltada_poco_tiempo"
+                logger.warning(
+                    f"{question.page_url}: cierra en {quedan:.0f} min; sin investigación de Claude"
+                )
+            else:
+                # fuera del turno de preguntas: puede tardar minutos y va con su propio límite
+                research = await self._claude_max.ampliar(
+                    base,
+                    question.question_text,
+                    question.resolution_criteria or "",
+                    question.fine_print or "",
+                    clave=str(k),
+                    enlaces=self._enlaces(question),
+                )
+                datos["claude_estado"] = self._claude_max.estados.pop(str(k), "desconocido")
+                if research != base:
+                    datos["claude"] = research[len(base) :]
+        if datos["claude_estado"] not in ("ok", "no_usada", "sin_secreto"):
+            logger.warning(
+                f"{question.page_url}: investigación de Claude -> {datos['claude_estado']}"
             )
         return research
 
@@ -204,8 +258,12 @@ class QuantBot(ForecastBot):
                 {question.resolution_criteria}
 
                 {question.fine_print}
+
+                {inv.bloque_enlaces(self._enlaces(question))}
+                {inv.REGLA_CITAR_MERCADOS}
                 """  # noqa: E501 (texto para el modelo: no se parte)
             )
+            estado = "ok"
             try:
                 if cfg.hay("ASKNEWS_CLIENT_ID") and cfg.hay("ASKNEWS_SECRET"):
                     # AskNews (noticias): lo usa como fuente principal nostreambot
@@ -220,6 +278,10 @@ class QuantBot(ForecastBot):
             except Exception as e:  # sin investigación (o sin tiempo) se sigue pronosticando
                 logger.warning(f"Investigación fallida en {question.page_url}: {e!r}")
                 research = ""
+                estado = "tiempo" if isinstance(e, TimeoutError) else "fallo"
+            if estado == "ok" and not (research or "").strip():
+                estado = "vacia"
+            self._investigacion.setdefault(_clave(question), {})["base_estado"] = estado
         # La ampliada va FUERA del semáforo: las de varias preguntas no hacen cola entre sí.
         if ajustes.p("investigacion.modo", self.params) == "ampliada":
             research = await inv.ampliar(
@@ -271,6 +333,8 @@ class QuantBot(ForecastBot):
             Good forecasters put extra weight on the status quo since the world changes slowly,
             and they do not hedge towards 50% when the evidence is clear.
 
+            {REGLAS_LECTURA}
+
             The last thing you write is your final answer as: "Probability: ZZ%", 0-100
             """  # noqa: E501 (texto para el modelo: no se parte)
         )
@@ -285,7 +349,7 @@ class QuantBot(ForecastBot):
             )
             p = pred.prediction_in_decimal
         p = max(0.001, min(0.999, p))  # hecho, no elección: lo que Metaculus acepta (0,1-99,9 %)
-        self._anotar_miembro(question, modelo, round(p, 4))
+        self._anotar_miembro(question, modelo, round(p, 4), texto)
         logger.info(f"{question.page_url} [{modelo}] -> {p:.3f}")
         return ReasonedPrediction(prediction_value=p, reasoning=f"[{modelo}]\n{texto}")
 
@@ -324,6 +388,8 @@ class QuantBot(ForecastBot):
             Good forecasters put extra weight on the status quo, and leave some moderate
             probability on most options to account for unexpected outcomes.
 
+            {REGLAS_LECTURA}
+
             The last thing you write is your final probabilities (in %) for the N options in this order {question.options} as:
             Option_A: Probability_A
             Option_B: Probability_B
@@ -349,7 +415,7 @@ class QuantBot(ForecastBot):
         probs = ag.normalizar_opciones(
             {op: leidas.get(op, 0.0) for op in question.options}, minimo=0.0
         )
-        self._anotar_miembro(question, modelo, {k: round(v, 4) for k, v in probs.items()})
+        self._anotar_miembro(question, modelo, {k: round(v, 4) for k, v in probs.items()}, texto)
         return ReasonedPrediction(
             prediction_value=_a_lista(probs), reasoning=f"[{modelo}]\n{texto}"
         )
@@ -398,6 +464,8 @@ class QuantBot(ForecastBot):
 
             Good forecasters are humble and set wide 90/10 intervals to account for unknown unknowns.
 
+            {REGLAS_LECTURA}
+
             The last thing you write is your final answer as:
             "
             Percentile 10: XX (lowest number value)
@@ -426,7 +494,7 @@ class QuantBot(ForecastBot):
                 num_validation_samples=self._structure_output_validation_samples,
             )
         pred = NumericDistribution.from_question(percentiles, question)
-        self._anotar_miembro(question, modelo, {p.percentile: p.value for p in percentiles})
+        self._anotar_miembro(question, modelo, {p.percentile: p.value for p in percentiles}, texto)
         return ReasonedPrediction(prediction_value=pred, reasoning=f"[{modelo}]\n{texto}")
 
     ##################################### FECHAS #####################################
@@ -653,9 +721,15 @@ def registrar(informes, torneo, publicado: bool, bot: QuantBot | None = None) ->
                 "investigacion_modo": ajustes.p("investigacion.modo", bot.params) if bot else None,
                 "miembros": bot._miembros.pop(_clave(q), []) if bot else [],
                 # lo que habría costado por API la investigación con Claude Max (mide el cupo usado)
-                "claude_max_usd_equivalente": bot._claude_max.costes.pop(q.page_url, None)
+                "claude_max_usd_equivalente": bot._claude_max.costes.pop(str(_clave(q)), None)
                 if bot
                 else None,
+                # registro completo (mejora 2, 25/09/2026): lo necesario para comparar después
+                "criterios": q.resolution_criteria,
+                "letra_pequena": q.fine_print,
+                "cierre_utc": str(getattr(q, "close_time", None)),
+                "fecha_para_modelos": datetime.now(UTC).strftime("%Y-%m-%d"),
+                "investigacion": bot._investigacion.pop(_clave(q), {}) if bot else {},
             }
         )
     return ok
@@ -722,6 +796,7 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
             preguntas = preguntas[: int(ajustes.p("pronostico.max_preguntas_ensayo", params))]
         if modo == "test_questions":
             bot.skip_previously_forecasted_questions = False
+        preguntas = _primero_lo_que_cierra_antes(preguntas)
         bot._torneo_actual, bot._publicado = torneo, envio
         informes = asyncio.run(bot.forecast_questions(preguntas, return_exceptions=True))
         bot._torneo_actual = None
@@ -743,6 +818,20 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
             f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba."
         )
     return 0
+
+
+def _primero_lo_que_cierra_antes(preguntas: list) -> list:
+    """Mejora 1b (25/09/2026): si no da tiempo a todas, que se pierdan las que cierran más tarde
+    (la siguiente ejecución, 20 min después, aún llega). Sin hora de cierre, al final."""
+    lejos = datetime.max.replace(tzinfo=UTC)
+
+    def cierre(q):
+        c = getattr(q, "close_time", None)
+        if c is None:
+            return lejos
+        return c if c.tzinfo else c.replace(tzinfo=UTC)
+
+    return sorted(preguntas, key=cierre)
 
 
 def _es_falta_de_tiempo(error: BaseException) -> bool:

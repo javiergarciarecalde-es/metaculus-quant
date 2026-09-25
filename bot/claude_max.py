@@ -22,6 +22,8 @@ import os
 import shutil
 import tempfile
 
+from bot.investigacion import REGLA_CITAR_MERCADOS, bloque_enlaces
+
 logger = logging.getLogger(__name__)
 
 CABECERA = "\n\n## Investigación con agentes (Claude Opus 5.5; añadido; puede contener errores)\n"
@@ -46,16 +48,27 @@ def prompt_investigacion(
     informe: str,
     agentes: int,
     max_caracteres: int,
+    enlaces: list[str],
 ) -> str:
+    # 25/09/2026 (decisión del usuario, mejora 5 de docs/ESTUDIO_BOTS.md): «verificar primero».
+    # Sin pedir pronóstico: Opus también es uno de los 3 que pronostican y su opinión no debe
+    # colarse en el informe (la mediana contaría dos veces la misma voz).
     return (
-        "You lead a small research team for a superforecaster. Do NOT forecast.\n"
+        "You lead a small research team for a superforecaster. Do NOT forecast and do NOT give "
+        "probabilities.\n"
         f"Launch up to {agentes} research subagents IN PARALLEL (Agent tool), each on a different "
-        "angle, using web search and by reading the pages themselves:\n"
-        "1. What the resolution source currently says/shows, and how close the question is to "
-        "resolving (dates, exact figures).\n"
-        "2. The latest news that could change the outcome before the resolution date, with dates.\n"
-        "3. Base rates / historical frequency of similar events, and any scheduled events.\n"
-        "Also check the report below for facts that look wrong or outdated.\n"
+        "angle, using web search and by reading the original pages themselves:\n"
+        "1. VERIFY FIRST: pick the 2-3 claims in the report below that the forecast depends on "
+        "most, and check each one in an original/primary source. Say if it is confirmed, wrong or "
+        "outdated.\n"
+        "2. What the resolution source currently says/shows: quote the exact sentence or figure "
+        "that decides the question, and how close it is to resolving (dates, exact figures).\n"
+        "3. The latest news that could change the outcome before the resolution date, base rates "
+        "of similar events, and any scheduled events.\n"
+        f"{bloque_enlaces(enlaces)}"
+        "Date every fact. Flag anything that happened BEFORE the question opened (it only counts "
+        "if the resolution criteria say so). "
+        f"{REGLA_CITAR_MERCADOS}\n"
         "Return brief notes: each fact with its date and source URL. Mark anything uncertain.\n\n"
         f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\n"
         f"Fine print: {letra_pequena}\n\n"
@@ -152,6 +165,8 @@ class InvestigadorClaudeMax:
         self._turnos: dict = {}  # un semáforo por bucle (el bot abre uno por torneo)
         self.sin_cupo = False
         self.costes: dict[str, float | None] = {}  # por pregunta: lo que costaría en $ por API
+        # por pregunta: ok | sin_secreto | sin_cupo | tiempo | fallo (mejora 2: saber si falló)
+        self.estados: dict[str, str] = {}
 
     def _turno(self) -> asyncio.Semaphore:
         bucle = asyncio.get_running_loop()
@@ -169,8 +184,10 @@ class InvestigadorClaudeMax:
         criterios: str,
         letra_pequena: str = "",
         clave: str = "",
+        enlaces: list[str] | None = None,
     ) -> str:
         if not self.disponible():
+            self.estados[clave] = "sin_cupo" if self.sin_cupo else "sin_secreto"
             return informe_base
         tope = float(self.conf["tope_segundos"])
         entrada = prompt_investigacion(
@@ -180,21 +197,26 @@ class InvestigadorClaudeMax:
             informe_base,
             int(self.conf["agentes"]),
             self.max_caracteres,
+            enlaces or [],
         )
         try:
             async with self._turno():
                 if self.sin_cupo:
+                    self.estados[clave] = "sin_cupo"
                     return informe_base
                 env = {k: v for k, v in os.environ.items() if k not in OTRAS_CLAVES}
                 codigo, salida, error = await self._ejecutar(orden(self.conf), entrada, env, tope)
             notas, coste = comprobar_salida(codigo, salida, error)
         except Exception as e:  # incluye tiempo agotado: se sigue con el informe base
+            self.estados[clave] = "tiempo" if isinstance(e, TimeoutError) else "fallo"
             if any(p in str(e).lower() for p in PALABRAS_CUPO):
                 self.sin_cupo = True
+                self.estados[clave] = "sin_cupo"
                 logger.warning("Cupo de Claude Max agotado: se sigue sin esta investigación.")
             logger.warning(f"Investigación con Claude Max descartada: {e!r}"[:500])
             return informe_base
         self.costes[clave] = coste
+        self.estados[clave] = "ok"
         logger.info(
             f"Investigación con Claude Max: {len(notas)} caracteres; "
             f"{coste} $ equivalentes de API. Empieza así: {notas[:600]}"

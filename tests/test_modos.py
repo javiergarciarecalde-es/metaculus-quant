@@ -86,7 +86,9 @@ def test_registro_guarda_cada_miembro(monkeypatch, llms, tmp_path):
         assert len(linea["miembros"]) == 3 and linea["modo"] == "tres_empresas"
         assert linea["investigacion_modo"] == "claude_max"
         assert linea["claude_max_usd_equivalente"] is None  # sin secreto no se usa
-    assert lineas[0]["miembros"][0] == {"modelo": "falso/modelo", "valor": 0.72}
+    primero = lineas[0]["miembros"][0]
+    assert (primero["modelo"], primero["valor"]) == ("falso/modelo", 0.72)
+    assert primero["razonamiento"]  # el texto completo del modelo (registro completo, 25/09)
 
 
 # ---------------------------- investigación ampliada ----------------------------
