@@ -32,10 +32,9 @@ torneos:
 # Tres modelos de tres empresas, una pasada cada uno (lo que usa nostreambot, ~10.º de 173
 # en primavera 2026). "esfuerzo" = cuánto «piensa» el modelo antes de responder: el informe
 # de primavera dice que es de lo que más pesa en el puesto final.
-# Comprobados en la lista pública de OpenRouter el 25/09/2026 (sesión 2): gpt-5.6-sol,
-# claude-opus-4.8, gemini-3.5-flash, gpt-4o-mini. gpt-6-sol y claude-opus-5.5 los usa
-# nostreambot desde el 22/09/2026, pero NO los hemos comprobado nosotros: en cada ejecución
-# `python -m bot.modelos` avisa si alguno no existe (y el respaldo responde en su lugar).
+# Todos comprobados en la lista pública de OpenRouter el 25/09/2026 (sesión 2, en vivo, también
+# gpt-6-sol y claude-opus-5.5). En cada ejecución `python -m bot.modelos` avisa si alguno
+# desaparece (y el respaldo responde en su lugar).
 modelos:
   openrouter:
     # modo "tres_empresas": un puesto por empresa. "respaldo" = modelo que responde si el
