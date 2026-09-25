@@ -1,7 +1,7 @@
 # ESTADO (siempre «ahora»)
 
-**Actualizado:** 25/09/2026 por la tarde (sesión 2 en Windows, tras la puesta en marcha con Cowork;
-la limpieza de reglas, orden 12e; y el código a las reglas comunes, orden 14).
+**Actualizado:** 25/09/2026 por la noche (sesión 2 en Windows: estudio de bots rivales, marcador,
+comparador y mejoras A, B y C; antes, órdenes 12e y 14 del mando).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
 automática que hace git después de guardar).
 
@@ -17,7 +17,7 @@ nada a Metaculus.
 | Repositorio | **público** |
 | Secretos en GitHub (claves guardadas) | `METACULUS_TOKEN` y `CLAUDE_CODE_OAUTH_TOKEN` puestos. **Falta `OPENROUTER_API_KEY`** (la clave de créditos, aún no ha llegado) |
 | Interruptor `ENVIO_REAL` | no existe todavía → no envía nada |
-| Pruebas automáticas (programa que comprueba el bot solo) | **82 de 82 en verde** (25/09, tarde, tras la orden 14) |
+| Pruebas automáticas (programa que comprueba el bot solo) | **98 de 98 en verde** y ruff (revisor de estilo) sin quejas (25/09, noche) |
 
 ## Primera prueba real (25/09, 09:27, sin enviar nada)
 | Qué | Resultado |
@@ -84,13 +84,19 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
 - La búsqueda en internet del modelo (`:online`): necesita la clave de créditos.
 - Costes: estimaciones hasta la primera prueba con clave.
 
-## Trabajo a medias (25/09, parado para no agotar el cupo de 5 h)
-- **Marcador semanal: hecho** (`bot/marcador.py`, flujo «Marcador» cada lunes, resultado en `docs/MARCADOR.md`).
-- **Estudio de bots rivales, datos de los otros proyectos y viabilidad del backtest:** parado a medias
-  (7 de 13 agentes terminados; sus resultados están guardados y se reanuda en ESTA misma sesión con
-  `resumeFromRunId: wf_a48ee14e-a30`).
-- Ojo: la app dice que el plan de Claude del usuario es **Pro**, no Max: el cupo que gastaría la
-  investigación con Claude en el bot es menor de lo supuesto. Revisar antes de encender el envío real.
+## Mejoras del 25/09 por la noche (decididas por ti): hechas
+| Pieza | Qué hace | ¿Cambia los pronósticos? |
+|---|---|---|
+| Estudio de bots rivales | 25 agentes; informe en `docs/ESTUDIO_BOTS.md` (mejoras, datos de tus proyectos, backtest) | — |
+| Marcador semanal | cada lunes cruza pronósticos y resultados → `docs/MARCADOR.md` | No |
+| Comparador | en el marcador: qué forma de juntar a los 3 modelos habría ido mejor (media, sin Gemini, límites 1-99 %…). Gratis. Solo vale para decidir con ≥150 preguntas resueltas y ganando en las dos mitades | No |
+| A. Registro completo | guarda la investigación entera y si funcionó, y el razonamiento de cada modelo | No |
+| B. Orden y tiempo | primero las preguntas que cierran antes; sin investigación de Claude si cierra en <30 min | Apenas |
+| C. Textos mejores | enlaces de las condiciones «para consultar primero», Claude «verifica primero», 3 reglas de lectura para los modelos | **Sí** (anotado en CHANGELOG) |
+- Backtest con preguntas antiguas: **descartado** (no podemos ver sus resoluciones, la búsqueda
+  «haría trampa» sin querer y costaría ~90 $). El comparador lo sustituye, gratis.
+- Datos de tus otros proyectos: ninguno reutilizable tal cual; se revisa en 2 semanas.
+- Plan de Claude: dices que tienes **Max**; la app de escritorio mostraba «Pro» (quizá otra cuenta).
 
 ## Limpieza de reglas (25/09, orden 12e del mando): hecha
 - `CLAUDE.md` lleva solo lo propio; lo común está en las reglas comunes (se cargan solas). Ninguna
@@ -107,7 +113,7 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
   escondido); tabla de límites de tamaño de los documentos en CLAUDE.md con su prueba.
 - **Qué puedes comprobar tú:** en GitHub → pestaña «Actions» → flujo «Pruebas», la última ejecución
   en verde con dos trabajos, `pytest` y `ruff`.
-- HALLAZGOS va por ~397 líneas: al pasar de ~400, lo viejo se archiva en `docs/archivo/`.
+- HALLAZGOS: lo del 24/09 ya está archivado en `docs/archivo/` (25/09 noche).
 
 ## Para el mando
 - A las comunes §7 les falta decir qué hacer con un documento propio de un proyecto como
@@ -119,3 +125,5 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
   encendido del envío real con tu «sí».
 - La sesión de la nube debe descargar el repositorio de nuevo antes de trabajar (historial reescrito).
 - Tras la primera semana con envío real: ¿el reloj lanza cada 20 min? ¿Cuánto cupo gasta Max?
+- Semana del 28/09 (docs/ESTUDIO_BOTS.md §4): alarma por correo si hay preguntas abiertas sin
+  pronóstico (probada con fallos simulados) y curva numérica suave «en sombra» (se guarda, no se envía).

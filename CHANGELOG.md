@@ -20,6 +20,7 @@ Motivo: estudio de bots rivales (`docs/ESTUDIO_BOTS.md`). Cambian los textos que
 | Texto de Claude | 3 ángulos | «verificar primero» 2-3 datos clave, cita literal de la fuente, fechas | C (5) |
 | Textos de los 3 pronosticadores | — | + 3 reglas de lectura (mercados con poco volumen, escaleras de tramos, «RESUELTO») | C (4c) |
 | Registro | razonamiento recortado | investigación entera y su estado, criterios, cierre, fecha, razonamiento de cada modelo | A |
+| `marcador.comparador.*` | no existía | 3 variantes decididas de antemano (media, sin google, límites 1-99 %), mínimo 150 preguntas, límites alternativos 0,01-0,99 | Comparador de formas de juntar (decisión del usuario); no cambia lo que se envía |
 
 ## 2026-09-25 (tarde, orden 14 del mando: el código a las reglas comunes)
 

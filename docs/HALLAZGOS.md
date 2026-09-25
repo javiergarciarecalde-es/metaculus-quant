@@ -334,3 +334,16 @@ un escéptico por cada mejora candidata). Lo esencial:
 - Backtest con preguntas antiguas: **no** (no podemos leer sus resoluciones; la búsqueda filtra la
   respuesta en el 71-81 % de casos; ~90 $). Sí: comparar gratis combinaciones de los 3 miembros ya
   registrados; hacen falta ~125 preguntas pareadas para ver +3 puntos.
+
+## 25/09/2026 (noche) — Mejoras A, B, C y comparador (decisión del usuario)
+- A: el registro guarda la investigación entera (búsqueda y Claude por separado) con su estado
+  (ok / vacía / fallo / tiempo; Claude: ok / sin_secreto / sin_cupo / fallo / tiempo /
+  saltada_poco_tiempo), criterios, letra pequeña, cierre, fecha dada a los modelos y el razonamiento
+  completo de cada modelo. El marcador pasa ese texto largo a `datos/detalle/` (un fichero por pregunta).
+- B: preguntas ordenadas por hora de cierre; sin Claude si cierran en menos de 30 min.
+- C: enlaces de las condiciones de resolución (hasta 5) en la búsqueda y en Claude; «fecha y volumen al
+  citar un mercado»; Claude «verifica primero» 2-3 datos clave; 3 reglas de lectura en los prompts.
+- Comparador (`bot/comparador.py`): cambio de puntuación ≈ 100·ln(p_variante/p_enviada) por pregunta
+  (sí/no y opciones). Control: la variante «mediana (la actual)» da 0. Decididas de antemano: media,
+  sin google, límites 1-99 %. Regla: ≥150 resueltas y ganar en las dos mitades.
+- 98 pruebas en verde; ruff limpio.

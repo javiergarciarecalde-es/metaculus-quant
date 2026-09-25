@@ -87,7 +87,7 @@ def test_calcular_por_modelo_calibracion_y_peores():
         str(mc.clave(filas[1])): {"estado": "resolved", "resolucion": "yes", "spot_peer": -40.0},
         str(mc.clave(filas[2])): {"estado": "open"},
     }
-    m = mc.calcular(filas, resueltas)
+    m = mc.calcular(filas, resueltas, mc.conf_comparador())
     assert m["resueltas"] == 2 and m["spot_peer_suma"] == -20.0
     assert m["por_modelo"]["a"]["binary:log"]["n"] == 2
     assert m["por_modelo"]["a"]["binary:log"]["media"] == pytest.approx(
@@ -95,7 +95,7 @@ def test_calcular_por_modelo_calibracion_y_peores():
     )
     assert m["calibracion"]["80-90 %"] == {"n": 1, "dijimos": 80.0, "paso": 100.0}
     assert m["peores"][0]["url"] == "u2"
-    texto = mc.informe_md(m, "20/10/2026")
+    texto = mc.informe_md(m, "20/10/2026", mc.conf_comparador())
     assert "Las 5 peores" in texto and "| a | binary:log | 2 |" in texto
 
 

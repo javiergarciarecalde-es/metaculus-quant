@@ -129,6 +129,12 @@ registro:
 marcador:
   horas_de_espera: 24                # solo cuenta pronósticos de hace más de esto (pregunta ya cerrada)
   pausa_entre_preguntas_segundos: 0.5  # sin prisas con la API de Metaculus
+  # Comparador de formas de juntar a los 3 modelos (decisión del usuario del 25/09/2026).
+  # Decididas de antemano (docs/ESTUDIO_BOTS.md §3): como mucho 3; el resto es exploratorio.
+  comparador:
+    preregistradas: ["media", "sin google", "límites 1%-99%"]
+    minimo_preguntas: 150            # resueltas, antes de dar por buena una variante
+    limites_alternativos: [0.01, 0.99]  # la variante «límites 1%-99%» (el bot usa 2-98 %)
 
 red:
   tiempo_espera_segundos: 30         # espera máxima de cada consulta a Metaculus o a la lista de OpenRouter

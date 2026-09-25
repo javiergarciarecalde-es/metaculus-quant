@@ -8,7 +8,9 @@ Pasos:
 2. Para cada pregunta pide a Metaculus su estado, su resolución y nuestra puntuación oficial
    (score_data de my_forecasts: spot_peer_score = la puntuación de pares que cuenta en el torneo).
 3. Calcula, por modelo, puntuaciones propias (log y Brier) para comparar a los tres miembros.
-4. Escribe docs/MARCADOR.md (en llano) y datos/marcador.json.
+4. Compara formas de juntar a los 3 modelos (bot/comparador.py).
+5. Escribe docs/MARCADOR.md (en llano) y datos/marcador.json. El texto largo de cada pregunta
+   (investigación entera, razonamientos) va aparte, a datos/detalle/, un fichero por pregunta.
 
 Uso: python -m bot.marcador [--descargas carpeta]
 """
@@ -27,6 +29,7 @@ from pathlib import Path
 
 import requests
 
+from . import comparador as cmp
 from . import params as ajustes
 from .config import RAIZ
 
@@ -34,6 +37,7 @@ HISTORICO = RAIZ / "datos" / "registro_historico.jsonl"
 RESUELTAS = RAIZ / "datos" / "resueltas.json"  # caché: lo ya resuelto no se vuelve a pedir
 SALIDA_JSON = RAIZ / "datos" / "marcador.json"
 SALIDA_MD = RAIZ / "docs" / "MARCADOR.md"
+DETALLE = RAIZ / "datos" / "detalle"  # texto largo de cada pregunta
 API = "https://www.metaculus.com/api/posts/{}/"
 ANULADAS = {"annulled", "ambiguous"}
 
@@ -75,6 +79,26 @@ def juntar(historico: list[dict], nuevas: list[dict], ahora: datetime, horas: fl
             salida.append(f)
             vistos.add(clave(f))
     return salida
+
+
+def aligerar(fila: dict, carpeta: Path) -> dict:
+    """Guarda el texto largo de la pregunta en `carpeta` (una vez) y lo quita de la fila."""
+    pesado = {k: fila[k] for k in ("investigacion", "criterios", "letra_pequena") if k in fila}
+    razonamientos = [m.get("razonamiento") for m in fila.get("miembros") or []]
+    if not pesado and not any(razonamientos):
+        return fila
+    nombre = f"{id_post(fila) or 'x'}_{fila.get('id_pregunta') or 'x'}.json"
+    ruta = carpeta / nombre
+    if not ruta.exists():
+        carpeta.mkdir(parents=True, exist_ok=True)
+        detalle = {"url": fila.get("url"), **pesado, "razonamientos": razonamientos}
+        ruta.write_text(json.dumps(detalle, ensure_ascii=False, indent=1), encoding="utf-8")
+    ligera = {k: v for k, v in fila.items() if k not in pesado}
+    ligera["miembros"] = [
+        {k: v for k, v in m.items() if k != "razonamiento"} for m in fila.get("miembros") or []
+    ]
+    ligera["detalle"] = f"datos/detalle/{nombre}"
+    return ligera
 
 
 def id_post(fila: dict) -> int | None:
@@ -162,14 +186,17 @@ def puntos(tipo: str, valor, resolucion) -> dict | None:
 # ------------------------------------------------------------------ cálculo del marcador
 
 
-def calcular(filas: list[dict], resueltas: dict) -> dict:
-    preguntas, modelos, calib = [], {}, {}
+def calcular(filas: list[dict], resueltas: dict, conf_comparador: dict) -> dict:
+    preguntas, modelos, calib, cambios = [], {}, {}, []
     for f in filas:
         info = resueltas.get(str(clave(f)))
         if not info or info.get("estado") != "resolved":
             continue
         tipo = f.get("tipo")
         agregado = puntos(tipo, f.get("valor"), info.get("resolucion"))
+        variantes = cmp.cambios_por_pregunta(f, info.get("resolucion"), conf_comparador)
+        if variantes:
+            cambios.append((f.get("cuando_utc", ""), variantes))
         preguntas.append(
             {
                 "pregunta": f.get("pregunta"),
@@ -216,6 +243,7 @@ def calcular(filas: list[dict], resueltas: dict) -> dict:
             }
             for t, c in sorted(calib.items())
         },
+        "comparador": cmp.resumir(cambios, conf_comparador),
         "peores": sorted(
             [p for p in preguntas if isinstance(p["spot_peer"], (int, float))],
             key=lambda p: p["spot_peer"],
@@ -223,7 +251,7 @@ def calcular(filas: list[dict], resueltas: dict) -> dict:
     }
 
 
-def informe_md(m: dict, fecha: str) -> str:
+def informe_md(m: dict, fecha: str, conf_comparador: dict) -> str:
     media = m["spot_peer_media"]
     lineas = [
         "# Marcador del bot (se actualiza solo cada lunes)",
@@ -283,7 +311,20 @@ def informe_md(m: dict, fecha: str) -> str:
             f"| {round(p['spot_peer'], 1)} | [{(p['pregunta'] or '')[:90]}]({p['url']}) "
             f"| {p['resolucion']} |"
         )
+    lineas += cmp.informe_md(m.get("comparador", []), conf_comparador)
     return "\n".join(lineas) + "\n"
+
+
+def conf_comparador(arbol: dict | None = None) -> dict:
+    """Ajustes del comparador: los límites del bot y las reglas de config/params.yaml."""
+    return {
+        "prob_min": float(ajustes.p("pronostico.prob_min", arbol)),
+        "prob_max": float(ajustes.p("pronostico.prob_max", arbol)),
+        "minimo_por_opcion": float(ajustes.p("pronostico.minimo_por_opcion", arbol)),
+        "alternativos": tuple(ajustes.p("marcador.comparador.limites_alternativos", arbol)),
+        "preregistradas": list(ajustes.p("marcador.comparador.preregistradas", arbol)),
+        "minimo_preguntas": int(ajustes.p("marcador.comparador.minimo_preguntas", arbol)),
+    }
 
 
 # ------------------------------------------------------------------ programa
@@ -298,6 +339,7 @@ def main(argv=None) -> int:
     historico = [f for f in historico if f.get("url")]
     nuevas = leer_jsonl(Path(args.descargas)) if Path(args.descargas).exists() else []
     filas = juntar(historico, nuevas, ahora, float(ajustes.p("marcador.horas_de_espera")))
+    filas = [aligerar(f, DETALLE) for f in filas]
     HISTORICO.parent.mkdir(parents=True, exist_ok=True)
     HISTORICO.write_text(
         "".join(json.dumps(f, ensure_ascii=False) + "\n" for f in filas), encoding="utf-8"
@@ -325,11 +367,12 @@ def main(argv=None) -> int:
         time.sleep(pausa)  # sin prisas con la API de Metaculus
     RESUELTAS.write_text(json.dumps(resueltas, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    m = calcular(filas, resueltas)
+    conf = conf_comparador()
+    m = calcular(filas, resueltas, conf)
     SALIDA_JSON.write_text(
         json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8"
     )
-    SALIDA_MD.write_text(informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC"), encoding="utf-8")
+    SALIDA_MD.write_text(informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf), encoding="utf-8")
     print(
         f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "
         f"suma de pares {m['spot_peer_suma']}. Preguntas que no cargaron: {fallos}."
