@@ -25,3 +25,18 @@ asyncio_mode = "auto"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# Revisor de estilo (reglas comunes §6), con la misma configuración que los proyectos hermanos
+# (cripto-quant y quiniela-quant, pyproject.toml, 25/09/2026).
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "TRY", "DTZ", "RUF"]
+ignore = ["TRY003"]  # mensajes de error largos: aquí son deliberados y los lee una persona
+
+[tool.ruff.lint.isort]
+# Los módulos del proyecto (main.py y bot/) no son un paquete instalado: sin esto ruff los toma
+# por librerías de terceros.
+known-first-party = ["bot", "main", "tests"]

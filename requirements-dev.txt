@@ -1,3 +1,7 @@
 -r requirements.txt
 pytest>=8.0
 pytest-asyncio>=0.24
+# El revisor de estilo lleva tope por arriba a propósito, igual que en los proyectos hermanos:
+# sin tope, una versión nueva de ruff puede estrenar una regla y dejar las pruebas en rojo sobre
+# código que nadie ha tocado.
+ruff>=0.16.7,<0.17
