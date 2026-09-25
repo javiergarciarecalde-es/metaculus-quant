@@ -1,116 +1,123 @@
 # ESTADO (siempre «ahora»)
 
-**Actualizado:** 24/09/2026 por la noche (sesión 1, sin usuario delante).
-**Rama:** todo está en `main` (el push funcionó).
+**Actualizado:** 25/09/2026 (sesión 2, en el ordenador de casa, Windows).
+**Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
+automática que hace git después de guardar).
 
 ## Dónde estamos
-El bot está **hecho y probado en ensayo**, pero **apagado**. No ha enviado nada a Metaculus
-ni ha gastado un céntimo: no hay token ni claves puestas.
+El bot está **hecho, probado en ensayo y apagado**. No ha enviado nada a Metaculus ni ha gastado
+un céntimo: no hay token ni claves puestas.
 
 | Pieza | Estado |
 |---|---|
-| Protocolo y documentos (CLAUDE.md, este ESTADO, HALLAZGOS, DECISIONES, FUENTES) | hecho |
-| Puerta de la fase 0 escrita en `config/params.yaml` | hecho (texto literal, no se toca) |
-| Bot (`main.py` + carpeta `bot/`) | hecho, basado en la plantilla oficial de Metaculus |
-| Pruebas automáticas (pytest = programa que comprueba el bot solo) | **20 de 20 en verde**, con Metaculus y modelos simulados |
-| Flujo de GitHub Actions (el «reloj» que lanza el bot cada 20 min) | listo; **apagado** hasta que tú pongas los secretos y el interruptor |
+| Pruebas automáticas (programa que comprueba el bot solo) | **22 de 22 en verde**, también en Windows |
+| Modelos de IA | los 3 existen (comprobado hoy en la lista pública de OpenRouter) |
+| Fallo arreglado hoy | el modelo que buscaba noticias **había desaparecido**: el bot habría pronosticado sin noticias, sin avisar. Cambiado por uno que existe, y ahora cada ejecución comprueba los nombres y avisa |
+| Flujo de GitHub Actions (el «reloj» que lanza el bot cada 20 min) | listo; **apagado** hasta que pongas secretos e interruptor |
+| Reglas del torneo | hoy **leídas directamente** en la web de Metaculus (anoche no cargaba) |
 
-## Qué hace el bot (en llano)
-1. Cada 20 minutos mira si hay preguntas nuevas del torneo de otoño y de la MiniBench.
-2. Para cada una busca noticias recientes con un modelo de IA que navega.
-3. Pregunta a **3 modelos de IA de 3 empresas distintas** (OpenAI, Anthropic, Google), que
-   razonan a fondo y dan su probabilidad.
-4. Se queda con el **valor del medio** (mediana) de los tres. Nunca da menos de 2 % ni más de
-   98 % (un 0 % equivocado hunde la puntuación sin remedio).
-5. Envía el pronóstico con su explicación (obligatoria) y apunta todo en un registro.
+## Tu pregunta: ¿3 modelos de 3 empresas o un solo Opus 5.5 con varios agentes?
+(«agente» = una copia del modelo haciendo un papel: buscar, pronosticar, criticar…)
 
-Esto copia **lo que está medido** que funciona en el mejor bot abierto (nostreambot, ~10.º de 173
-en primavera; licencia MIT, verificada; no se copió código, solo ideas). Lo que ellos probaron y
-no funcionó (p. ej. «extremizar» = empujar las probabilidades hacia los extremos), está apagado.
+**Respuesta corta: mejor seguir con 3 empresas, pero metiendo Opus 5.5 en el puesto de Anthropic.**
 
-**Honestamente:** esto es un bot «plantilla mejorada». La plantilla sola quedó 18.º de 173; con
-esto aspiramos a parecido o algo mejor, **no hay garantía de pasar la puerta**. nostreambot hace
-además cosas caras (mercados de apuestas, leer las fuentes oficiales) que quedan para después.
+Lo que está medido por otros (detalle y cifras en `HALLAZGOS.md`, 25/09):
+| Prueba | Qué dice |
+|---|---|
+| Metaculus, primavera: 65 bots iguales cambiando solo el modelo | GPT-5.1 1.º (11,3 puntos/pregunta), Claude Sonnet 2.º (8,9). Diferencia dentro del azar |
+| Encuesta de Metaculus a 58 creadores de bots | usar **GPT** es lo que más se asocia a quedar arriba; usar **Opus, nada** (correlación ~0). Los 10 mejores usaban GPT. Ojo: nada es seguro estadísticamente |
+| Metaculus: juntar varios bots | juntar 2-10 bots buenos mejora al mejor bot solo |
+| nostreambot (el mejor bot abierto): 262 preguntas | combinar 3 pronósticos con la mediana gana claramente a un modelo solo. Pero **que sean de empresas distintas no añadió nada medible** |
+| Opus 5.5 | salió el **22/09** (hace 3 días): **nadie ha medido** cómo pronostica |
+| Nuestro código | si falla 1 de 3 modelos, el bot pronostica igual con los otros 2. Con un solo Opus, si Anthropic falla, **se pierde la pregunta** (0 puntos) |
 
-## Lo que tienes que hacer tú antes del lunes 28/09
-Todo esto lo tienes que hacer tú: el sistema no crea cuentas, no acepta condiciones ni toca claves.
+En llano: lo que funciona es **juntar 3 opiniones**. Que sean de 3 empresas no está demostrado que
+ayude, pero quitar GPT es quitar el modelo con más pruebas a favor, y depender de una sola empresa
+es un riesgo. Tu idea sí tiene sentido en una parte: Opus 5.5 es **más nuevo y un 20 % más barato**
+que el Opus 4.8 que usamos ahora. nostreambot hizo justo eso hace 3 días (Opus 5.5 + GPT-6).
 
-1. **Crear la cuenta de bot en Metaculus.** Entra en https://www.metaculus.com/futureeval/participate/
-   con tu cuenta personal y sigue los pasos para crear el bot. Un solo bot con premio por persona.
-2. **Verificar tu identidad** en Metaculus cuando te lo pida (es condición para cobrar).
-3. **Aceptar las condiciones del torneo** de otoño 2026 (FutureEval) en esa misma web. Léelas:
-   ahí pone lo de entregar el código o una descripción y aceptar inspección.
-4. **Pedir los créditos de IA gratis** en este formulario: https://forms.gle/aQdYMq9Pisrf1v7d8 .
-   Según otros participantes, te llega una **clave de OpenRouter** (OpenRouter = tienda de modelos
-   de IA; la clave es como una tarjeta prepago que paga Metaculus). Hay que pedirlos cada temporada.
-5. **Sacar el token de Metaculus** (token = contraseña para programas) en la página del paso 1.
-6. **Ponerlo como secreto de GitHub**: en https://github.com/javiergarciarecalde-es/metaculus-quant
-   → **Settings** → **Secrets and variables** → **Actions** → pestaña **Secrets** →
-   **New repository secret**:
+**Coste por opción** (estimación propia con precios de hoy; «~800 preguntas» = temporada 300-400 +
+MiniBench ~60 cada 2 semanas hasta enero; puede salir hasta el doble si los modelos piensan más):
+| Opción | $ por pregunta | ~800 preguntas | Con los ~100 $ de créditos llega para |
+|---|---|---|---|
+| Actual: GPT-5.6 + Opus 4.8 + Gemini Flash | ~0,38 | ~300 $ | ~260 preguntas |
+| **Recomendada: GPT-6 + Opus 5.5 + Gemini Flash** | **~0,34** | **~270 $** | **~290 preguntas** |
+| Un Opus 5.5 que pronostica 3 veces | ~0,47 | ~375 $ | ~210 preguntas |
+| Un Opus 5.5 una sola vez | ~0,19 | ~150 $ | ~520 preguntas (peor puesto esperado) |
+| Opus 5.5 con papeles (investiga, 3 pronostican, 1 critica) | ~0,80 | ~640 $ | ~125 preguntas |
+
+- **Con créditos de Metaculus:** este otoño dan **~100 $ al empezar** (y puede que nada: son
+  selectivos). Dan más si el bot va por encima de la media en la MiniBench, y **el doble a los bots
+  de código abierto**. Con 100 $ no llega para toda la temporada con ninguna opción buena: dependemos
+  de ir bien para que recarguen.
+- **Sin créditos:** lo pagas tú: la cifra de «~800 preguntas» más una pequeña comisión de OpenRouter.
+- El registro del bot apunta el coste real de cada pregunta: tras la primera prueba cambio estas
+  estimaciones por lo medido.
+
+**No he cambiado nada del diseño.** Si dices «sí», cambio los modelos a GPT-6 + Opus 5.5 + Gemini
+Flash (5 minutos de trabajo y pruebas).
+
+## Lo que tienes que hacer tú (mejor antes del lunes 28/09)
+El sistema no crea cuentas, no acepta condiciones ni toca claves: esto lo haces tú.
+No hay prisa extrema: las 1-2 primeras semanas salen pocas preguntas y se puede entrar cuando sea
+(cada pregunta perdida son 0 puntos, no negativos).
+
+1. **Crear el bot en Metaculus:** entra con tu cuenta en https://www.metaculus.com/futureeval/participate/
+   → «Create your first forecasting bot». Queda inscrito solo en el torneo.
+2. **Rellenar el formulario de participación** (obligatorio para todos, 3 preguntas) y, en el mismo,
+   **pedir los créditos de IA**: https://forms.gle/aQdYMq9Pisrf1v7d8 . Si decides repositorio público
+   (decisión 2), dilo ahí: los bots de código abierto reciben el doble.
+3. **Aceptar las condiciones del torneo** en la web y **verificar tu identidad** cuando te lo pida
+   (es condición para cobrar). Confirma que participas como aficionado (los bots de empresas no cobran).
+4. **Sacar el token** (token = contraseña para programas): en Metaculus, Ajustes → My Forecasting
+   Bots → «Show Bot Token».
+5. **Ponerlo como secreto de GitHub**: en https://github.com/javiergarciarecalde-es/metaculus-quant
+   → **Settings** → **Secrets and variables** → **Actions** → pestaña **Secrets** → **New repository secret**:
    | Nombre (exacto, en mayúsculas) | Valor |
    |---|---|
-   | `METACULUS_TOKEN` | el token del paso 5 |
-   | `OPENROUTER_API_KEY` | la clave de los créditos del paso 4 (o una tuya) |
+   | `METACULUS_TOKEN` | el token del paso 4 |
+   | `OPENROUTER_API_KEY` | la clave de los créditos (llega por correo) o una tuya |
    Nunca pegues estas claves en ningún fichero ni en un chat.
-7. **Primera prueba, en ensayo (sin enviar nada):** pestaña **Actions** → «Pronosticar en el
-   torneo» → **Run workflow** → modo `test_questions` → botón verde. Pronostica 3 preguntas de la
-   **zona de pruebas** de Metaculus (no del torneo: las normas prohíben «previsualizar» preguntas
-   del torneo) y no envía nada. Tarda unos minutos. Debe acabar en verde y decir
-   «Terminado: 3 pronósticos de ensayo». Si sale un error de modelo (nombre de modelo no
-   encontrado), dilo en la próxima sesión: los nombres de modelos no se pudieron comprobar esta noche.
-8. **Encender el interruptor de envío real**: mismo sitio del paso 6, pero pestaña **Variables**
-   → **New repository variable** → nombre `ENVIO_REAL`, valor `true`.
-9. **Comprobar el envío de verdad**: repite el paso 7 (modo `test_questions`). Ahora sí envía, pero
-   a la zona de pruebas. Mira el perfil de tu bot en Metaculus: deben aparecer los pronósticos.
-   Desde ese momento, cada 20 minutos pronostica solo en el torneo y la MiniBench.
-10. **Decidir lo de los minutos de GitHub** (ver «Decisiones pendientes», punto 1).
+6. **Primera prueba, sin enviar nada:** pestaña **Actions** → «Pronosticar en el torneo» →
+   **Run workflow** → modo `test_questions` → botón verde. Pronostica 3 preguntas de la zona de
+   pruebas (no del torneo) y no envía. Debe acabar en verde con «Terminado: 3 pronósticos de ensayo».
+   Si sale algo en amarillo o rojo, dímelo en la próxima sesión.
+7. **Decidir lo de los minutos de GitHub** (decisión 2) **antes** del paso 8.
+8. **Encender el envío real**: mismo sitio del paso 5, pestaña **Variables** → **New repository
+   variable** → nombre `ENVIO_REAL`, valor `true`. Luego repite el paso 6: ahora sí envía, pero a la
+   zona de pruebas; mira el perfil del bot en Metaculus. Desde ahí pronostica solo cada 20 minutos.
+9. **Al final de la temporada:** rellenar la encuesta del bot (obligatoria para cobrar). Te lo recordaré.
 
 Para **apagarlo**: borra la variable `ENVIO_REAL` (o ponla en `false`). No toques nunca un
 pronóstico a mano ni relances el bot «porque no te gusta»: está prohibido.
 
-## Dinero: qué cuesta
-No se apuesta nada. Los únicos costes posibles son la IA y los minutos de GitHub.
-
-| Concepto | Con créditos de Metaculus | Sin créditos (pagas tú) |
-|---|---|---|
-| IA por pregunta (3 modelos + búsqueda) | 0 € | ~1 $ (estimado; nostreambot gasta 2,60 $ con más cosas; el informe dice ~1,40 $ los ganadores) |
-| Preguntas hasta diciembre (temporada 300-500 + MiniBench ~60 × 6) | 0 € | ~660-860 preguntas → **~650-900 $** |
-| Minutos de GitHub (repositorio privado) | ver decisión 1 | ver decisión 1 |
-
-Si **no dan créditos**: no pongas ninguna clave de pago sin decidirlo antes. Opciones: (a) no
-competir esta temporada; (b) pagar tu propia clave de OpenRouter con un tope de gasto; (c) bajar
-a modelos más baratos (peor puesto esperado). Es decisión tuya.
-
 ## Decisiones pendientes del usuario
-1. **Minutos de GitHub.** El repositorio es **privado**. GitHub da gratis ~2.000 minutos al mes en
-   privados (plan gratuito). Lanzar el bot cada 20 minutos gasta como mínimo ~2.160 minutos al
-   mes (cada lanzamiento cuenta como 1 minuto aunque no haya preguntas), más el tiempo pensando.
-   Sin tarjeta, GitHub **no cobra: se para** a mitad de mes, y perderíamos preguntas.
-   | Opción | Coste | Riesgo |
-   |---|---|---|
-   | A. Hacer el repositorio **público** (como la plantilla y nostreambot) | 0 € | tu código lo ve cualquiera (igualmente hay que enseñárselo a Metaculus) |
-   | B. Lanzarlo cada 30 min en vez de 20 | 0 € | ~1.500-2.000 min/mes, justo; menos oportunidades (las preguntas están abiertas ~1,5 h) |
-   | C. Añadir tarjeta a GitHub | ~0,008 $/min por encima del límite, pocos $ al mes | pagas algo |
-   Recomendación: **A**. Mientras esté apagado no gasta nada (las ejecuciones se omiten).
-2. **Reloj de GitHub poco fiable.** Otro participante vio que el reloj de GitHub solo lanzó el
-   bot ~22 % de las veces y usa un servicio externo gratuito (cron-job.org) para lanzarlo. Eso
-   exige crear un token de GitHub: lo tendrías que hacer tú. Proponemos mirarlo tras la primera
-   semana, con datos (el registro dirá cuántas preguntas se perdieron).
-3. **Si no dan créditos**: ver «Dinero».
+1. **Modelos:** ¿cambio a GPT-6 + Opus 5.5 + Gemini Flash (recomendado), dejo los actuales, o
+   prefieres probar un solo Opus? Mejor decidirlo antes del paso 8: cambiar a mitad de temporada
+   mezcla resultados y cuesta saber qué funciona.
+2. **Minutos de GitHub (repositorio público o privado).** Ahora es **privado**.
+   | Opción | Coste | A favor | En contra |
+   |---|---|---|---|
+   | **A. Hacerlo público** (recomendada) | 0 € | minutos gratis e ilimitados; **créditos dobles** por código abierto; así están la plantilla oficial y nostreambot | cualquiera ve el código y los registros de cada ejecución (incluidos los pronósticos mientras la pregunta está abierta, ~1,5 h). Las claves nunca se ven |
+   | B. Privado y cada 30 min | 0 € | nadie lo ve | no llega: ~2.000-4.000 min/mes contra 2.000 gratis; sin tarjeta **GitHub lo para** a mitad de mes y se pierden preguntas |
+   | C. Privado con tarjeta en GitHub | ~6-27 $/mes (0,006 $/min por encima de 2.000) | nadie lo ve | pagas; pierdes el doble de créditos |
+   Cómo se hace A (lo haces tú): repositorio → **Settings** → abajo del todo, **Danger Zone** →
+   **Change visibility** → **Make public** → confirmar. Mientras el envío esté apagado no gasta nada.
+3. **Reloj de GitHub poco fiable** (otro participante vio que solo lanzaba ~22 % de las veces):
+   lo miramos tras la primera semana con los datos del registro.
+4. **Opcional, noticias gratis (AskNews):** Metaculus tiene un acuerdo con AskNews (un servicio de
+   noticias para bots). Para darte de alta hay que escribirles con tu nombre y LinkedIn; lo harías
+   tú. No es necesario para empezar.
 
-## Cuánto quedó sin verificar (de frente)
-- **La web de Metaculus estaba bloqueada** desde donde trabajo: no pude leer el anuncio de otoño,
-  el análisis de primavera ni la página de participación. Las reglas y fechas vienen de segunda
-  mano (buscador, notas de otros participantes) y del código de Metaculus, que sí leí. Léete tú
-  las condiciones en el paso 3.
-- Sin comprobar: que los créditos sean «selectivos», la encuesta obligatoria, los límites de uso.
-- **Nombres de modelos** (`gpt-5.6-sol`, `claude-opus-4.8`, `gemini-3.5-flash`): sacados del código
-  de nostreambot de septiembre; no pude ver la lista en vivo. Se confirma en el paso 7.
-- El bot **nunca ha hablado con Metaculus ni con una IA de verdad**: solo con simulaciones.
-- Cifras de coste: estimaciones.
+## Cuánto queda sin verificar (de frente)
+- El bot **nunca ha hablado con Metaculus ni con una IA de verdad**: solo con simulaciones. El paso 6
+  es la primera prueba real.
+- El modo «búsqueda en internet» del modelo (`:online`) no se ha probado de verdad (hace falta clave).
+- Los costes son estimaciones hasta la primera ejecución real.
+- Si llegan créditos y cuánto: depende de Metaculus.
 
 ## Qué toca en la próxima sesión
-- Leer lo que salió del paso 7 y corregir nombres de modelos si hace falta.
+- Aplicar lo que decidas en 1 y 2.
+- Leer lo que salió del paso 6 y corregir lo que falle; cambiar costes estimados por medidos.
 - Tras las primeras semanas: medir con el registro y la tabla de Metaculus cómo vamos frente a
   la puerta de la fase 0.
-- Mejoras con evidencia (ver HALLAZGOS, «Pendiente»).
