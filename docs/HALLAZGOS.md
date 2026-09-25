@@ -159,3 +159,30 @@ El registro guarda `coste_usd` por pregunta: tras la primera ejecución real se 
 - Riesgo de hacerlo público: los registros de las ejecuciones (y el artefacto `registro/`) los
   puede ver cualquiera, con los pronósticos mientras la pregunta está abierta (~1,5 h). Mismo caso
   que nostreambot y la plantilla. Los secretos no se ven nunca.
+
+## 25/09/2026 — Sesión en la nube: «3 modelos o un Opus con agentes» (estudio con agentes) y cambios
+Se estudió con un equipo de 9 agentes (2 recogen pruebas, 3 diseñan, 3 critican, 1 juez). Coincide
+con la sesión 2. Datos nuevos verificados en los documentos de nostreambot:
+- Probabilidad extrema dada por **un solo** modelo sin que otro lo acompañe: acertó **4 de 9**;
+  con otro modelo de acuerdo: **21 de 23** (performance_analysis.md). La pregunta q44874, publicada
+  con un solo modelo (0,03), sacó −105 puntos. Desde entonces limitan a 5-95 % si publica uno solo.
+- Probaron y **rechazaron** agentes que debaten, juez, combinador y que cada pronosticador investigue
+  por su cuenta con agentes (FUTURE.md). Los agentes que SÍ usan están en la **investigación
+  compartida** («búsqueda de huecos»: comprobar los 2-3 datos clave), porque sus peores fallos
+  vienen de un dato erróneo que se creen todos los modelos (q44267, −95,66 puntos).
+- Diseños evaluados (coste estimado por pregunta): Opus con 8-12 papeles ~1,65-3 $ (**descartado**:
+  no cabe en los créditos, un solo proveedor, sin evidencia de mejora); híbrido completo ~1-2,4 $
+  (descartado por calendario y coste); cambio mínimo + opciones configurables (**elegido**).
+
+Cambios hechos (código probado con modelos simulados; 35 pruebas en verde):
+1. Modelos por defecto: **gpt-6-sol + claude-opus-5.5 + gemini-3.5-flash** (la opción que
+   recomiendan las dos sesiones). Cada puesto tiene un **respaldo** (el modelo anterior de la
+   misma empresa) que responde si el principal falla o contesta vacío.
+2. `pronostico.modo`: `tres_empresas` (por defecto) o `un_modelo` (3 pasadas de Opus 5.5, la idea
+   del usuario). Se cambia con una línea de `config/params.yaml`.
+3. El registro guarda **cada pronóstico individual** (modelo y valor), no solo la mediana: sin eso
+   nunca se podrá medir qué modo va mejor.
+4. `investigacion.modo: ampliada` (APAGADA): un director (Opus 5.5) elige hasta 2 datos clave y
+   2 buscadores los comprueban a la vez; lo encontrado se AÑADE al final del informe, con tope de
+   240 s; si algo falla, se sigue con el informe normal. Coste extra estimado: +0,05-0,35 $/pregunta.
+5. El comprobador de modelos (`python -m bot.modelos`) revisa también respaldos, director y buscador.

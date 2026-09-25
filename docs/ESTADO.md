@@ -1,6 +1,6 @@
 # ESTADO (siempre «ahora»)
 
-**Actualizado:** 25/09/2026 (sesión 2, en el ordenador de casa, Windows).
+**Actualizado:** 25/09/2026 (sesión 2 en Windows + sesión en la nube, integradas).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
 automática que hace git después de guardar).
 
@@ -10,8 +10,8 @@ un céntimo: no hay token ni claves puestas.
 
 | Pieza | Estado |
 |---|---|
-| Pruebas automáticas (programa que comprueba el bot solo) | **22 de 22 en verde**, también en Windows |
-| Modelos de IA | los 3 existen (comprobado hoy en la lista pública de OpenRouter) |
+| Pruebas automáticas (programa que comprueba el bot solo) | **35 de 35 en verde** |
+| Modelos de IA | **ya cambiados a GPT-6 + Opus 5.5 + Gemini Flash** (la opción recomendada), cada uno con un modelo de respaldo por si falla |
 | Fallo arreglado hoy | el modelo que buscaba noticias **había desaparecido**: el bot habría pronosticado sin noticias, sin avisar. Cambiado por uno que existe, y ahora cada ejecución comprueba los nombres y avisa |
 | Flujo de GitHub Actions (el «reloj» que lanza el bot cada 20 min) | listo; **apagado** hasta que pongas secretos e interruptor |
 | Reglas del torneo | hoy **leídas directamente** en la web de Metaculus (anoche no cargaba) |
@@ -54,8 +54,17 @@ MiniBench ~60 cada 2 semanas hasta enero; puede salir hasta el doble si los mode
 - El registro del bot apunta el coste real de cada pregunta: tras la primera prueba cambio estas
   estimaciones por lo medido.
 
-**No he cambiado nada del diseño.** Si dices «sí», cambio los modelos a GPT-6 + Opus 5.5 + Gemini
-Flash (5 minutos de trabajo y pruebas).
+**Ya está aplicada la opción recomendada** (GPT-6 + Opus 5.5 + Gemini Flash). Además:
+- Tu idea queda **lista con un solo ajuste**: `modo: "un_modelo"` en `config/params.yaml` hace que
+  Opus 5.5 pronostique 3 veces. Si lo prefieres, dímelo y lo cambio.
+- Si un modelo falla o contesta vacío, responde un **modelo de respaldo** (el anterior de la misma
+  empresa), para no perder la pregunta.
+- El registro apunta **lo que dijo cada modelo**, no solo el resultado final: así, con datos reales,
+  podremos ver qué funciona mejor.
+- Los «agentes» sí tienen sentido en una parte: **investigar** (comprobar los 2-3 datos clave antes
+  de pronosticar). Eso está programado y probado, pero **apagado**: con ~100 $ de créditos, primero
+  hay que medir cuánto cuesta. Lo que otros probaron y **no** funcionó: agentes que debaten entre sí
+  o un «juez» que corrige al grupo.
 
 ## Lo que tienes que hacer tú (mejor antes del lunes 28/09)
 El sistema no crea cuentas, no acepta condiciones ni toca claves: esto lo haces tú.
@@ -92,9 +101,9 @@ Para **apagarlo**: borra la variable `ENVIO_REAL` (o ponla en `false`). No toque
 pronóstico a mano ni relances el bot «porque no te gusta»: está prohibido.
 
 ## Decisiones pendientes del usuario
-1. **Modelos:** ¿cambio a GPT-6 + Opus 5.5 + Gemini Flash (recomendado), dejo los actuales, o
-   prefieres probar un solo Opus? Mejor decidirlo antes del paso 8: cambiar a mitad de temporada
-   mezcla resultados y cuesta saber qué funciona.
+1. **Modelos:** puesto GPT-6 + Opus 5.5 + Gemini Flash (recomendado). ¿Te vale, o prefieres
+   `un_modelo` (Opus 5.5 tres veces, ~0,47 $/pregunta en vez de ~0,34 $)? Mejor decidirlo antes
+   del paso 8: cambiar a mitad de temporada mezcla resultados.
 2. **Minutos de GitHub (repositorio público o privado).** Ahora es **privado**.
    | Opción | Coste | A favor | En contra |
    |---|---|---|---|
@@ -117,6 +126,7 @@ pronóstico a mano ni relances el bot «porque no te gusta»: está prohibido.
 - Si llegan créditos y cuánto: depende de Metaculus.
 
 ## Qué toca en la próxima sesión
+- Tras la primera ejecución real: medir el coste de la «investigación ampliada» y decidir si se enciende.
 - Aplicar lo que decidas en 1 y 2.
 - Leer lo que salió del paso 6 y corregir lo que falle; cambiar costes estimados por medidos.
 - Tras las primeras semanas: medir con el registro y la tabla de Metaculus cómo vamos frente a

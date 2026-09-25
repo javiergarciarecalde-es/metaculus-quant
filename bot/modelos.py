@@ -20,8 +20,11 @@ URL_MODELOS = "https://openrouter.ai/api/v1/models"
 def nombres_openrouter(params: dict) -> list[str]:
     """Modelos del bloque «openrouter», sin el prefijo `openrouter/` ni sufijos como `:online`."""
     m = params["modelos"]["openrouter"]
-    nombres = [x["nombre"] for x in m["pronostico"]] + [m["investigacion"], m["lector"]]
-    return [n.removeprefix("openrouter/").split(":")[0] for n in nombres]
+    nombres = [m["investigacion"], m["lector"], m.get("director"), m.get("buscador")]
+    for x in m["pronostico"] + [m.get("un_modelo") or {}]:
+        nombres += [x.get("nombre"), x.get("respaldo")]
+    limpios = [n.removeprefix("openrouter/").split(":")[0] for n in nombres if n]
+    return list(dict.fromkeys(limpios))  # sin repetidos, en orden
 
 
 def faltan(params: dict, disponibles: set[str]) -> list[str]:
