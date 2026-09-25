@@ -31,13 +31,15 @@ jobs:
   pronosticar:
     if: github.event_name == 'workflow_dispatch' || vars.ENVIO_REAL == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - name: Comprobar el token (sin mostrarlo)
         id: token
         env:
           METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then echo "max=si" >> "$GITHUB_OUTPUT"; fi
           if [ -z "$METACULUS_TOKEN" ]; then
             echo "::notice::Falta el secreto METACULUS_TOKEN: el bot no hace nada (normal hasta que el usuario lo ponga)."
             echo "hay=no" >> "$GITHUB_OUTPUT"
@@ -55,6 +57,9 @@ jobs:
       - name: Instalar dependencias
         if: steps.token.outputs.hay == 'si'
         run: pip install -r requirements.txt
+      - name: Instalar Claude Code (solo si está el secreto de Claude Max)
+        if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
+        run: npm install -g @anthropic-ai/claude-code
       - name: Comprobar que los modelos siguen existiendo (lista pública, gratis)
         if: steps.token.outputs.hay == 'si'
         run: python -m bot.modelos
@@ -66,6 +71,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ASKNEWS_CLIENT_ID: ${{ secrets.ASKNEWS_CLIENT_ID }}
           ASKNEWS_SECRET: ${{ secrets.ASKNEWS_SECRET }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ENVIO_REAL: ${{ vars.ENVIO_REAL }}
       - name: Guardar el registro de pronósticos
         if: always() && steps.token.outputs.hay == 'si'

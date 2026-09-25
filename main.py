@@ -51,6 +51,7 @@ from forecasting_tools import (  # noqa: E402
 )
 
 from bot import agregacion as ag  # noqa: E402
+from bot import claude_max  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
 from bot import registro  # noqa: E402
@@ -68,7 +69,7 @@ class QuantBot(ForecastBot):
     _structure_output_validation_samples = 2
 
     def __init__(self, *args, params: dict, modelos_pronostico: list, respaldos: list | None = None,
-                 **kwargs):
+                 claude_ejecutar=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.params = params
         p = params["pronostico"]
@@ -80,6 +81,9 @@ class QuantBot(ForecastBot):
         respaldos = respaldos or [None] * len(self._modelos)
         self._rueda = itertools.cycle(list(zip(self._modelos, respaldos)))
         self._miembros: dict[str, list[dict]] = {}  # pronósticos individuales por pregunta
+        conf_max = params.get("investigacion", {}).get("claude_max", {})
+        self._claude_max = (claude_max.InvestigadorClaudeMax(conf_max, claude_ejecutar)
+                            if claude_ejecutar else claude_max.InvestigadorClaudeMax(conf_max))
 
     # Rueda de puestos: cada pasada usa el siguiente puesto (modelo + respaldo).
     async def _pensar(self, prompt: str) -> tuple[str, str]:
@@ -112,6 +116,16 @@ class QuantBot(ForecastBot):
     ##################################### INVESTIGACIÓN #####################################
 
     async def run_research(self, question: MetaculusQuestion) -> str:
+        research = await self._investigacion_base(question)
+        if self.params.get("investigacion", {}).get("modo") == "claude_max":
+            # fuera del turno de preguntas: puede tardar minutos y va con su propio límite
+            research = await self._claude_max.ampliar(
+                research, question.question_text, question.resolution_criteria or "",
+                question.fine_print or "", clave=question.page_url,
+            )
+        return research
+
+    async def _investigacion_base(self, question: MetaculusQuestion) -> str:
         async with self._concurrency_limiter:
             researcher = self.get_llm("researcher")
             if not researcher or researcher in ("None", "no_research"):
@@ -471,6 +485,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     m = cfg.bloque_modelos(params)
     temp = params["modelos"]["temperatura"]
     tmax = params["modelos"]["tiempo_max_segundos"]
+    claude_ejecutar = None
     if llms is None:
         puestos = cfg.lista_pronosticadores(params)
         pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax) for x in puestos]
@@ -487,6 +502,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     else:  # pruebas: modelos simulados
         pronosticadores = llms.get("_puestos") or [llms["default"]]
         respaldos = llms.get("_respaldos")
+        claude_ejecutar = llms.get("_claude_ejecutar")
         llms = {k: v for k, v in llms.items() if not k.startswith("_")}
         for extra in ("director", "buscador"):
             llms.setdefault(extra, llms["default"])
@@ -504,6 +520,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         params=params,
         modelos_pronostico=pronosticadores,
         respaldos=respaldos,
+        claude_ejecutar=claude_ejecutar,
     )
 
 
@@ -528,6 +545,8 @@ def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) 
             "modo": bot.params["pronostico"].get("modo") if bot else None,
             "investigacion_modo": bot.params.get("investigacion", {}).get("modo") if bot else None,
             "miembros": bot._miembros.pop(q.page_url, []) if bot else [],
+            # lo que habría costado por API la investigación con Claude Max (mide el cupo usado)
+            "claude_max_usd_equivalente": bot._claude_max.costes.pop(q.page_url, None) if bot else None,
         })
     return ok
 

@@ -91,7 +91,8 @@ def llms(modelo):
 @pytest.fixture(autouse=True)
 def entorno_limpio(monkeypatch, tmp_path):
     for v in ["METACULUS_TOKEN", "ENVIO_REAL", "OPENROUTER_API_KEY", "GITHUB_EVENT_NAME",
-              "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ASKNEWS_CLIENT_ID", "ASKNEWS_SECRET"]:
+              "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ASKNEWS_CLIENT_ID", "ASKNEWS_SECRET",
+              "CLAUDE_CODE_OAUTH_TOKEN"]:
         monkeypatch.delenv(v, raising=False)
     import bot.registro as r
     monkeypatch.setattr(r, "CARPETA", tmp_path / "registro")

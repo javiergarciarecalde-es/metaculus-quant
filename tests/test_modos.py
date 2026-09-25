@@ -82,7 +82,8 @@ def test_registro_guarda_cada_miembro(monkeypatch, llms, tmp_path):
     lineas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines()]
     for l in lineas:
         assert len(l["miembros"]) == 3 and l["modo"] == "tres_empresas"
-        assert l["investigacion_modo"] == "basica"
+        assert l["investigacion_modo"] == "claude_max"
+        assert l["claude_max_usd_equivalente"] is None  # sin secreto no se usa
     assert lineas[0]["miembros"][0] == {"modelo": "falso/modelo", "valor": 0.72}
 
 

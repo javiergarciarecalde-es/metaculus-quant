@@ -84,7 +84,17 @@ pronostico:
 #            fuente que resuelve la pregunta) y 2 «buscadores» los comprueban a la vez. Lo que
 #            encuentran se AÑADE al final del informe; nunca lo reescribe. APAGADA hasta medir
 #            su coste real en un ensayo.
+# claude_max = además, Claude Opus 5.5 con varios agentes investiga en la web, pagado con la
+#            suscripción Claude Max del usuario (decisión 25/09/2026). Solo actúa si existe el
+#            secreto CLAUDE_CODE_OAUTH_TOKEN; si no, o si falla o se agota el cupo -> «basica».
 investigacion:
-  modo: "basica"
+  modo: "claude_max"            # basica | ampliada | claude_max
   max_datos_clave: 2
   tope_total_segundos: 240
+  claude_max:
+    modelo: "claude-opus-5-5"
+    agentes: 3                   # investigadores en paralelo por pregunta
+    max_turnos: 30
+    tope_segundos: 300           # por pregunta; si se pasa, se sigue sin ella
+    simultaneas: 3               # preguntas investigadas a la vez
+    tope_usd_por_pregunta: 3     # freno de Claude Code (en $ equivalentes de API)
