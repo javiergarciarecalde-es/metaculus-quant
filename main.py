@@ -594,6 +594,10 @@ def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) 
             "tipo": getattr(q, "question_type", type(q).__name__),
             "pregunta": q.question_text,
             "pronostico": r.make_readable_prediction(r.prediction),
+            # para el marcador: identificadores y el valor exacto (no solo el texto legible)
+            "id_post": getattr(q, "id_of_post", None),
+            "id_pregunta": getattr(q, "id_of_question", None),
+            "valor": _valor_legible_por_maquina(r.prediction),
             "coste_usd": r.price_estimate,
             "minutos": r.minutes_taken,
             "razonamiento": registro.resumir(r.explanation),
@@ -604,6 +608,20 @@ def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) 
             "claude_max_usd_equivalente": bot._claude_max.costes.pop(q.page_url, None) if bot else None,
         })
     return ok
+
+
+def _valor_legible_por_maquina(pred):
+    """Binaria -> probabilidad; opciones -> {opción: prob}; numérica -> {percentil: valor}."""
+    try:
+        if isinstance(pred, (int, float)):
+            return round(float(pred), 4)
+        if isinstance(pred, PredictedOptionList):
+            return {o.option_name: round(o.probability, 4) for o in pred.predicted_options}
+        if isinstance(pred, NumericDistribution):
+            return {round(p.percentile, 4): p.value for p in pred.declared_percentiles}
+    except Exception:  # el registro nunca debe tumbar un pronóstico
+        pass
+    return None
 
 
 def aviso(msg: str) -> None:

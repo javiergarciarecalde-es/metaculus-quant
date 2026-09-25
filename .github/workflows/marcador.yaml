@@ -1,0 +1,64 @@
+# Marcador semanal: cada lunes cruza los pronósticos del bot con cómo se resolvieron las preguntas
+# y guarda el resultado en docs/MARCADOR.md (en llano) y datos/ (histórico y cálculos).
+# - No pronostica ni envía nada a Metaculus: solo lee.
+# - Solo guarda pronósticos de hace más de 24 h (preguntas ya cerradas).
+# - Cada lunes deja un commit: eso además evita que GitHub apague el reloj por 60 días sin cambios.
+name: Marcador
+
+on:
+  schedule:
+    - cron: "30 6 * * 1" # lunes 06:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write # para guardar el marcador en el repositorio
+  actions: read   # para descargar los registros de las ejecuciones
+
+concurrency:
+  group: marcador
+  cancel-in-progress: false
+
+jobs:
+  marcador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Descargar los registros de las ejecuciones de los últimos 10 días
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p registro_descargas
+          desde=$(date -u -d '10 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            -q ".artifacts[] | select(.name | startswith(\"registro-\")) | select(.expired | not) | select(.created_at > \"$desde\") | .id" \
+            > ids.txt || true
+          echo "Registros a descargar: $(wc -l < ids.txt)"
+          while read -r id; do
+            [ -z "$id" ] && continue
+            gh api "repos/${{ github.repository }}/actions/artifacts/$id/zip" > "a_$id.zip" \
+              && unzip -o -q "a_$id.zip" -d "registro_descargas/$id" || echo "::warning::No se pudo bajar el registro $id"
+            rm -f "a_$id.zip"
+          done < ids.txt
+      - name: Calcular el marcador
+        env:
+          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+        run: python -m bot.marcador --descargas registro_descargas
+      - name: Guardar el marcador en el repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/MARCADOR.md datos/
+          if git diff --cached --quiet; then
+            echo "Sin cambios en el marcador."
+          else
+            git commit -m "Marcador semanal (automático)"
+            git pull --rebase --autostash
+            git push
+          fi
