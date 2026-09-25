@@ -55,6 +55,9 @@ jobs:
       - name: Instalar dependencias
         if: steps.token.outputs.hay == 'si'
         run: pip install -r requirements.txt
+      - name: Comprobar que los modelos siguen existiendo (lista pública, gratis)
+        if: steps.token.outputs.hay == 'si'
+        run: python -m bot.modelos
       - name: Ejecutar el bot
         if: steps.token.outputs.hay == 'si'
         run: python main.py --mode "${{ inputs.modo || 'tournament' }}"

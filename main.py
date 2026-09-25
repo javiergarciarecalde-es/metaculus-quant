@@ -445,7 +445,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(model=m["lector"], temperature=0.3),
-            "researcher": GeneralLlm(model=m["investigacion"], temperature=0.1),
+            "researcher": _crear_llm(m["investigacion"], m.get("investigacion_esfuerzo"), None, tmax),
             "parser": GeneralLlm(model=m["lector"], temperature=0.0),
         }
     else:
