@@ -32,8 +32,10 @@ torneos:
 # Tres modelos de tres empresas, una pasada cada uno (lo que usa nostreambot, ~10.º de 173
 # en primavera 2026). "esfuerzo" = cuánto «piensa» el modelo antes de responder: el informe
 # de primavera dice que es de lo que más pesa en el puesto final.
-# NOMBRES SIN VERIFICAR EN VIVO por nosotros (los usa nostreambot desde el 22/09/2026):
-# comprobarlos en la primera ejecución de ensayo.
+# Comprobados en la lista pública de OpenRouter el 25/09/2026 (sesión 2): gpt-5.6-sol,
+# claude-opus-4.8, gemini-3.5-flash, gpt-4o-mini. gpt-6-sol y claude-opus-5.5 los usa
+# nostreambot desde el 22/09/2026, pero NO los hemos comprobado nosotros: en cada ejecución
+# `python -m bot.modelos` avisa si alguno no existe (y el respaldo responde en su lugar).
 modelos:
   openrouter:
     # modo "tres_empresas": un puesto por empresa. "respaldo" = modelo que responde si el
@@ -44,10 +46,14 @@ modelos:
       - {nombre: "openrouter/google/gemini-3.5-flash", esfuerzo: null, respaldo: "openrouter/openai/gpt-6-sol"}  # Gemini Pro: sin cuota con la clave donada
     # modo "un_modelo": la idea del usuario, un solo modelo potente repetido en los 3 puestos
     un_modelo: {nombre: "openrouter/anthropic/claude-opus-5.5", esfuerzo: "high", respaldo: "openrouter/openai/gpt-6-sol"}
-    investigacion: "openrouter/openai/gpt-4o-search-preview"
+    # Búsqueda de noticias: «:online» = el modelo busca en internet con el buscador de su empresa
+    # (el que cubren los créditos de Metaculus). gpt-4o-search-preview dejó de existir en
+    # OpenRouter (comprobado en vivo el 25/09/2026).
+    investigacion: "openrouter/openai/gpt-5.6-sol:online"
+    investigacion_esfuerzo: "low"
     lector: "openrouter/openai/gpt-4o-mini"
     director: "openrouter/anthropic/claude-opus-5.5"      # solo con investigacion.modo = ampliada
-    buscador: "openrouter/openai/gpt-4o-search-preview"   # solo con investigacion.modo = ampliada
+    buscador: "openrouter/openai/gpt-5.6-sol:online"     # solo con investigacion.modo = ampliada (esfuerzo = investigacion_esfuerzo)
   proxy_metaculus:
     pronostico:
       - {nombre: "metaculus/gpt-5", esfuerzo: "high"}

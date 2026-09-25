@@ -479,10 +479,10 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(model=m["lector"], temperature=0.3),
-            "researcher": GeneralLlm(model=m["investigacion"], temperature=0.1),
+            "researcher": _crear_llm(m["investigacion"], m.get("investigacion_esfuerzo"), None, tmax),
             "parser": GeneralLlm(model=m["lector"], temperature=0.0),
             "director": GeneralLlm(model=m["director"], temperature=temp, timeout=tmax),
-            "buscador": GeneralLlm(model=m["buscador"], temperature=0.1),
+            "buscador": _crear_llm(m["buscador"], m.get("investigacion_esfuerzo"), None, tmax),
         }
     else:  # pruebas: modelos simulados
         pronosticadores = llms.get("_puestos") or [llms["default"]]
