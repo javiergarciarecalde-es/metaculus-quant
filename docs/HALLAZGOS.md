@@ -330,3 +330,37 @@ geminicli.com/docs/resources/quota-and-pricing; más búsquedas (visto en web) s
 | Clave de pago de Google (facturación de Cloud) | Gemini 3.1 Pro ~2 $/12 $ por millón de tokens → ~0,08 $ por pregunta, ~65 $ hasta enero (estimación) | Sí, pero **cuesta dinero** aparte de la suscripción |
 Conclusión: la suscripción AI Pro no se puede aprovechar en el bot. El puesto de Google ya lo pagan los
 créditos de Metaculus (gemini-3.5-flash). No se cambia nada salvo decisión del usuario.
+
+## 25/09/2026 — Limpieza de reglas (orden 12e del mando): CLAUDE.md solo con lo propio
+Desde hoy las reglas comunes a todos los proyectos están en `C:\Users\Administrador\Proyectos\CLAUDE.md`
+(se cargan solas). El CLAUDE.md del proyecto sigue en 58 líneas, pero ahora solo con lo propio
+(crece por las trampas y la sección de excepciones). Ninguna regla ha cambiado de sentido.
+| Bloque del CLAUDE.md viejo | Dónde queda |
+|---|---|
+| Protocolo 1 (leer ESTADO primero) y 3 (actualizar ESTADO al final) | comunes §1. Se queda como matiz: «ESTADO corto y en presente» |
+| Protocolo 2 (tramos pequeños, commit y push tras cada uno) | comunes §4 y §3.4; el push lo hace el gancho. Se queda como matiz: «mensajes de commit en español» |
+| Protocolo 4 (HALLAZGOS solo crece) | comunes §7 |
+| Protocolo 5 (`docs/DECISIONES.md`, solo decisiones del usuario) | **se queda** (documento propio) |
+| Protocolo 6 (FUENTES «verificado» / «visto en web») | comunes §7 |
+| Protocolo 7 (trabajar en `main`) | comunes §1. Se queda como matiz: «si el push a main se rechaza, rama y aviso en ESTADO» |
+| «Cómo hablar al usuario» entero | comunes §2 |
+| Reglas duras 1-4 (dinero, claves, `ENVIO_REAL`, sin gasto en API, flujo inofensivo) | **se quedan enteras** |
+| Regla dura 5 (commit + push, en español) | comunes §4 (lo de «en español», como matiz en el protocolo) |
+| Regla dura 6 (no pulir sin fin) | comunes §4 |
+| Regla dura 7 (prohibido intervenir a mano) | **se queda** (ahora es la 5) |
+| Puerta de la fase 0 | **se queda literal**; copia también en `docs/MAESTRO.md` |
+| Trampas: Windows, órdenes de >8.000 caracteres, rutas largas | comunes §10 |
+| Trampa: metaculus.com bloqueada desde la nube | **se queda** como matiz propio |
+| Estructura | **se queda**, más la sección «Excepciones a las reglas comunes» (`main.py` + `bot/` en vez de `src/` + `scripts/`) |
+Añadido: 4 trampas que ya estaban en HALLAZGOS pero no en CLAUDE.md (sesiones a la vez en `main`,
+historial reescrito, reloj de Windows a saltos de 15 ms, reloj de GitHub poco fiable y apagado a
+los 60 días). Nuevos: `CHANGELOG.md` (cambios de parámetros del 24-25/09, sacados de git) y
+`docs/MAESTRO.md` (especificación corta). Pruebas: **62 de 62 en verde**.
+
+Choques con las comunes §6 encontrados (no se toca código en esta orden; quedan en ESTADO):
+- Python 3.11 en los flujos y en `pyproject.toml` (las comunes piden 3.12).
+- Sin `ruff` (el revisor de formato) configurado ni usado.
+- Los parámetros se leen como diccionario, no con `params.p("seccion.nombre")`, y alguno tiene valor
+  por defecto en el código (p. ej. `pronostico.modo` → `tres_empresas`); algunos números elegidos
+  viven en los flujos (horario, tope de 60 min), no en `params.yaml`.
+- El CLAUDE.md no tiene tabla de límites de tamaño ni prueba que la lea (comunes §7).

@@ -1,6 +1,7 @@
 # ESTADO (siempre «ahora»)
 
-**Actualizado:** 25/09/2026 por la tarde (sesión 2 en Windows, tras la puesta en marcha con Cowork).
+**Actualizado:** 25/09/2026 por la tarde (sesión 2 en Windows, tras la puesta en marcha con Cowork;
+y la limpieza de reglas, orden 12e).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
 automática que hace git después de guardar).
 
@@ -16,7 +17,7 @@ nada a Metaculus.
 | Repositorio | **público** |
 | Secretos en GitHub (claves guardadas) | `METACULUS_TOKEN` y `CLAUDE_CODE_OAUTH_TOKEN` puestos. **Falta `OPENROUTER_API_KEY`** (la clave de créditos, aún no ha llegado) |
 | Interruptor `ENVIO_REAL` | no existe todavía → no envía nada |
-| Pruebas automáticas (programa que comprueba el bot solo) | **55 de 55 en verde** |
+| Pruebas automáticas (programa que comprueba el bot solo) | **62 de 62 en verde** (25/09, tarde) |
 
 ## Primera prueba real (25/09, 09:27, sin enviar nada)
 | Qué | Resultado |
@@ -90,6 +91,23 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
   `resumeFromRunId: wf_a48ee14e-a30`).
 - Ojo: la app dice que el plan de Claude del usuario es **Pro**, no Max: el cupo que gastaría la
   investigación con Claude en el bot es menor de lo supuesto. Revisar antes de encender el envío real.
+
+## Limpieza de reglas (25/09, orden 12e del mando): hecha
+- `CLAUDE.md` lleva solo lo propio; lo común está en las reglas comunes (se cargan solas). Ninguna
+  regla ha cambiado de sentido: tabla de correspondencia en HALLAZGOS (25/09, «Limpieza de reglas»).
+- Nuevos: `docs/MAESTRO.md` (qué es el bot y cómo debe ser) y `CHANGELOG.md` (historia de los
+  parámetros). Pruebas: 62 de 62 en verde.
+- **Pregunta para ti (sin prisa):** el código no cumple aún 3 normas técnicas de las reglas comunes
+  (versión de Python 3.11 en vez de 3.12; sin revisor de formato `ruff`; parámetros leídos sin la
+  función común `params.p` y alguno con valor por defecto). ¿Lo adaptamos en una sesión aparte, o lo
+  declaramos excepción? Mi recomendación: adaptarlo en una sesión aparte, pero después de la primera
+  semana con envío real, no antes (tocar el código justo al arrancar añade riesgo sin ganar puntos).
+
+## Para el mando
+- A las comunes §7 les falta decir qué hacer con un documento propio de un proyecto como
+  `docs/DECISIONES.md` (aquí las decisiones del usuario van ahí, no en ESTADO ni CHANGELOG).
+- Este proyecto no tiene la tabla de límites de tamaño que piden las comunes §7 ni la prueba que la
+  lee: hace falta un encargo (toca pruebas).
 
 ## Qué toca en la próxima sesión
 - Si ya está la clave: repetir la prueba sin envío, leer el resultado y, si sale bien, preparar el
