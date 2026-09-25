@@ -18,3 +18,4 @@
 | Lista de modelos de OpenRouter (openrouter.ai/api/v1/models) | **verificado** 25/09/2026 | nombres y precios en vivo; gpt-4o-search-preview ya no existe |
 | Facturación de GitHub Actions (docs.github.com) | verificado (resumen automático) | 2.000 min/mes en privados, públicos gratis, 0,006 $/min, se bloquea sin tarjeta |
 | Normas citadas en github.com/Daatan/retro/issues/616 | visto en web | reglas de «sin humano», ventana ~1,5 h |
+| Bots rivales de código abierto (joy-void-joy, alekthebear/castor, maradotwebp/5cast, geemus, Panshul42, edisonymy y ~15 más) y notebooks 43497/45336/45382 de Metaculus | verificado por agentes (25/09) | ver `docs/ESTUDIO_BOTS.md`; licencias anotadas allí |
