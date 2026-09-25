@@ -56,8 +56,8 @@ modelos:
     buscador: "openrouter/openai/gpt-5.6-sol:online"     # solo con investigacion.modo = ampliada (esfuerzo = investigacion_esfuerzo)
   proxy_metaculus:
     pronostico:
-      - {nombre: "metaculus/gpt-5", esfuerzo: "high"}
-      - {nombre: "metaculus/claude-sonnet-4-5", esfuerzo: null}
+      - {nombre: "metaculus/gpt-5", esfuerzo: "high", respaldo: "metaculus/claude-sonnet-4-5"}
+      - {nombre: "metaculus/claude-sonnet-4-5", esfuerzo: null, respaldo: "metaculus/gpt-5"}
     un_modelo: {nombre: "metaculus/claude-sonnet-4-5", esfuerzo: null, respaldo: "metaculus/gpt-5"}
     investigacion: "metaculus/gpt-4o-search-preview"
     lector: "metaculus/gpt-4o-mini"
@@ -89,3 +89,9 @@ investigacion:
   modo: "basica"
   max_datos_clave: 2
   tope_total_segundos: 240
+
+# --- Tiempos (el flujo de GitHub corta a los 40 min) ---
+tiempos:
+  tope_pasada_segundos: 900          # una pasada (modelo + respaldo) nunca más de 15 min
+  tope_busqueda_segundos: 180        # búsqueda de noticias: 3 min, 1 intento; si falla, sin noticias
+  dejar_de_empezar_tras_minutos: 28  # pasado esto no se empiezan preguntas nuevas (las coge la siguiente ejecución)

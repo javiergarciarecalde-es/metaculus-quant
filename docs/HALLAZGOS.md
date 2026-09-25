@@ -186,3 +186,13 @@ Cambios hechos (código probado con modelos simulados; 35 pruebas en verde):
    2 buscadores los comprueban a la vez; lo encontrado se AÑADE al final del informe, con tope de
    240 s; si algo falla, se sigue con el informe normal. Coste extra estimado: +0,05-0,35 $/pregunta.
 5. El comprobador de modelos (`python -m bot.modelos`) revisa también respaldos, director y buscador.
+
+### 25/09/2026 — Revisión con agentes del cambio anterior: 5 fallos confirmados, arreglados
+| Fallo | Qué habría pasado | Arreglo |
+|---|---|---|
+| Turno de investigación compartido entre tandas (viene de la plantilla oficial) | la **MiniBench entera** (segunda tanda de cada ejecución) podía fallar con «bound to a different event loop» | un turno nuevo por tanda; prueba nueva |
+| Modelos repartidos con una rueda común a todas las preguntas | sin clave de OpenRouter, si un modelo del proxy caía, se perdía 1 de cada 2 preguntas | la pasada n de cada pregunta usa el puesto n; respaldo también en el proxy |
+| Modelo colgado: 2 intentos × 10 min, y después el respaldo | una sola pregunta podía pasar de los 40 min del flujo y **cortar la ejecución** | 1 intento si hay respaldo; tope de 15 min por pasada; búsqueda 3 min; no se empiezan preguntas tras 28 min |
+| Registro solo al final de la tanda | si se cortaba, no quedaba nada apuntado | se apunta cada pregunta en cuanto termina |
+| Subpreguntas de un grupo con la misma dirección web | el registro por modelo se mezclaba | clave = id de la pregunta |
+Pruebas: **42 de 42 en verde**.
