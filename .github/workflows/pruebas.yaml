@@ -1,4 +1,6 @@
 # Pruebas automáticas (sin claves, sin internet a Metaculus ni a modelos): en cada cambio.
+# Dos trabajos separados: si el revisor de estilo (ruff) falla, las pruebas (pytest) se
+# ejecutan igual, y cada uno sale en rojo por su cuenta.
 name: Pruebas
 
 on:
@@ -20,3 +22,19 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
+
+  ruff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # solo ruff (con el mismo tope de versión que requirements-dev.txt): no hace falta el resto
+      - run: pip install "$(grep '^ruff' requirements-dev.txt)"
+      - name: Formato (ruff format)
+        run: ruff format --check .
+      - name: Revisión (ruff check)
+        if: always()
+        run: ruff check .
