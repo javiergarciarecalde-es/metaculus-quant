@@ -305,7 +305,7 @@ Pedido por el usuario: quitar su correo de Gmail del primer commit (repositorio 
   **55 de 55 pruebas en verde.**
 
 ## 25/09/2026 — Historial reescrito para quitar el correo del usuario (decisión del usuario)
-- Copia de seguridad previa: `C:	\mq-respaldo-antes-de-reescribir.bundle` (todas las ramas; comprobada).
+- Copia de seguridad previa: `C:/t/mq-respaldo-antes-de-reescribir.bundle` (todas las ramas; comprobada).
 - `git filter-branch --env-filter` en un clon limpio: el autor del primer commit pasa de su Gmail a
   `327065986+javiergarciarecalde-es@users.noreply.github.com` (la dirección anónima de GitHub).
   Contenido idéntico (sin diferencias de ficheros); cambian los identificadores de los 23 commits.
