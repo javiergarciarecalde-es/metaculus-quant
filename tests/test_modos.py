@@ -211,3 +211,23 @@ def test_registro_por_pregunta_aunque_la_tanda_no_termine(monkeypatch, llms, tmp
     monkeypatch.setattr(main, "registrar", lambda inf, *a, **k: apuntadas.append(len(inf)) or orig(inf, *a, **k))
     main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()), llms=llms)
     assert apuntadas[:3] == [1, 1, 1]
+
+
+# ---------------------------- aviso de fallo total (ensayo real del 25/09/2026) ----------------------------
+
+def test_si_fallan_todas_acaba_en_rojo(monkeypatch, llms, capsys):
+    """El primer ensayo real acabó en verde con 0 pronósticos: ahora tiene que verse."""
+    monkeypatch.setenv("METACULUS_TOKEN", "t")
+    roto = ModeloRoto("excepcion")
+    codigo = main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()),
+                           llms={**llms, "default": roto, "researcher": roto})
+    salida = capsys.readouterr().out
+    assert codigo == 1 and "::error::" in salida and "OPENROUTER_API_KEY" in salida
+
+
+def test_si_todo_va_bien_acaba_en_verde(monkeypatch, llms, capsys):
+    monkeypatch.setenv("METACULUS_TOKEN", "t")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "clave-falsa")
+    codigo = main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()), llms=llms)
+    salida = capsys.readouterr().out
+    assert codigo == 0 and "::error::" not in salida and "::warning::" not in salida

@@ -133,4 +133,6 @@ class InvestigadorClaudeMax:
             logger.warning(f"Investigación con Claude Max descartada: {e!r}"[:500])
             return informe_base
         self.costes[clave] = coste
+        logger.info(f"Investigación con Claude Max: {len(notas)} caracteres; "
+                    f"{coste} $ equivalentes de API. Empieza así: {notas[:600]}")
         return informe_base + CABECERA + notas

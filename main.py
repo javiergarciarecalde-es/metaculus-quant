@@ -635,8 +635,11 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
         # pronósticos en preguntas del torneo. Solo la zona de pruebas oficial.
         torneos = [t["prueba"]]
     print(f"Modo {modo}. Envío real: {'SÍ' if envio else 'NO (ensayo)'}. Torneos: {torneos}")
+    if not cfg.hay("OPENROUTER_API_KEY"):
+        aviso("Falta OPENROUTER_API_KEY (la clave de los créditos): se prueban los modelos de "
+              "Metaculus sin clave, que el 25/09/2026 no tenían cupo. Lo normal es que falle.")
 
-    total = 0
+    total = fallos = 0
     for torneo in torneos:
         preguntas = cliente.get_all_open_questions_from_tournament(torneo)
         if not envio:
@@ -652,9 +655,21 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
         # las buenas ya se apuntaron al terminar cada una; aquí solo los errores
         registrar([r for r in informes if isinstance(r, BaseException)], torneo, envio, bot=bot)
         total += sum(not isinstance(r, BaseException) for r in informes)
+        fallos += sum(isinstance(r, BaseException) and not _es_falta_de_tiempo(r) for r in informes)
         bot.log_report_summary(informes, raise_errors=False)
     print(f"Terminado: {total} pronósticos {'ENVIADOS' if envio else 'de ensayo (no enviados)'}.")
+    if fallos and not total:
+        # antes acababa en verde con 0 pronósticos (25/09/2026): un fallo total tiene que verse
+        print(f"::error::Fallaron las {fallos} preguntas y no salió ningún pronóstico. Mira los avisos de arriba.")
+        return 1
+    if fallos:
+        print(f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba.")
     return 0
+
+
+def _es_falta_de_tiempo(error: BaseException) -> bool:
+    """Las preguntas que se dejan para la siguiente ejecución por tiempo no son fallos."""
+    return "sin tiempo en esta ejecución" in str(error)
 
 
 def main(argv=None) -> int:

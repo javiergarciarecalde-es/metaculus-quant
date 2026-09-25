@@ -265,3 +265,41 @@ Sin verificar (hace falta el secreto real; se verá en el primer ensayo):
 - Cuánto cupo semanal de Max gasta cada pregunta.
 - **Sesiones a la vez:** hoy la sesión de la nube y la local han subido a `main` al mismo tiempo
   (3 veces hubo que juntar cambios). Funciona, pero conviene que trabaje una sola sesión cada vez.
+
+## 25/09/2026 — Puesta en marcha hecha por el usuario con Claude Cowork (informe de Cowork)
+Hecho por el usuario: bot creado en Metaculus (**Kyou-bot**); formulario de participación y créditos
+enviado (aficionado, código abierto, se piden 270 $); repositorio **público**; secretos
+`METACULUS_TOKEN` y `CLAUDE_CODE_OAUTH_TOKEN` puestos (comprobado con `gh secret list`). Falta
+`OPENROUTER_API_KEY` (la clave de créditos aún no ha llegado; Metaculus avisa de que suele caer en spam).
+
+Lo que Cowork leyó en Metaculus (anuncio 45615, recursos 38928, /tournament-rules) y matiza lo anterior:
+| Punto | Qué dice |
+|---|---|
+| Aceptar condiciones | no hay botón: inscribirse o enviar pronósticos equivale a aceptarlas |
+| Identidad | se pide al cobrar, no ahora. Pago por Ramp (comprobar que admite España/EUR), documentos de identidad y formulario W-8BEN; impuestos a cargo del ganador; pago ~1-2 meses tras resolverse |
+| Token | el botón se llama «Copiar token de API» (no «Show Bot Token») |
+| Créditos dobles por código abierto | llegan **tras un periodo de evaluación**, no desde el principio; «puede cambiar» |
+| Comentarios | obligatorios, deben reflejar el razonamiento real y ser **notas privadas**; comentarios largos sin valor = spam (puede desactivar la cuenta); privados aceptados «dentro de límites razonables». Comprobado en forecasting-tools 0.3.1: `post_question_comment` publica con `is_private=True` por defecto; el texto es el de la plantilla (resumen + investigación + razonamientos, tope 150.000 caracteres) |
+| Comentarios archivados | >30 días y >1.000 caracteres: el listado da 200 caracteres; texto completo con api/comments/[id]/ (8 llamadas / 10 s). No nos afecta: el bot no lee sus comentarios |
+| Para cobrar | código o descripción (y cambios importantes), aceptar inspección (enseñar código, demostración, preguntas), encuesta |
+| Un bot con premio por persona | los secundarios llevan «v2» y se vinculan en Ajustes |
+Otras notas: `claude` no quedó en la lista de carpetas de Windows tras instalarlo (se usó la ruta
+`%USERPROFILE%\.local\bin\claude.exe`); el formulario de créditos es «solo para humanos» y se declaró
+que lo rellenó el usuario con ayuda de IA; Metaculus pide que las IAs no les escriban sin guía humana.
+Pedido por el usuario: quitar su correo de Gmail del primer commit (repositorio ya público).
+
+## 25/09/2026 — Primer ensayo real en GitHub Actions (ejecución 36118516529, sin envío)
+- Lanzado con `gh workflow run` (modo test_questions, zona de pruebas). Secretos presentes:
+  METACULUS_TOKEN y CLAUDE_CODE_OAUTH_TOKEN; sin OPENROUTER_API_KEY.
+- Instalación bien: Claude Code 2.1.282 con Node 22; comprobador de modelos: todos existen.
+- Sin clave de OpenRouter el bot usa el bloque `proxy_metaculus`: Metaculus contestó
+  «You don't have an allowance for model <gpt-5>», «<claude-sonnet-4-5>» y «<gpt-4o-search-preview>»
+  (sin cupo), y una vez «Cannot authenticate user» (página HTML) en la ruta de Anthropic.
+  Resultado: **0 de 3 pronósticos**. Sin la clave de créditos el bot no puede pronosticar.
+- La investigación con Claude Max no dio error (hubo ~2 min entre la búsqueda y los pronósticos),
+  pero su texto no se registraba en ningún sitio y las preguntas fallaron: sin confirmar.
+- **Fallo de diseño:** el flujo acabó en VERDE con 0 pronósticos. Arreglado: fallo total → rojo
+  (`::error::`, código 1); fallo parcial → amarillo; aviso si falta OPENROUTER_API_KEY. Las preguntas
+  que se dejan por falta de tiempo no cuentan como fallo. La investigación con Claude Max apunta
+  en el registro de la ejecución su longitud, su coste equivalente y el principio del texto.
+  **55 de 55 pruebas en verde.**
