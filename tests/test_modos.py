@@ -8,7 +8,7 @@ import pytest
 import main
 from bot import config as cfg
 from bot import investigacion as inv
-from tests.conftest import RESPUESTA_BINARIA, MetaculusFalso, ModeloFalso, preguntas_ejemplo
+from tests.conftest import MetaculusFalso, ModeloFalso, preguntas_ejemplo
 
 
 def test_tres_empresas_da_tres_modelos_distintos(monkeypatch):
@@ -32,7 +32,7 @@ def test_un_modelo_repite_opus_tres_veces(monkeypatch):
 def test_modo_invalido_da_error_claro():
     params = cfg.cargar_params()
     params["pronostico"]["modo"] = "agentes"
-    with pytest.raises(ValueError, match="pronostico.modo"):
+    with pytest.raises(ValueError, match=r"pronostico\.modo"):
         cfg.lista_pronosticadores(params)
 
 
@@ -81,11 +81,11 @@ def test_registro_guarda_cada_miembro(monkeypatch, llms, tmp_path):
     monkeypatch.setenv("METACULUS_TOKEN", "token-de-prueba")
     main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()), llms=llms)
     [f] = list((tmp_path / "registro").glob("*.jsonl"))
-    lineas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines()]
-    for l in lineas:
-        assert len(l["miembros"]) == 3 and l["modo"] == "tres_empresas"
-        assert l["investigacion_modo"] == "claude_max"
-        assert l["claude_max_usd_equivalente"] is None  # sin secreto no se usa
+    lineas = [json.loads(linea) for linea in f.read_text(encoding="utf-8").splitlines()]
+    for linea in lineas:
+        assert len(linea["miembros"]) == 3 and linea["modo"] == "tres_empresas"
+        assert linea["investigacion_modo"] == "claude_max"
+        assert linea["claude_max_usd_equivalente"] is None  # sin secreto no se usa
     assert lineas[0]["miembros"][0] == {"modelo": "falso/modelo", "valor": 0.72}
 
 
@@ -165,7 +165,7 @@ def test_ampliada_integrada_en_el_bot(llms, modelo):
 
 
 def test_puestos_por_pregunta_sin_desalinear(llms):
-    """La pasada n de cada pregunta usa el puesto n aunque otras preguntas fallen o sean de grupo."""
+    """La pasada n de cada pregunta usa el puesto n aunque otras fallen o sean de grupo."""
     a, b = ModeloFalso(), ModeloFalso()
     bot = _bot_con_puestos(llms, [a, b], [None, None])
     asyncio.run(bot.forecast_questions(preguntas_ejemplo()[:1] * 1))
@@ -193,7 +193,9 @@ def test_subpreguntas_de_grupo_no_mezclan_miembros(monkeypatch, llms, tmp_path):
     ]
     main.ejecutar("test_questions", cliente=MetaculusFalso(grupo), llms=llms)
     [f] = list((tmp_path / "registro").glob("*.jsonl"))
-    assert [len(json.loads(l)["miembros"]) for l in f.read_text(encoding="utf-8").splitlines()] == [
+    assert [
+        len(json.loads(linea)["miembros"]) for linea in f.read_text(encoding="utf-8").splitlines()
+    ] == [
         3,
         3,
         3,
@@ -242,7 +244,7 @@ def test_registro_por_pregunta_aunque_la_tanda_no_termine(monkeypatch, llms, tmp
     assert apuntadas[:3] == [1, 1, 1]
 
 
-# ---------------------------- aviso de fallo total (ensayo real del 25/09/2026) ----------------------------
+# -------------------- aviso de fallo total (ensayo real del 25/09/2026) --------------------
 
 
 def test_si_fallan_todas_acaba_en_rojo(monkeypatch, llms, capsys):

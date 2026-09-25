@@ -1,8 +1,9 @@
 """Lectura de parámetros e interruptores.
 
-Interruptores (variables de entorno; en GitHub se ponen en Settings → Secrets and variables → Actions):
+Interruptores (variables de entorno; en GitHub se ponen en
+Settings → Secrets and variables → Actions):
 - METACULUS_TOKEN (secreto): sin él, el bot termina limpio sin hacer nada.
-- ENVIO_REAL (variable): solo con el valor exacto "true" se envían pronósticos. Por defecto: apagado.
+- ENVIO_REAL (variable): solo con el valor exacto "true" se envían pronósticos. Si no: apagado.
 - OPENROUTER_API_KEY (secreto, opcional): si está, se usan modelos con clave propia.
 """
 

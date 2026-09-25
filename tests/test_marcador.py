@@ -2,13 +2,13 @@
 
 import json
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from bot import marcador as mc
 
-AHORA = datetime(2026, 10, 20, 12, tzinfo=timezone.utc)
+AHORA = datetime(2026, 10, 20, 12, tzinfo=UTC)
 
 
 def _fila(url, tipo, valor, miembros, horas=48, enviado=True, idq=None):
@@ -111,7 +111,7 @@ def test_programa_completo_con_metaculus_simulado(tmp_path, monkeypatch):
         [{"modelo": "a", "valor": 0.7}],
         horas=24 * 30,
     )
-    fila["cuando_utc"] = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    fila["cuando_utc"] = (datetime.now(UTC) - timedelta(days=3)).isoformat()
     (descargas / "pronosticos_2026-10.jsonl").write_text(json.dumps(fila) + "\n", encoding="utf-8")
     pedidas = []
     monkeypatch.setattr(
@@ -148,7 +148,7 @@ def test_el_registro_guarda_valor_exacto_para_el_marcador(monkeypatch, llms, tmp
     monkeypatch.setenv("METACULUS_TOKEN", "t")
     main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()), llms=llms)
     [f] = list((tmp_path / "registro").glob("*.jsonl"))
-    lineas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines()]
+    lineas = [json.loads(linea) for linea in f.read_text(encoding="utf-8").splitlines()]
     binaria, opciones, numerica = lineas
     assert binaria["valor"] == pytest.approx(0.72)
     assert set(opciones["valor"]) == {"Rojo", "Verde", "Azul"}

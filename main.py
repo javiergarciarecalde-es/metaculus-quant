@@ -24,7 +24,7 @@ import logging
 import sys
 import time
 import warnings
-from datetime import datetime
+from datetime import UTC, datetime
 
 import dotenv
 
@@ -32,12 +32,12 @@ warnings.filterwarnings("ignore", message=r".*does not support cost tracking.*")
 
 from forecasting_tools import (  # noqa: E402
     AskNewsSearcher,
+    BinaryPrediction,
     BinaryQuestion,
-    DateQuestion,
     DatePercentile,
+    DateQuestion,
     ForecastBot,
     GeneralLlm,
-    MetaculusClient,
     MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericDistribution,
@@ -45,17 +45,15 @@ from forecasting_tools import (  # noqa: E402
     Percentile,
     PredictedOption,
     PredictedOptionList,
-    BinaryPrediction,
     ReasonedPrediction,
     clean_indents,
     structure_output,
 )
 
 from bot import agregacion as ag  # noqa: E402
-from bot import claude_max  # noqa: E402
+from bot import claude_max, registro  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
-from bot import registro  # noqa: E402
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -86,7 +84,7 @@ class QuantBot(ForecastBot):
         self.minimo_por_opcion = float(p["minimo_por_opcion"])
         self._modelos = list(modelos_pronostico)
         respaldos = respaldos or [None] * len(self._modelos)
-        self._puestos = list(zip(self._modelos, respaldos))
+        self._puestos = list(zip(self._modelos, respaldos, strict=True))
         self._pasadas: dict[tuple, int] = {}  # cuántas pasadas lleva cada pregunta
         self._miembros: dict[tuple, list[dict]] = {}  # pronósticos individuales por pregunta
         t = params.get("tiempos", {})
@@ -203,7 +201,7 @@ class QuantBot(ForecastBot):
                 {question.resolution_criteria}
 
                 {question.fine_print}
-                """
+                """  # noqa: E501 (texto para el modelo: no se parte)
             )
             try:
                 if cfg.hay("ASKNEWS_CLIENT_ID") and cfg.hay("ASKNEWS_SECRET"):
@@ -257,7 +255,7 @@ class QuantBot(ForecastBot):
             Your research assistant says:
             {research}
 
-            Today is {datetime.now().strftime("%Y-%m-%d")}.
+            Today is {datetime.now(UTC).strftime("%Y-%m-%d")}.
 
             Before answering you write:
             (a) The time left until the outcome to the question is known.
@@ -271,7 +269,7 @@ class QuantBot(ForecastBot):
             and they do not hedge towards 50% when the evidence is clear.
 
             The last thing you write is your final answer as: "Probability: ZZ%", 0-100
-            """
+            """  # noqa: E501 (texto para el modelo: no se parte)
         )
         texto, modelo = await self._pensar(prompt, question)
         p = ag.leer_probabilidad(texto)
@@ -312,7 +310,7 @@ class QuantBot(ForecastBot):
             Your research assistant says:
             {research}
 
-            Today is {datetime.now().strftime("%Y-%m-%d")}.
+            Today is {datetime.now(UTC).strftime("%Y-%m-%d")}.
 
             Before answering you write:
             (a) The time left until the outcome to the question is known.
@@ -328,7 +326,7 @@ class QuantBot(ForecastBot):
             Option_B: Probability_B
             ...
             Option_N: Probability_N
-            """
+            """  # noqa: E501 (texto para el modelo: no se parte)
         )
         texto, modelo = await self._pensar(prompt, question)
         leidas = ag.leer_opciones(texto, question.options)
@@ -339,7 +337,8 @@ class QuantBot(ForecastBot):
                 model=self.get_llm("parser", "llm"),
                 num_validation_samples=self._structure_output_validation_samples,
                 additional_instructions=(
-                    f"Make sure that all option names are one of the following: {question.options}. "
+                    "Make sure that all option names are one of the following: "
+                    f"{question.options}. "
                     "Remove any 'Option' prefix not part of the names. Keep options with 0%."
                 ),
             )
@@ -377,7 +376,7 @@ class QuantBot(ForecastBot):
             Your research assistant says:
             {research}
 
-            Today is {datetime.now().strftime("%Y-%m-%d")}.
+            Today is {datetime.now(UTC).strftime("%Y-%m-%d")}.
 
             {inf}
             {sup}
@@ -405,7 +404,7 @@ class QuantBot(ForecastBot):
             Percentile 80: XX
             Percentile 90: XX (highest number value)
             "
-            """
+            """  # noqa: E501 (texto para el modelo: no se parte)
         )
         texto, modelo = await self._pensar(prompt, question)
         leidos = ag.leer_percentiles(texto)
@@ -452,7 +451,7 @@ class QuantBot(ForecastBot):
             Your research assistant says:
             {research}
 
-            Today is {datetime.now().strftime("%Y-%m-%d")}.
+            Today is {datetime.now(UTC).strftime("%Y-%m-%d")}.
 
             {inf}
             {sup}
@@ -610,7 +609,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     )
 
 
-def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) -> int:
+def registrar(informes, torneo, publicado: bool, bot: QuantBot | None = None) -> int:
     ok = 0
     for r in informes:
         if isinstance(r, BaseException):
@@ -671,7 +670,8 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
     params = params or cfg.cargar_params()
     if not cfg.hay("METACULUS_TOKEN"):
         aviso(
-            "Falta METACULUS_TOKEN: el bot no hace nada (esto es normal hasta que el usuario lo ponga)."
+            "Falta METACULUS_TOKEN: el bot no hace nada "
+            "(esto es normal hasta que el usuario lo ponga)."
         )
         return 0
 
@@ -685,12 +685,10 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
         bot.metaculus_client = cliente
     cliente = bot.metaculus_client
     t = params["torneos"]
-    if envio and modo == "tournament":
-        torneos = [t["temporada"], t["minibench"]]
-    else:
-        # En ensayo NUNCA se tocan preguntas del torneo: las reglas prohíben «previsualizar»
-        # pronósticos en preguntas del torneo. Solo la zona de pruebas oficial.
-        torneos = [t["prueba"]]
+    # En ensayo NUNCA se tocan preguntas del torneo: las reglas prohíben «previsualizar»
+    # pronósticos en preguntas del torneo. Solo la zona de pruebas oficial.
+    de_verdad = envio and modo == "tournament"
+    torneos = [t["temporada"], t["minibench"]] if de_verdad else [t["prueba"]]
     print(f"Modo {modo}. Envío real: {'SÍ' if envio else 'NO (ensayo)'}. Torneos: {torneos}")
     if not cfg.hay("OPENROUTER_API_KEY"):
         aviso(
@@ -720,7 +718,8 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
     if fallos and not total:
         # antes acababa en verde con 0 pronósticos (25/09/2026): un fallo total tiene que verse
         print(
-            f"::error::Fallaron las {fallos} preguntas y no salió ningún pronóstico. Mira los avisos de arriba."
+            f"::error::Fallaron las {fallos} preguntas y no salió ningún pronóstico. "
+            "Mira los avisos de arriba."
         )
         return 1
     if fallos:

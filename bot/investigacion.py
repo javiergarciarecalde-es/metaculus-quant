@@ -23,7 +23,8 @@ def _prompt_director(pregunta: str, criterios: str, informe: str, n: int) -> str
     return (
         "You direct research for a forecaster. Given the question, its resolution criteria and the "
         f"current research report, choose at most {n} KEY facts whose verification would most "
-        "change the forecast. One of them MUST be: what the resolution source currently says/shows. "
+        "change the forecast. One of them MUST be: "
+        "what the resolution source currently says/shows. "
         'Answer ONLY with JSON: [{"dato": "...", "busqueda": "search query"}]\n\n'
         f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\nReport:\n{informe[:6000]}"
     )
@@ -69,7 +70,7 @@ async def ampliar(
         )
         partes = [
             f"### {d.get('dato', d['busqueda'])}\n{r}"
-            for d, r in zip(datos, res)
+            for d, r in zip(datos, res, strict=True)
             if isinstance(r, str) and r.strip()
         ]
         return informe_base + CABECERA + "\n\n".join(partes) if partes else informe_base

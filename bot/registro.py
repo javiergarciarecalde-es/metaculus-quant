@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .config import RAIZ
@@ -19,8 +19,8 @@ def resumir(texto: str, n: int = 600) -> str:
 def anotar(entrada: dict, carpeta: Path | None = None) -> Path:
     carpeta = carpeta or CARPETA
     carpeta.mkdir(parents=True, exist_ok=True)
-    ruta = carpeta / f"pronosticos_{datetime.now(timezone.utc):%Y-%m}.jsonl"
-    entrada = {"cuando_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), **entrada}
+    ruta = carpeta / f"pronosticos_{datetime.now(UTC):%Y-%m}.jsonl"
+    entrada = {"cuando_utc": datetime.now(UTC).isoformat(timespec="seconds"), **entrada}
     with open(ruta, "a", encoding="utf-8") as f:
         f.write(json.dumps(entrada, ensure_ascii=False, default=str) + "\n")
     return ruta

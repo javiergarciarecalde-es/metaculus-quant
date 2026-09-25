@@ -1,6 +1,6 @@
-"""Piezas simuladas: un modelo falso (no llama a ninguna IA) y un Metaculus falso (no envía nada)."""
+"""Piezas simuladas: un modelo falso (no llama a ninguna IA) y un Metaculus falso (no envía
+nada)."""
 
-import os
 import sys
 from pathlib import Path
 
@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from forecasting_tools import (  # noqa: E402
+from forecasting_tools import (
     BinaryQuestion,
     GeneralLlm,
     MultipleChoiceQuestion,

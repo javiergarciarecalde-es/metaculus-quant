@@ -1,3 +1,4 @@
+import itertools
 import json
 import subprocess
 import sys
@@ -44,7 +45,7 @@ async def test_tres_tipos_dan_pronostico_valido(llms):
 
     assert isinstance(numerica, NumericDistribution)
     cdf = [p.percentile for p in numerica.get_cdf()]
-    assert all(b >= a for a, b in zip(cdf, cdf[1:]))
+    assert all(b >= a for a, b in itertools.pairwise(cdf))
     assert len(cdf) == 201
 
 
@@ -104,11 +105,13 @@ def test_registro_se_escribe(monkeypatch, llms, tmp_path):
     _ejecutar(monkeypatch, llms, envio=False)
     ficheros = list((tmp_path / "registro").glob("*.jsonl"))
     assert ficheros
-    lineas = [json.loads(l) for l in ficheros[0].read_text(encoding="utf-8").splitlines()]
+    lineas = [json.loads(linea) for linea in ficheros[0].read_text(encoding="utf-8").splitlines()]
     assert len(lineas) == 3
-    for l in lineas:
-        assert {"url", "pregunta", "pronostico", "coste_usd", "razonamiento", "enviado"} <= set(l)
-        assert l["enviado"] is False
+    for linea in lineas:
+        assert {"url", "pregunta", "pronostico", "coste_usd", "razonamiento", "enviado"} <= set(
+            linea
+        )
+        assert linea["enviado"] is False
 
 
 def test_envio_real_solo_con_true_exacto(monkeypatch):

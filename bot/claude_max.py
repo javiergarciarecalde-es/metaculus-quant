@@ -2,7 +2,8 @@
 
 Decisión del usuario (25/09/2026, esquema mixto): los 3 pronosticadores van con los créditos de
 Metaculus; esta investigación extra va con su Claude Max, usando Claude Code (`claude -p`) en
-GitHub Actions con el secreto CLAUDE_CODE_OAUTH_TOKEN (lo genera el usuario con `claude setup-token`).
+GitHub Actions con el secreto CLAUDE_CODE_OAUTH_TOKEN (lo genera el usuario con
+`claude setup-token`).
 
 Reglas (las mismas que la investigación ampliada):
 - Lo que encuentra se AÑADE al final del informe base; nunca lo sustituye.
@@ -14,6 +15,7 @@ Reglas (las mismas que la investigación ampliada):
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -50,7 +52,8 @@ def prompt_investigacion(
         "3. Base rates / historical frequency of similar events, and any scheduled events.\n"
         "Also check the report below for facts that look wrong or outdated.\n"
         "Return brief notes: each fact with its date and source URL. Mark anything uncertain.\n\n"
-        f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\nFine print: {letra_pequena}\n\n"
+        f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\n"
+        f"Fine print: {letra_pequena}\n\n"
         f"Current research report:\n{informe[:6000]}"
     )
 
@@ -86,11 +89,18 @@ def leer_salida(texto: str) -> tuple[str, float | None]:
     """Devuelve (notas, coste equivalente en $) o lanza error si Claude Code falló."""
     datos = json.loads(texto)
     if not isinstance(datos, dict):
-        raise ValueError("salida de Claude Code sin formato esperado")
+        raise TypeError("salida de Claude Code sin formato esperado")
     notas = datos.get("result")
     if datos.get("is_error") or not isinstance(notas, str) or not notas.strip():
         raise RuntimeError(f"Claude Code sin resultado: {str(notas or datos.get('subtype'))[:300]}")
     return notas.strip(), datos.get("total_cost_usd")
+
+
+def comprobar_salida(codigo: int, salida: str, error: str) -> tuple[str, float | None]:
+    """Como `leer_salida`, pero antes da error si Claude Code terminó mal y sin decir nada."""
+    if codigo != 0 and not salida.strip():
+        raise RuntimeError(f"Claude Code terminó con código {codigo}: {error[-300:]}")
+    return leer_salida(salida)
 
 
 async def _ejecutar_de_verdad(args: list[str], entrada: str, env: dict, tope: float):
@@ -110,10 +120,8 @@ async def _ejecutar_de_verdad(args: list[str], entrada: str, env: dict, tope: fl
         try:
             salida, error = await asyncio.wait_for(proc.communicate(entrada.encode("utf-8")), tope)
         except BaseException:
-            try:
+            with contextlib.suppress(ProcessLookupError):
                 proc.kill()
-            except ProcessLookupError:
-                pass
             await proc.wait()
             raise
     return proc.returncode, salida.decode("utf-8", "replace"), error.decode("utf-8", "replace")
@@ -156,9 +164,7 @@ class InvestigadorClaudeMax:
                     return informe_base
                 env = {k: v for k, v in os.environ.items() if k not in OTRAS_CLAVES}
                 codigo, salida, error = await self._ejecutar(orden(self.conf), entrada, env, tope)
-            if codigo != 0 and not salida.strip():
-                raise RuntimeError(f"Claude Code terminó con código {codigo}: {error[-300:]}")
-            notas, coste = leer_salida(salida)
+            notas, coste = comprobar_salida(codigo, salida, error)
         except Exception as e:  # incluye tiempo agotado: se sigue con el informe base
             if any(p in str(e).lower() for p in PALABRAS_CUPO):
                 self.sin_cupo = True

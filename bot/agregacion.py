@@ -61,7 +61,7 @@ def agregar_opciones(
         raise ValueError("sin pronósticos de opciones")
     res = {}
     for op in opciones:
-        vals = [float(l.get(op, 0.0)) for l in listas]
+        vals = [float(lista.get(op, 0.0)) for lista in listas]
         res[op] = median(vals)
     return normalizar_opciones(res, minimo)
 
@@ -89,11 +89,11 @@ def agregar_percentiles(listas: list[dict[float, float]]) -> dict[float, float]:
     if not listas:
         raise ValueError("sin percentiles")
     comunes = set(listas[0])
-    for l in listas[1:]:
-        comunes &= set(l)
+    for lista in listas[1:]:
+        comunes &= set(lista)
     if not comunes:
         raise ValueError("percentiles sin coincidencias")
-    res = {pc: median(l[pc] for l in listas) for pc in sorted(comunes)}
+    res = {pc: median(lista[pc] for lista in listas) for pc in sorted(comunes)}
     return monotono(res)
 
 

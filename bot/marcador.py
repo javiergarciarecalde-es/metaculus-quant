@@ -1,4 +1,5 @@
-"""Marcador semanal: cruza lo que pronosticó el bot (y cada modelo) con cómo se resolvió cada pregunta.
+"""Marcador semanal: cruza lo que pronosticó el bot (y cada modelo) con cómo se resolvió cada
+pregunta.
 
 Pasos:
 1. Junta los registros de las ejecuciones (artefactos de GitHub descargados) con el histórico
@@ -15,12 +16,13 @@ Uso: python -m bot.marcador [--descargas carpeta]
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import math
 import os
 import re
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import requests
@@ -47,10 +49,8 @@ def leer_jsonl(carpeta: Path) -> list[dict]:
         for linea in ruta.read_text(encoding="utf-8").splitlines():
             linea = linea.strip()
             if linea:
-                try:
+                with contextlib.suppress(json.JSONDecodeError):
                     filas.append(json.loads(linea))
-                except json.JSONDecodeError:
-                    pass
     return filas
 
 
@@ -128,7 +128,10 @@ def _prob_binaria(valor) -> float | None:
 
 
 def puntos(tipo: str, valor, resolucion) -> dict | None:
-    """log = ln(prob. dada a lo que pasó) (0 es perfecto, más negativo es peor); brier solo en binarias."""
+    """log = ln(prob. dada a lo que pasó) (0 es perfecto, más negativo es peor).
+
+    brier: solo en binarias.
+    """
     if valor is None or resolucion in (None, "") or str(resolucion) in ANULADAS:
         return None
     if tipo == "binary":
@@ -220,18 +223,23 @@ def calcular(filas: list[dict], resueltas: dict) -> dict:
 
 
 def informe_md(m: dict, fecha: str) -> str:
-    l = [
+    media = m["spot_peer_media"]
+    lineas = [
         "# Marcador del bot (se actualiza solo cada lunes)",
         "",
         f"**Actualizado:** {fecha}. Lo genera `bot/marcador.py`; no se toca a mano.",
         "",
         "Qué es cada cosa:",
-        "- **Puntuación de pares** (spot peer): la que da Metaculus y cuenta en el torneo. Positiva = mejor",
+        "- **Puntuación de pares** (spot peer): la que da Metaculus y cuenta en el torneo. "
+        "Positiva = mejor",
         "  que la media de los demás bots en esa pregunta; negativa = peor.",
-        "- **Log** (por modelo): logaritmo de la probabilidad que el modelo dio a lo que pasó. 0 es",
+        "- **Log** (por modelo): logaritmo de la probabilidad que el modelo dio a lo que pasó. "
+        "0 es",
         "  perfecto; cuanto más negativo, peor. Sirve para comparar a los 3 modelos entre sí.",
-        "- **Brier**: error al cuadrado en preguntas de sí/no. 0 es perfecto; 0,25 es decir siempre 50 %.",
-        "- Con pocas preguntas resueltas todo esto es **ruido**: no sacar conclusiones con menos de ~50.",
+        "- **Brier**: error al cuadrado en preguntas de sí/no. 0 es perfecto; "
+        "0,25 es decir siempre 50 %.",
+        "- Con pocas preguntas resueltas todo esto es **ruido**: "
+        "no sacar conclusiones con menos de ~50.",
         "",
         "## Resumen",
         "",
@@ -239,8 +247,9 @@ def informe_md(m: dict, fecha: str) -> str:
         "|---|---|",
         f"| Pronósticos enviados (cerrados) | {m['pronosticos_enviados']} |",
         f"| Preguntas ya resueltas | {m['resueltas']} |",
-        f"| Suma de puntuación de pares | {m['spot_peer_suma']} (en {m['spot_peer_n']} preguntas) |",
-        f"| Media por pregunta | {m['spot_peer_media'] if m['spot_peer_media'] is not None else '—'} |",
+        f"| Suma de puntuación de pares | {m['spot_peer_suma']} "
+        f"(en {m['spot_peer_n']} preguntas) |",
+        f"| Media por pregunta | {media if media is not None else '—'} |",
         "",
         "## Cada modelo por separado",
         "",
@@ -249,8 +258,8 @@ def informe_md(m: dict, fecha: str) -> str:
     ]
     for mod, d in sorted(m["por_modelo"].items()):
         for k, v in sorted(d.items()):
-            l.append(f"| {mod} | {k} | {v['n']} | {v['media']} |")
-    l += [
+            lineas.append(f"| {mod} | {k} | {v['n']} | {v['media']} |")
+    lineas += [
         "",
         "## Calibración (preguntas de sí/no)",
         "",
@@ -260,8 +269,8 @@ def informe_md(m: dict, fecha: str) -> str:
         "|---|---|---|---|",
     ]
     for tramo, c in m["calibracion"].items():
-        l.append(f"| {tramo} | {c['n']} | {c['dijimos']} % | {c['paso']} % |")
-    l += [
+        lineas.append(f"| {tramo} | {c['n']} | {c['dijimos']} % | {c['paso']} % |")
+    lineas += [
         "",
         "## Las 5 peores preguntas",
         "",
@@ -269,10 +278,11 @@ def informe_md(m: dict, fecha: str) -> str:
         "|---|---|---|",
     ]
     for p in m["peores"]:
-        l.append(
-            f"| {round(p['spot_peer'], 1)} | [{(p['pregunta'] or '')[:90]}]({p['url']}) | {p['resolucion']} |"
+        lineas.append(
+            f"| {round(p['spot_peer'], 1)} | [{(p['pregunta'] or '')[:90]}]({p['url']}) "
+            f"| {p['resolucion']} |"
         )
-    return "\n".join(l) + "\n"
+    return "\n".join(lineas) + "\n"
 
 
 # ------------------------------------------------------------------ programa
@@ -282,7 +292,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--descargas", default=str(RAIZ / "registro_descargas"))
     args = ap.parse_args(argv)
-    ahora = datetime.now(timezone.utc)
+    ahora = datetime.now(UTC)
     historico = leer_jsonl(HISTORICO) if HISTORICO.exists() else []
     historico = [f for f in historico if f.get("url")]
     filas = juntar(
