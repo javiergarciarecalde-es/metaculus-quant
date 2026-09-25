@@ -83,6 +83,14 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
 - La búsqueda en internet del modelo (`:online`): necesita la clave de créditos.
 - Costes: estimaciones hasta la primera prueba con clave.
 
+## Trabajo a medias (25/09, parado para no agotar el cupo de 5 h)
+- **Marcador semanal: hecho** (`bot/marcador.py`, flujo «Marcador» cada lunes, resultado en `docs/MARCADOR.md`).
+- **Estudio de bots rivales, datos de los otros proyectos y viabilidad del backtest:** parado a medias
+  (7 de 13 agentes terminados; sus resultados están guardados y se reanuda en ESTA misma sesión con
+  `resumeFromRunId: wf_a48ee14e-a30`).
+- Ojo: la app dice que el plan de Claude del usuario es **Pro**, no Max: el cupo que gastaría la
+  investigación con Claude en el bot es menor de lo supuesto. Revisar antes de encender el envío real.
+
 ## Qué toca en la próxima sesión
 - Si ya está la clave: repetir la prueba sin envío, leer el resultado y, si sale bien, preparar el
   encendido del envío real con tu «sí».
