@@ -40,3 +40,17 @@ def es_ejecucion_programada() -> bool:
 def bloque_modelos(params: dict) -> dict:
     m = params["modelos"]
     return m["openrouter"] if hay("OPENROUTER_API_KEY") else m["proxy_metaculus"]
+
+
+MODOS = ("tres_empresas", "un_modelo")
+
+
+def lista_pronosticadores(params: dict) -> list[dict]:
+    """Puestos de pronóstico según `pronostico.modo`: [{nombre, esfuerzo, respaldo}, ...]."""
+    modo = params["pronostico"].get("modo", "tres_empresas")
+    if modo not in MODOS:
+        raise ValueError(f"pronostico.modo inválido: {modo!r}; usa uno de {MODOS}")
+    m = bloque_modelos(params)
+    if modo == "un_modelo":
+        return [dict(m["un_modelo"]) for _ in range(len(m["pronostico"]))]
+    return [dict(x) for x in m["pronostico"]]

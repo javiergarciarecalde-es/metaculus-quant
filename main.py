@@ -52,6 +52,7 @@ from forecasting_tools import (  # noqa: E402
 
 from bot import agregacion as ag  # noqa: E402
 from bot import config as cfg  # noqa: E402
+from bot import investigacion as inv  # noqa: E402
 from bot import registro  # noqa: E402
 
 dotenv.load_dotenv()
@@ -66,7 +67,8 @@ class QuantBot(ForecastBot):
     _concurrency_limiter = asyncio.Semaphore(_max_concurrent_questions)
     _structure_output_validation_samples = 2
 
-    def __init__(self, *args, params: dict, modelos_pronostico: list, **kwargs):
+    def __init__(self, *args, params: dict, modelos_pronostico: list, respaldos: list | None = None,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         self.params = params
         p = params["pronostico"]
@@ -75,19 +77,37 @@ class QuantBot(ForecastBot):
         self.prob_max = float(p["prob_max"])
         self.minimo_por_opcion = float(p["minimo_por_opcion"])
         self._modelos = list(modelos_pronostico)
-        self._rueda = itertools.cycle(self._modelos)
+        respaldos = respaldos or [None] * len(self._modelos)
+        self._rueda = itertools.cycle(list(zip(self._modelos, respaldos)))
+        self._miembros: dict[str, list[dict]] = {}  # pronósticos individuales por pregunta
 
-    # Rueda de modelos: cada pasada usa el siguiente modelo de la lista.
-    def _siguiente_modelo(self) -> tuple[GeneralLlm, str]:
-        m = next(self._rueda)
-        if isinstance(m, GeneralLlm):
-            return m, m.model
-        return self.get_llm("default", "llm"), str(m)
-
+    # Rueda de puestos: cada pasada usa el siguiente puesto (modelo + respaldo).
     async def _pensar(self, prompt: str) -> tuple[str, str]:
-        llm, nombre = self._siguiente_modelo()
-        texto = await llm.invoke(prompt)
-        return texto, nombre
+        llm, respaldo = next(self._rueda)
+        try:
+            texto = await llm.invoke(prompt)
+            if texto and texto.strip():
+                return texto, llm.model
+            motivo = "respuesta vacía"
+        except Exception as e:
+            if respaldo is None:
+                raise
+            motivo = repr(e)
+        if respaldo is None:
+            raise ValueError(f"{llm.model}: {motivo}")
+        logger.warning(f"{llm.model} falló ({motivo}); responde el respaldo {respaldo.model}")
+        texto = await respaldo.invoke(prompt)
+        if not (texto and texto.strip()):
+            raise ValueError(f"{llm.model} y su respaldo {respaldo.model} sin respuesta")
+        return texto, respaldo.model
+
+    @classmethod
+    def _llm_config_defaults(cls):
+        base = super()._llm_config_defaults()
+        return {**base, "director": base["default"], "buscador": base["researcher"]}
+
+    def _anotar_miembro(self, question: MetaculusQuestion, modelo: str, valor) -> None:
+        self._miembros.setdefault(question.page_url, []).append({"modelo": modelo, "valor": valor})
 
     ##################################### INVESTIGACIÓN #####################################
 
@@ -127,6 +147,15 @@ class QuantBot(ForecastBot):
             except Exception as e:  # sin investigación se sigue pronosticando
                 logger.warning(f"Investigación fallida en {question.page_url}: {e}")
                 research = ""
+            ci = self.params.get("investigacion", {})
+            if ci.get("modo") == "ampliada":
+                research = await inv.ampliar(
+                    research, question.question_text, question.resolution_criteria or "",
+                    director=self.get_llm("director", "llm"),
+                    buscador=self.get_llm("buscador", "llm"),
+                    n=int(ci.get("max_datos_clave", 2)),
+                    tope_segundos=float(ci.get("tope_total_segundos", 240)),
+                )
             logger.info(f"Investigación para {question.page_url}:\n{research[:2000]}")
             return research
 
@@ -180,6 +209,7 @@ class QuantBot(ForecastBot):
             )
             p = pred.prediction_in_decimal
         p = max(0.001, min(0.999, p))
+        self._anotar_miembro(question, modelo, round(p, 4))
         logger.info(f"{question.page_url} [{modelo}] -> {p:.3f}")
         return ReasonedPrediction(prediction_value=p, reasoning=f"[{modelo}]\n{texto}")
 
@@ -242,6 +272,7 @@ class QuantBot(ForecastBot):
         probs = ag.normalizar_opciones(
             {op: leidas.get(op, 0.0) for op in question.options}, minimo=0.0
         )
+        self._anotar_miembro(question, modelo, {k: round(v, 4) for k, v in probs.items()})
         return ReasonedPrediction(
             prediction_value=_a_lista(probs), reasoning=f"[{modelo}]\n{texto}"
         )
@@ -318,6 +349,7 @@ class QuantBot(ForecastBot):
                 num_validation_samples=self._structure_output_validation_samples,
             )
         pred = NumericDistribution.from_question(percentiles, question)
+        self._anotar_miembro(question, modelo, {p.percentile: p.value for p in percentiles})
         return ReasonedPrediction(prediction_value=pred, reasoning=f"[{modelo}]\n{texto}")
 
     ##################################### FECHAS #####################################
@@ -440,16 +472,24 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     temp = params["modelos"]["temperatura"]
     tmax = params["modelos"]["tiempo_max_segundos"]
     if llms is None:
-        pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax)
-                           for x in m["pronostico"]]
+        puestos = cfg.lista_pronosticadores(params)
+        pronosticadores = [_crear_llm(x["nombre"], x.get("esfuerzo"), temp, tmax) for x in puestos]
+        respaldos = [_crear_llm(x["respaldo"], x.get("esfuerzo"), temp, tmax) if x.get("respaldo")
+                     else None for x in puestos]
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(model=m["lector"], temperature=0.3),
             "researcher": GeneralLlm(model=m["investigacion"], temperature=0.1),
             "parser": GeneralLlm(model=m["lector"], temperature=0.0),
+            "director": GeneralLlm(model=m["director"], temperature=temp, timeout=tmax),
+            "buscador": GeneralLlm(model=m["buscador"], temperature=0.1),
         }
-    else:
-        pronosticadores = [llms["default"]]
+    else:  # pruebas: modelos simulados
+        pronosticadores = llms.get("_puestos") or [llms["default"]]
+        respaldos = llms.get("_respaldos")
+        llms = {k: v for k, v in llms.items() if not k.startswith("_")}
+        for extra in ("director", "buscador"):
+            llms.setdefault(extra, llms["default"])
     p = params["pronostico"]
     return QuantBot(
         research_reports_per_question=int(p["informes_investigacion"]),
@@ -463,10 +503,11 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         llms=llms,
         params=params,
         modelos_pronostico=pronosticadores,
+        respaldos=respaldos,
     )
 
 
-def registrar(informes, torneo, publicado: bool) -> int:
+def registrar(informes, torneo, publicado: bool, bot: "QuantBot | None" = None) -> int:
     ok = 0
     for r in informes:
         if isinstance(r, BaseException):
@@ -484,6 +525,9 @@ def registrar(informes, torneo, publicado: bool) -> int:
             "coste_usd": r.price_estimate,
             "minutos": r.minutes_taken,
             "razonamiento": registro.resumir(r.explanation),
+            "modo": bot.params["pronostico"].get("modo") if bot else None,
+            "investigacion_modo": bot.params.get("investigacion", {}).get("modo") if bot else None,
+            "miembros": bot._miembros.pop(q.page_url, []) if bot else [],
         })
     return ok
 
@@ -529,7 +573,7 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
         if modo == "test_questions":
             bot.skip_previously_forecasted_questions = False
         informes = asyncio.run(bot.forecast_questions(preguntas, return_exceptions=True))
-        total += registrar(informes, torneo, publicado=envio)
+        total += registrar(informes, torneo, publicado=envio, bot=bot)
         bot.log_report_summary(informes, raise_errors=False)
     print(f"Terminado: {total} pronósticos {'ENVIADOS' if envio else 'de ensayo (no enviados)'}.")
     return 0
