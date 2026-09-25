@@ -44,14 +44,9 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
 4. **Al final de la temporada:** la encuesta del bot (obligatoria para cobrar). Te lo recordaré.
 
 ## Decisiones pendientes tuyas
-1. **Tu correo en el primer commit.** Pediste quitarlo. Se puede, pero tiene consecuencias:
-   | Qué | Detalle |
-   |---|---|
-   | Cómo | reescribir el historial del repositorio (cambiar tu Gmail por la dirección anónima de GitHub) y sustituir el de GitHub a la fuerza |
-   | Qué cambia | los 23 «commits» (versiones guardadas) cambian de identificador; nada del bot cambia |
-   | Qué NO arregla | el correo ya estuvo público desde el 25/09: quien lo haya copiado lo tiene. GitHub puede guardar la versión vieja en caché un tiempo |
-   | Riesgo | bajo: nadie ha copiado el repositorio (0 copias). La sesión de la nube tendría que descargarlo de nuevo |
-   Espera tu «sí».
+1. **Tu correo en el primer commit: quitado** (25/09). Queda un resto: GitHub aún enseña la versión
+   vieja a quien tenga su identificador exacto. Para borrarla del todo tendrías que pedírselo al soporte
+   de GitHub (https://support.github.com, «remove cached views» / datos sensibles). Es opcional.
 2. **Si la clave de créditos no llega** (este otoño son selectivos): (a) esperar; (b) pagar tú una
    clave de OpenRouter con tope de gasto (~0,34 $ por pregunta, ~270 $ hasta enero); (c) no competir
    esta temporada. No se pone ninguna clave de pago sin que lo decidas.
@@ -91,5 +86,5 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
 ## Qué toca en la próxima sesión
 - Si ya está la clave: repetir la prueba sin envío, leer el resultado y, si sale bien, preparar el
   encendido del envío real con tu «sí».
-- Si dijiste «sí» a lo del correo: reescribir el historial.
+- La sesión de la nube debe descargar el repositorio de nuevo antes de trabajar (historial reescrito).
 - Tras la primera semana con envío real: ¿el reloj lanza cada 20 min? ¿Cuánto cupo gasta Max?

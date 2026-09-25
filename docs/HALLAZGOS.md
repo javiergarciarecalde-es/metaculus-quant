@@ -303,3 +303,17 @@ Pedido por el usuario: quitar su correo de Gmail del primer commit (repositorio 
   que se dejan por falta de tiempo no cuentan como fallo. La investigación con Claude Max apunta
   en el registro de la ejecución su longitud, su coste equivalente y el principio del texto.
   **55 de 55 pruebas en verde.**
+
+## 25/09/2026 — Historial reescrito para quitar el correo del usuario (decisión del usuario)
+- Copia de seguridad previa: `C:	\mq-respaldo-antes-de-reescribir.bundle` (todas las ramas; comprobada).
+- `git filter-branch --env-filter` en un clon limpio: el autor del primer commit pasa de su Gmail a
+  `327065986+javiergarciarecalde-es@users.noreply.github.com` (la dirección anónima de GitHub).
+  Contenido idéntico (sin diferencias de ficheros); cambian los identificadores de los 23 commits.
+- Subido con `--force-with-lease` a `main` y a `claude/elastic-maxwell-4718c9`: nuevo `main` = cf8c20e.
+  Copias locales (principal y worktree) puestas al día; estaban limpias.
+- **Límite:** GitHub sigue sirviendo el commit viejo 4bc7453 si se pide por su identificador exacto
+  (comprobado con la API). Solo el soporte de GitHub puede purgarlo del todo (lo tendría que pedir el
+  usuario). Las ejecuciones antiguas de Actions apuntan a commits viejos.
+- **Aviso a la sesión de la nube:** su copia tiene el historial viejo. Antes de trabajar debe
+  descargar de nuevo (`git fetch` + `git reset --hard origin/main` si no tiene cambios propios); si
+  sube el historial viejo, el correo volvería.
