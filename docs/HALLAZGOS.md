@@ -317,3 +317,16 @@ Pedido por el usuario: quitar su correo de Gmail del primer commit (repositorio 
 - **Aviso a la sesión de la nube:** su copia tiene el historial viejo. Antes de trabajar debe
   descargar de nuevo (`git fetch` + `git reset --hard origin/main` si no tiene cambios propios); si
   sube el historial viejo, el correo volvería.
+
+## 25/09/2026 — ¿Se puede usar la suscripción Google AI Pro del usuario en el bot? (pregunta del usuario)
+Fuentes oficiales leídas hoy: ai.google.dev/gemini-api/docs/google-ai-plans y
+geminicli.com/docs/resources/quota-and-pricing; más búsquedas (visto en web) sobre Antigravity CLI.
+| Vía | Qué dicen | ¿Sirve al bot? |
+|---|---|---|
+| Suscripción AI Pro → Gemini API | «las ventajas del plan para desarrolladores solo valen dentro de la web de Google AI Studio. El uso directo de la API (claves o aplicaciones externas) se factura y gestiona aparte» | **No** |
+| Gemini CLI con la cuenta AI Pro (1.500 peticiones/día) | Google **dejó de atender** Gemini CLI para AI Pro/Ultra el 18/06/2026 y quitó el acceso con cuenta personal; lo sustituye Antigravity CLI | **No** |
+| Antigravity CLI con la cuenta | en modo automático usa credenciales guardadas de un inicio de sesión manual en esa máquina; para CI la vía documentada es una clave de API, no la suscripción (visto en web). Habría que copiar credenciales de la cuenta al servidor de GitHub | No recomendable: frágil y manipula credenciales |
+| Clave gratuita de AI Studio | solo modelos Flash; ~250 peticiones/día en total y **~20/día para Gemini 3.8 Flash** (visto en web; los límites exactos solo se ven en la consola de cada proyecto); Gemini 3.1 Pro no tiene nivel gratuito; lo enviado puede usarse para mejorar productos de Google | Muy justo para los picos de la MiniBench (~60 preguntas en pocos días) |
+| Clave de pago de Google (facturación de Cloud) | Gemini 3.1 Pro ~2 $/12 $ por millón de tokens → ~0,08 $ por pregunta, ~65 $ hasta enero (estimación) | Sí, pero **cuesta dinero** aparte de la suscripción |
+Conclusión: la suscripción AI Pro no se puede aprovechar en el bot. El puesto de Google ya lo pagan los
+créditos de Metaculus (gemini-3.5-flash). No se cambia nada salvo decisión del usuario.
