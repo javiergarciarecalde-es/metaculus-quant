@@ -235,3 +235,33 @@ Consecuencias para metaculus-quant:
 | Registro solo al final de la tanda | si se cortaba, no quedaba nada apuntado | se apunta cada pregunta en cuanto termina |
 | Subpreguntas de un grupo con la misma dirección web | el registro por modelo se mezclaba | clave = id de la pregunta |
 Pruebas: **42 de 42 en verde**.
+
+## 25/09/2026 — Sesión 2 (cont.): esquema mixto construido (investigación con Claude Max)
+Decisión del usuario (DECISIONES 25/09): 3 empresas con créditos + investigación con agentes de
+Opus 5.5 pagada con su Claude Max. Construido en `bot/claude_max.py`:
+- `investigacion.modo: claude_max` (por defecto ya). Tras la búsqueda normal, el bot llama a
+  Claude Code (`claude -p`, modelo `claude-opus-5-5`), que lanza hasta 3 investigadores en paralelo
+  (fuente de resolución, últimas noticias, tasas base) con búsqueda web y lectura de páginas. Sus
+  notas se **añaden** al final del informe con la cabecera «Investigación con agentes».
+- Seguridad: no puede ejecutar órdenes ni tocar ficheros (`--disallowedTools Bash Edit Write`);
+  corre en una carpeta vacía (no lee el CLAUDE.md del repositorio); no recibe las otras claves
+  (token de Metaculus, OpenRouter); el texto va por la entrada estándar (no por la línea de órdenes).
+- Topes: 300 s por pregunta, 30 turnos, 3 preguntas a la vez, freno de 3 $ equivalentes por pregunta
+  (`--max-budget-usd`). Si el cupo de Max se agota, deja de llamar el resto de la ejecución.
+- Sin el secreto `CLAUDE_CODE_OAUTH_TOKEN`, sin el programa, con error o sin tiempo: sigue con el
+  informe normal (nunca bloquea un pronóstico). El flujo instala Claude Code solo si está el secreto.
+- El registro guarda `claude_max_usd_equivalente` por pregunta (lo que costaría por API): así se mide
+  cuánto cupo de Max gasta el bot.
+- No se usa el modo «ultracode» (decenas de agentes): gastaría el cupo de Max muy deprisa. Si con
+  los datos del registro sobra cupo, se puede subir `agentes`.
+- Flujo de GitHub: límite de 60 min (antes 40) por la investigación extra; Node 22 para Claude Code.
+- Arreglada una prueba de la nube que fallaba solo en Windows (el reloj avanza a saltos de ~15 ms y
+  «más de 0 min» salía falso). **53 de 53 pruebas en verde** en Windows.
+
+Sin verificar (hace falta el secreto real; se verá en el primer ensayo):
+- Que `claude -p --output-format json` devuelva los campos `result`, `is_error` y `total_cost_usd`
+  (así los usa el Agent SDK; si cambian, el bot sigue sin esta investigación y se ve en el registro).
+- Que `--max-budget-usd` se aplique con suscripción, y el texto exacto del aviso de cupo agotado.
+- Cuánto cupo semanal de Max gasta cada pregunta.
+- **Sesiones a la vez:** hoy la sesión de la nube y la local han subido a `main` al mismo tiempo
+  (3 veces hubo que juntar cambios). Funciona, pero conviene que trabaje una sola sesión cada vez.

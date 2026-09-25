@@ -57,9 +57,13 @@ jobs:
       - name: Instalar dependencias
         if: steps.token.outputs.hay == 'si'
         run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
+        with:
+          node-version: "22"   # Claude Code pide Node 22 o más
       - name: Instalar Claude Code (solo si está el secreto de Claude Max)
         if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code && claude --version
       - name: Comprobar que los modelos siguen existiendo (lista pública, gratis)
         if: steps.token.outputs.hay == 'si'
         run: python -m bot.modelos
