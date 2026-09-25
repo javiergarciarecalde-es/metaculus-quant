@@ -1,7 +1,7 @@
 # ESTADO (siempre «ahora»)
 
 **Actualizado:** 25/09/2026 por la tarde (sesión 2 en Windows, tras la puesta en marcha con Cowork;
-y la limpieza de reglas, orden 12e).
+la limpieza de reglas, orden 12e; y el código a las reglas comunes, orden 14).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
 automática que hace git después de guardar).
 
@@ -17,7 +17,7 @@ nada a Metaculus.
 | Repositorio | **público** |
 | Secretos en GitHub (claves guardadas) | `METACULUS_TOKEN` y `CLAUDE_CODE_OAUTH_TOKEN` puestos. **Falta `OPENROUTER_API_KEY`** (la clave de créditos, aún no ha llegado) |
 | Interruptor `ENVIO_REAL` | no existe todavía → no envía nada |
-| Pruebas automáticas (programa que comprueba el bot solo) | **62 de 62 en verde** (25/09, tarde) |
+| Pruebas automáticas (programa que comprueba el bot solo) | **82 de 82 en verde** (25/09, tarde, tras la orden 14) |
 
 ## Primera prueba real (25/09, 09:27, sin enviar nada)
 | Qué | Resultado |
@@ -97,17 +97,22 @@ tuya). No es un fallo del bot: sin clave no hay modelos que pronostiquen.
   regla ha cambiado de sentido: tabla de correspondencia en HALLAZGOS (25/09, «Limpieza de reglas»).
 - Nuevos: `docs/MAESTRO.md` (qué es el bot y cómo debe ser) y `CHANGELOG.md` (historia de los
   parámetros). Pruebas: 62 de 62 en verde.
-- **Pregunta para ti (sin prisa):** el código no cumple aún 3 normas técnicas de las reglas comunes
-  (versión de Python 3.11 en vez de 3.12; sin revisor de formato `ruff`; parámetros leídos sin la
-  función común `params.p` y alguno con valor por defecto). ¿Lo adaptamos en una sesión aparte, o lo
-  declaramos excepción? Mi recomendación: adaptarlo en una sesión aparte, pero después de la primera
-  semana con envío real, no antes (tocar el código justo al arrancar añade riesgo sin ganar puntos).
+
+## El código a las reglas comunes (25/09, orden 14): hecho
+- Decidiste adaptarlo ya. Hecho **sin cambiar qué pronostica el bot**: una prueba compara la
+  configuración (modelos, pasadas, límites 2-98 %, tiempos, horarios) con una foto sacada antes de
+  tocar nada, y sale idéntica. Detalle en HALLAZGOS (25/09 tarde).
+- Ahora: Python 3.12; ruff (revisor de estilo del código) en local y en GitHub; cada número elegido
+  está en `config/params.yaml` y, si falta uno, el bot para y dice cuál (antes usaba un valor
+  escondido); tabla de límites de tamaño de los documentos en CLAUDE.md con su prueba.
+- **Qué puedes comprobar tú:** en GitHub → pestaña «Actions» → flujo «Pruebas», la última ejecución
+  en verde con dos trabajos, `pytest` y `ruff`.
+- HALLAZGOS va por ~397 líneas: al pasar de ~400, lo viejo se archiva en `docs/archivo/`.
 
 ## Para el mando
 - A las comunes §7 les falta decir qué hacer con un documento propio de un proyecto como
   `docs/DECISIONES.md` (aquí las decisiones del usuario van ahí, no en ESTADO ni CHANGELOG).
-- Este proyecto no tiene la tabla de límites de tamaño que piden las comunes §7 ni la prueba que la
-  lee: hace falta un encargo (toca pruebas).
+- Orden 14 terminada (25/09): código a las comunes §6 y tabla de límites con su prueba.
 
 ## Qué toca en la próxima sesión
 - Si ya está la clave: repetir la prueba sin envío, leer el resultado y, si sale bien, preparar el

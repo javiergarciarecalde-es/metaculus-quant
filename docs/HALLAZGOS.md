@@ -364,3 +364,34 @@ Choques con las comunes §6 encontrados (no se toca código en esta orden; queda
   por defecto en el código (p. ej. `pronostico.modo` → `tres_empresas`); algunos números elegidos
   viven en los flujos (horario, tope de 60 min), no en `params.yaml`.
 - El CLAUDE.md no tiene tabla de límites de tamaño ni prueba que la lea (comunes §7).
+
+## 25/09/2026 (tarde) — El código a las reglas comunes (orden 14 del mando)
+Decisión del usuario del 25/09: adaptarlo ya, antes del lunes 28/09. Resuelve los cuatro choques de
+la entrada anterior. **El bot pronostica exactamente igual**: lo demuestra una prueba nueva
+(`tests/test_configuracion_igual.py`) que guarda una «foto» de la configuración efectiva sacada
+con el código de ANTES (modelos de cada puesto y su respaldo, esfuerzo, intentos, temperatura,
+tiempos, pasadas, límites 2-98 % comprobados agregando pronósticos extremos, 1 % por opción,
+investigación con Claude, qué torneos se piden en cada modo, cuántas preguntas se ensayan y los
+horarios de los flujos) y la compara después de cada cambio. Salió idéntica en todos.
+Además se comprobó aparte que los textos que se mandan a los modelos y el del marcador salen
+letra por letra iguales (misma huella antes y después).
+- **Python 3.12:** `forecasting-tools` 0.3.1 admite de 3.11 a 3.x; instalado todo desde cero con
+  3.12 las pruebas pasan. En GitHub también (flujo de pruebas en verde con 3.12).
+- **ruff** (el revisor de estilo): misma configuración y tope de versión que los hermanos. El
+  formateo va en un commit aparte (e25b134). Las líneas largas dentro de los textos para los
+  modelos no se parten (cambiaría lo que leen): llevan la marca `noqa`. Único cambio que se nota
+  fuera de GitHub: la fecha «Today is» de los textos se calcula en UTC (en GitHub ya lo era).
+  En el flujo de pruebas, ruff es un trabajo aparte: si falla, pytest se ejecuta igual.
+- **Parámetros sin valor por defecto:** lector `bot/params.py` (copia de cripto-quant) que para y
+  dice qué falta. Pasaron al YAML, con el mismo valor, los números que estaban en el código:
+  intentos por modelo, temperaturas del lector, búsquedas a la vez, letras del informe que se pasan
+  al director y a Claude (6.000), recortes del registro, espera del marcador (24 h) y tiempos de
+  red. Se quedan en el código, a propósito, los hechos (0,1-99,9 % que acepta Metaculus) y los
+  recortes de los mensajes en pantalla. Los intentos del director y del lector siguen siendo los de
+  la librería (no son un número nuestro). Prueba nueva: cada parámetro del YAML lo lee alguien
+  (`tests/test_params_vivos.py`); la puerta no cuenta como ajuste.
+- **Tabla de límites** de los documentos en CLAUDE.md y `tests/test_documentacion.py`.
+- **Autor de los commits:** el repositorio firmaba como «Claude <noreply@anthropic.com>»; desde
+  esta orden firma con la dirección anónima del usuario (comunes §10), solo en este repositorio.
+- Ensayo sin envío ni claves: igual que antes (aviso amarillo «Falta METACULUS_TOKEN», código 0;
+  la ejecución programada con el envío apagado no hace nada). 82 pruebas en verde.

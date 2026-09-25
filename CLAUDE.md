@@ -44,6 +44,10 @@ del momento Y su proyección cae entre los 20 primeros de la temporada. Si no, s
 - El reloj de GitHub Actions no es fiable (a otro participante solo lanzó ~22 % de las veces) y en
   repositorios públicos se apaga tras 60 días sin commits.
 
+- Cambiar un parámetro a propósito hace fallar `tests/test_configuracion_igual.py` (la foto de la
+  configuración): se regenera con `python -m tests.test_configuracion_igual` en el mismo commit que
+  la entrada de `CHANGELOG.md`. Si falla sin haber cambiado nada, algo cambió el comportamiento.
+
 ## Estructura
 - `main.py` — punto de entrada (igual que la plantilla oficial de Metaculus).
 - `bot/` — lógica del bot (pronóstico, agregación, registro, interruptores). Los parámetros se leen
@@ -61,7 +65,7 @@ Fijados el 25/09/2026 (orden 14) con margen sobre lo que medían ese día (entre
 
 | Archivo | Tope |
 |---|---|
-| `CLAUDE.md` | ~120 líneas (74) |
+| `CLAUDE.md` | ~120 líneas (78) |
 | `ESTADO.md` | ~1.800 palabras (1.355) |
 | `FUENTES.md` | ~1.500 palabras (317) |
 | `HALLAZGOS.md` | ~500 líneas (366); al pasar de ~400, lo viejo va a `docs/archivo/` |
