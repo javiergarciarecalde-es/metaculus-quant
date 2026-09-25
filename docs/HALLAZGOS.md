@@ -78,3 +78,84 @@
   usuario → decisión del usuario.
 - Numéricas: más percentiles + interpolación suave (idea de nostreambot/Panshul42).
 - Añadir precios de mercados de predicción (Polymarket, Manifold) a la investigación.
+
+## 25/09/2026 — Sesión 2 (local, Windows)
+
+### Entorno
+- Pruebas: **22 de 22 en verde** en Windows (Python 3.12, entorno en `C:\t\mqv` por las rutas largas).
+- Desde local **sí cargan** metaculus.com y la lista pública de modelos de OpenRouter. Se leyeron
+  directamente el anuncio de otoño (notebook 45615), el análisis de primavera (45373) y la
+  página de recursos (38928). Ver `FUENTES.md`.
+- Gancho `post-commit` instalado (sube cada commit a GitHub, igual que cripto-quant y bolsa-quant).
+  Vive en `.git/hooks/` (no se versiona); vale también para las sesiones en worktrees.
+- La sesión en la nube de esta mañana no subió nada a GitHub (main seguía en 52c900f): la pregunta
+  «3 modelos o un Opus» se contesta aquí desde cero.
+
+### Fallo encontrado y arreglado
+- `openai/gpt-4o-search-preview` (el modelo de búsqueda de noticias) **ya no existe** en OpenRouter.
+  El bot no habría dado error rojo: habría pronosticado **sin noticias**, en silencio. Cambiado a
+  `openai/gpt-5.6-sol:online` (búsqueda nativa de OpenAI, la que cubren los créditos según la página
+  de recursos de Metaculus) con esfuerzo bajo. Añadido `python -m bot.modelos`: en cada ejecución
+  comprueba contra la lista pública de OpenRouter que todos los modelos siguen existiendo y avisa.
+- Los tres pronosticadores actuales existen: `gpt-5.6-sol`, `claude-opus-4.8`, `gemini-3.5-flash`.
+  Pero ya hay sucesores: `openai/gpt-6-sol` y `anthropic/claude-opus-5.5` (publicados el 22/09/2026).
+  nostreambot cambió a esos dos el 22/09 (su `docs/roster_history.md`), con esfuerzo `xhigh`.
+
+### Reglas de otoño leídas en directo (antes eran de segunda mano)
+| Dato | Valor |
+|---|---|
+| Formulario de participación | **obligatorio para todos** (3 preguntas); el mismo sirve para pedir créditos |
+| Créditos | más selectivos que antes: **~100 $ iniciales**, más si la MiniBench va por encima de la media; **bots de código abierto: ~el doble** tras un periodo de evaluación. Puede que no den nada |
+| Preguntas | temporada **300-400**; MiniBench ~60 cada 2 semanas (casi todas en los primeros días) |
+| Fechas | MiniBench de calentamiento desde el 21/09; preguntas de otoño desde el **28/09** (las 1-2 primeras semanas, pocas); se puede entrar en cualquier momento (empieza con 0) |
+| Encuesta del bot | obligatoria cada temporada para cobrar |
+| Bots comerciales | sin premio salvo que abran el código (un aficionado solo no está afectado) |
+| Google | límite compartido de 150 peticiones/min entre todos; Gemini 3.1 Pro mal configurado en los créditos |
+| Zona de pruebas | `bot-testing-area` = id 32977 |
+
+### ¿3 modelos de 3 empresas o un solo Opus 5.5 con varios «agentes»? (pregunta del usuario)
+Lo medido por otros:
+1. **Metaculus, primavera 2026** (65 bots propios con el mismo prompt): GPT-5.1-high 11,3 puntos/pregunta;
+   Claude Sonnet 4.5-high 8,9; GPT-5.2-high 8,6 (diferencias dentro del ruido). Más razonamiento
+   ganó 8 de 8 comparaciones.
+2. **Encuesta a 58 creadores**: usar GPT-5.4 para el pronóstico final = la señal más fuerte
+   (correlación 0,42); **usar Opus: correlación ~0**. Los 10 mejores que contestaron usaban todos un
+   GPT-5.x en su conjunto. Nada es estadísticamente significativo (33 pruebas).
+3. **Metaculus, tamaño de equipo**: juntar los 2-10 mejores bots (~-2) mejoró al mejor bot solo
+   (-4,5) frente a los profesionales. Combinar pronosticadores buenos ayuda; añadir malos, no.
+4. **nostreambot** (FUTURE.md, banco de agregación del 15/09/2026, n=262): la mediana gana a su miembro
+   medio por **+6,3 [+4,7, +7,9]** (log-puntos por pregunta), por «consenso de posición». Pero
+   «la diversidad de empresa con 3 miembros» da **delta nulo** en todos los tipos de pregunta.
+   Bajaron de 6 modelos a 3 (uno por empresa) sin pérdida medible. Su autor (blog): mejor llamar a
+   varios modelos que varias veces al mismo. Nadie ha medido «un modelo × 3» frente al trío.
+5. **Opus 5.5 salió el 22/09/2026**: no tiene ningún historial de pronóstico medido.
+6. Código (forecasting-tools 0.3.1): hace falta que funcionen al menos la mitad de las pasadas
+   (2 de 3). Con 3 empresas, si una cae, se pronostica igual; con un solo Opus, si Anthropic cae (o
+   se niega a contestar, como le pasó a nostreambot con fable-5), se pierde la pregunta.
+Conclusión: lo medido es que **combinar 3 pronósticos** ayuda; no está medido que las 3 empresas
+añadan algo por sí mismas. Pero quitar GPT es quitar el modelo con más evidencia a favor, y un solo
+proveedor es un único punto de fallo. Recomendación: seguir con 3 empresas y meter Opus 5.5 en el
+hueco de Anthropic (y GPT-6-sol en el de OpenAI). Pendiente del «sí» del usuario.
+
+### Costes (precios en vivo de OpenRouter, 25/09/2026; $ por millón de tokens)
+| Modelo | Entrada | Salida |
+|---|---|---|
+| openai/gpt-6-sol y gpt-5.6-sol | 2 | 10 |
+| anthropic/claude-opus-5.5 | 4 | 20 |
+| anthropic/claude-opus-4.8 | 5 | 25 |
+| google/gemini-3.5-flash | 1,5 | 9 |
+| búsqueda web nativa (`:online`) | 0,01 $ por búsqueda | — |
+
+Estimación propia por pregunta (≈5.000 tokens de entrada; 6.000-8.000 de razonamiento+respuesta):
+GPT ~0,09 $, Opus 5.5 ~0,14 $, Opus 4.8 ~0,18 $, Gemini Flash ~0,06 $, búsqueda ~0,05 $.
+nostreambot midió 0,24-0,27 $ por modelo y pregunta con prompts mucho más largos: es nuestro techo.
+El registro guarda `coste_usd` por pregunta: tras la primera ejecución real se cambia por lo medido.
+
+### Minutos de GitHub (documentación de GitHub, leída hoy)
+- Plan gratuito: 2.000 min/mes en privados; **públicos gratis**; exceso Linux **0,006 $/min**; sin
+  tarjeta, se **bloquea** al agotarlos. Cada trabajo redondea al minuto.
+- Con el envío encendido: 72 lanzamientos/día × ~1,5-3 min (instalar + mirar preguntas) ≈
+  3.000-6.500 min/mes → privado con tarjeta ≈ 6-27 $/mes.
+- Riesgo de hacerlo público: los registros de las ejecuciones (y el artefacto `registro/`) los
+  puede ver cualquiera, con los pronósticos mientras la pregunta está abierta (~1,5 h). Mismo caso
+  que nostreambot y la plantilla. Los secretos no se ven nunca.
