@@ -7,8 +7,10 @@ cuánto habría cambiado la puntuación de pares:
     cambio ≈ 100 · ln(prob. que la variante daba a lo que pasó / prob. que dimos de verdad)
 
 Es la fórmula de Metaculus para la puntuación de pares puntual cuando solo cambia nuestro número
-(el factor N/(N-1) es ~1 con muchos bots). Vale para sí/no y para opciones; las numéricas no entran
-(haría falta la curva entera que se envió, no solo los percentiles).
+(el factor N/(N-1) es ~1 con muchos bots). Vale para sí/no y para opciones. En las numéricas solo
+entra la curva suave (PCHIP) guardada en sombra desde el 27/09/2026 (bot/sombra.py), frente a la
+curva enviada: cambio ≈ 50 · ln(prob. del tramo donde cayó el resultado, suave / enviada) (la
+mitad, porque Metaculus puntúa las numéricas a la mitad).
 
 Para no engañarnos (docs/ESTUDIO_BOTS.md, apartado 3):
 - Solo 3 comparaciones se deciden de antemano (`marcador.comparador.preregistradas`); el resto
@@ -19,12 +21,15 @@ Para no engañarnos (docs/ESTUDIO_BOTS.md, apartado 3):
 
 from __future__ import annotations
 
+import bisect
 import math
 from statistics import mean, stdev
 
 from . import agregacion as ag
 
 ACTUAL = "mediana (la actual)"
+CURVA_SUAVE = "curva suave (PCHIP)"
+FUERA = {"below_lower_bound": "abajo", "above_upper_bound": "arriba"}
 
 
 def empresa(modelo: str | None) -> str:
@@ -98,9 +103,47 @@ def _prob_de_lo_que_paso(tipo: str, valor, resolucion) -> float | None:
     return None
 
 
+def _prob_del_tramo(valores: list[float], cdf: list[float], resolucion) -> float | None:
+    """Probabilidad que una curva de 201 puntos daba al tramo donde cayó el resultado (fuera de
+    los límites: lo que quedaba por debajo o por encima, como en Metaculus)."""
+    lado = FUERA.get(str(resolucion))
+    if lado == "abajo":
+        return cdf[0]
+    if lado == "arriba":
+        return 1 - cdf[-1]
+    try:
+        x = float(resolucion)
+    except (TypeError, ValueError):
+        return None
+    if x < valores[0]:
+        return cdf[0]
+    if x > valores[-1]:
+        return 1 - cdf[-1]
+    i = max(1, bisect.bisect_left(valores, x))  # igual al mínimo: primer tramo de dentro
+    return cdf[i] - cdf[i - 1]
+
+
+def cambio_curva_suave(fila: dict, resolucion) -> float | None:
+    """Numéricas: cuánto habría cambiado la puntuación enviando la curva suave guardada."""
+    s = fila.get("sombra_pchip") or {}
+    if s.get("estado") != "ok":
+        return None
+    try:
+        enviada = _prob_del_tramo(s["valores"], s["cdf_enviada"], resolucion)
+        suave = _prob_del_tramo(s["valores"], s["cdf_pchip"], resolucion)
+    except (KeyError, IndexError, TypeError):
+        return None
+    if not enviada or not suave or enviada <= 0 or suave <= 0:
+        return None
+    return 50 * math.log(suave / enviada)
+
+
 def cambios_por_pregunta(fila: dict, resolucion, conf: dict) -> dict[str, float]:
     """Para una pregunta resuelta: variante -> cambio de puntuación respecto a lo que enviamos."""
     tipo = fila.get("tipo")
+    if tipo == "numeric":
+        cambio = cambio_curva_suave(fila, resolucion)
+        return {} if cambio is None else {CURVA_SUAVE: cambio}
     real = _prob_de_lo_que_paso(tipo, fila.get("valor"), resolucion)
     if not real or real <= 0:
         return {}
@@ -167,7 +210,8 @@ def informe_md(filas: list[dict], conf: dict) -> list[str]:
         "cambio medio es menor que el margen, la diferencia puede ser suerte. Solo las «decididas",
         "de antemano» sirven para decidir, y solo si **cumplen la regla**: al menos",
         f"{conf['minimo_preguntas']} preguntas resueltas, ganar de media y ganar en las dos",
-        "mitades (preguntas antiguas y recientes). Preguntas numéricas: no entran.",
+        "mitades (preguntas antiguas y recientes). Numéricas: solo la curva suave, frente a la",
+        "curva enviada (cuenta la mitad, como en Metaculus).",
         "",
         "| Variante | Tipo | Preguntas | Cambio medio | Margen 95 % | Mitad antigua "
         "| Mitad reciente | ¿Cumple la regla? |",

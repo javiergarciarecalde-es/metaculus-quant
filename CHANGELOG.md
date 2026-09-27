@@ -6,6 +6,17 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-27 noche (decisión del usuario ~22:40: la curva suave entra en las comparaciones)
+
+Motivo: la curva suave (PCHIP) es la única variante con una medición a favor en otro bot, y sin
+estar «decidida de antemano» nunca se podría adoptar. Se cambia ANTES de ver ningún resultado.
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `marcador.comparador.preregistradas` | media, sin google, límites 1%-99% | media, sin google, **curva suave (PCHIP)** | «Límites 1 %-99 %» sigue calculándose como exploratoria |
+| Comparador en numéricas | no entraban | la curva suave frente a la enviada (cuenta la mitad, como en Metaculus) | Puntuar lo que se guarda en sombra |
+| Piezas de los flujos de GitHub | checkout v4, setup-python v5, setup-node v4, upload-artifact v4 | v5, v6, v5, v6 | GitHub quitó Node 20 el 23/09/2026 |
+
 ## 2026-09-27 noche (decisión del usuario ~22:40: lista semanal de preguntas perdidas)
 
 Motivo: comprobar con datos reales que la vigilancia no deja escapar preguntas (mejora 1c de

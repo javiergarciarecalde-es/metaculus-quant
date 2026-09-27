@@ -39,7 +39,10 @@ def test_cambios_de_cada_variante():
     assert cambios["media"] == pytest.approx(100 * math.log(0.6 / 0.7))
     assert cambios["sin google"] == pytest.approx(100 * math.log(0.8 / 0.7))
     assert cambios["solo openai"] == pytest.approx(100 * math.log(0.9 / 0.7))
-    assert set(CONF["preregistradas"]) <= set(cambios)
+    # las decididas de antemano salen todas: dos en sí/no y la curva suave en las numéricas
+    assert set(CONF["preregistradas"]) <= set(cambios) | {cmp.CURVA_SUAVE}
+    assert cmp.CURVA_SUAVE in CONF["preregistradas"]  # decisión del usuario del 27/09/2026
+    assert "límites 1%-99%" not in CONF["preregistradas"]  # queda como exploratoria
 
 
 def test_limites_alternativos_solo_importan_en_los_extremos():
@@ -92,3 +95,37 @@ def test_aligerar_guarda_el_texto_largo_aparte(tmp_path):
     assert "investigacion" not in ligera and "razonamiento" not in ligera["miembros"][0]
     assert (tmp_path / "5_6.json").exists() and ligera["detalle"].endswith("5_6.json")
     assert mc.aligerar(ligera, tmp_path) == ligera  # ya ligera: no cambia
+
+
+def _numerica(resolucion_tramo_suave=0.02, estado="ok"):
+    valores = [float(i) for i in range(201)]  # 0..200
+    enviada = [i / 200 for i in range(201)]  # 0,005 por tramo
+    suave = list(enviada)
+    for i in range(101, 201):  # la suave pone más en el tramo 100-101
+        suave[i] = min(1.0, enviada[i] + resolucion_tramo_suave - 0.005)
+    sombra = {"estado": estado, "valores": valores, "cdf_enviada": enviada, "cdf_pchip": suave}
+    return {"tipo": "numeric", "valor": {}, "miembros": [], "sombra_pchip": sombra}
+
+
+def test_numerica_curva_suave_frente_a_la_enviada():
+    cambios = cmp.cambios_por_pregunta(_numerica(), "100.5", CONF)
+    assert cambios == {cmp.CURVA_SUAVE: pytest.approx(50 * math.log(0.02 / 0.005))}
+    # fuera de los límites: ninguna de las dos curvas dejaba nada por encima -> no se puntúa
+    assert cmp.cambios_por_pregunta(_numerica(), "above_upper_bound", CONF) == {}
+    # exactamente en el mínimo: primer tramo de dentro (igual en las dos curvas)
+    assert cmp.cambios_por_pregunta(_numerica(), "0", CONF) == {cmp.CURVA_SUAVE: pytest.approx(0.0)}
+
+
+def test_numerica_sin_sombra_o_con_sombra_fallida_no_cuenta():
+    assert cmp.cambios_por_pregunta(_numerica(estado="fallo"), "100.5", CONF) == {}
+    fila = _numerica()
+    del fila["sombra_pchip"]
+    assert cmp.cambios_por_pregunta(fila, "100.5", CONF) == {}
+    assert cmp.cambios_por_pregunta(_numerica(), "annulled", CONF) == {}
+
+
+def test_la_curva_suave_cuenta_como_decidida_de_antemano():
+    filas = cmp.resumir([("2026-10-01", {cmp.CURVA_SUAVE: 1.0})], CONF)
+    assert filas[0]["tipo"] == "decidida de antemano"
+    filas = cmp.resumir([("2026-10-01", {"límites 1%-99%": 1.0})], CONF)
+    assert filas[0]["tipo"] == "exploratoria"
