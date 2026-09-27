@@ -377,3 +377,17 @@ un escéptico por cada mejora candidata). Lo esencial:
   da por bueno que Claude ayuda si su grupo gana **en las dos mitades** (ordenadas por fecha de
   cierre), la misma regla que el comparador. Hasta enero solo se verían diferencias grandes, de unos
   5-10 puntos.
+- **Envío encendido** (27/09, 21:04, con el «sí» del usuario). Prueba a mano en la zona de pruebas:
+  **8 pronósticos enviados** («Posted prediction» de Metaculus, cada uno con su comentario privado).
+  Fallo encontrado: con el envío encendido, la zona de pruebas **no se limitaba a 3 preguntas** y hacía
+  todas, gastando créditos y plan en preguntas de práctica. Se paró a los 14 min y se corrigió (3
+  preguntas también con envío, con su prueba). El reparto par/impar funcionó: 5 con Claude y 3 sin.
+- Plan de Claude en esa prueba: 1,7-2,1 $ equivalentes por investigación. La ventana de 5 h pasó de
+  11 a 30 % con ~6 investigaciones y esta sesión en marcha: **~3 puntos por investigación** (cota
+  alta). El tope semanal pasó de 90 a 92 %.
+- **Primera ejecución automática en torneo** (19:18 UTC): verde, **1 pronóstico enviado en la
+  temporada** (pregunta 45707); la MiniBench no tenía preguntas abiertas. El tope decía «llevamos
+  5,36 $ de 25,00 $ permitidos». Coste medio hasta aquí: ~0,35 $ por pregunta (5,36 $ entre ~15).
+- **Pausa de Claude hasta el 28/09 a las 11:00** (decisión del usuario): el tope semanal estaba al
+  92 %. Para el experimento par/impar, **las preguntas pronosticadas durante la pausa se quitan de
+  los dos grupos** (escrito antes de ver resultados).

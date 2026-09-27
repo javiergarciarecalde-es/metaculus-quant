@@ -22,6 +22,7 @@ No cambia qué pronostica el bot en cada pregunta: solo cuántas empieza y en qu
 | `presupuesto.ritmo.*` | no existía | 28/09/2026 → 06/01/2027, colchón 25 % | La temporada va al ritmo de una línea de gasto; la MiniBench, no |
 | Orden de los torneos | temporada, luego MiniBench | MiniBench, luego temporada | La MiniBench decide si llega más dinero |
 | Preguntas ya enviadas | las quitaba la librería | se quitan antes de contar cuántas caben | Para que no ocupen sitio en el tope |
+| `investigacion.claude_max.pausada_hasta_utc` | no existía | 28/09/2026 09:00 UTC (11:00 de Madrid); luego vuelve sola | Decisión del usuario del 27/09 (21:25): su tope semanal de Claude estaba al 92 % y la temporada abre de madrugada |
 | `pronostico.max_preguntas_ensayo` (alcance) | 3 preguntas solo en ensayo sin envío; con envío, la zona de pruebas hacía **todas** | 3 también en la zona de pruebas con envío | Visto al encender el envío el 27/09: la prueba gastaba créditos y plan en todas las preguntas de práctica |
 | `investigacion.claude_max.una_de_cada` | no existía (Claude investigaba todas) | 2: solo las preguntas de número par | Decisión del usuario del 27/09: gasta la mitad de su plan de Claude y deja un grupo de comparación para medir si ayuda. **Cambia la información que reciben los modelos en la mitad de las preguntas** |
 

@@ -216,6 +216,14 @@ class QuantBot(ForecastBot):
             return True
         return int(numero) % una_de_cada == 0
 
+    def _claude_en_pausa(self) -> bool:
+        """Pausa con fecha de vuelta (`pausada_hasta_utc`; null = sin pausa): vuelve sola, sin que
+        nadie tenga que tocar nada. Para no agotar el plan del usuario antes de que se renueve."""
+        hasta = ajustes.p("investigacion.claude_max.pausada_hasta_utc", self.params)
+        if hasta is None:
+            return False
+        return datetime.now(UTC) < datetime.fromisoformat(str(hasta))
+
     async def run_research(self, question: MetaculusQuestion) -> str:
         base = await self._investigacion_base(question)
         research = base
@@ -230,6 +238,8 @@ class QuantBot(ForecastBot):
             if not self._toca_claude(question):
                 # decisión del usuario del 27/09/2026: una de cada dos, para medir si ayuda
                 datos["claude_estado"] = "fuera_del_reparto"
+            elif self._claude_en_pausa():
+                datos["claude_estado"] = "pausada"
             elif quedan is not None and quedan < minimo:
                 # mejora 1b: con poco margen, la investigación lenta pondría en riesgo la pregunta
                 datos["claude_estado"] = "saltada_poco_tiempo"
@@ -249,7 +259,8 @@ class QuantBot(ForecastBot):
                 datos["claude_estado"] = self._claude_max.estados.pop(str(k), "desconocido")
                 if research != base:
                     datos["claude"] = research[len(base) :]
-        if datos["claude_estado"] not in ("ok", "no_usada", "sin_secreto", "fuera_del_reparto"):
+        tranquilos = ("ok", "no_usada", "sin_secreto", "fuera_del_reparto", "pausada")
+        if datos["claude_estado"] not in tranquilos:
             logger.warning(
                 f"{question.page_url}: investigación de Claude -> {datos['claude_estado']}"
             )

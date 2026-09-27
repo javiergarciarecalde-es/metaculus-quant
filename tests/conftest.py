@@ -1,6 +1,7 @@
 """Piezas simuladas: un modelo falso (no llama a ninguna IA) y un Metaculus falso (no envía
 nada)."""
 
+import copy
 import sys
 from pathlib import Path
 
@@ -124,10 +125,16 @@ def entorno_limpio(monkeypatch, tmp_path):
         "CLAUDE_CODE_OAUTH_TOKEN",
     ]:
         monkeypatch.delenv(v, raising=False)
+    import bot.params as ajustes
     import bot.presupuesto as presupuesto
     import bot.registro as r
 
     monkeypatch.setattr(r, "CARPETA", tmp_path / "registro")
     # Ninguna prueba pregunta a OpenRouter de verdad: la clave simulada tiene 100 $ sin gastar.
     monkeypatch.setattr(presupuesto, "consultar_clave", lambda *a, **k: CLAVE_NUEVA)
+    # Las pausas de Claude con fecha (p. ej. la del 27/09/2026 hasta las 11:00 del 28/09) son
+    # temporales: las pruebas no dependen del día en que se ejecutan (la pausa tiene su prueba).
+    sin_pausa = copy.deepcopy(ajustes.todos())
+    sin_pausa["investigacion"]["claude_max"]["pausada_hasta_utc"] = None
+    monkeypatch.setattr(ajustes, "todos", lambda: sin_pausa)
     yield

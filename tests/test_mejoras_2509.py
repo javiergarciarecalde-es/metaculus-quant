@@ -182,3 +182,21 @@ def test_con_una_de_cada_1_claude_investiga_todas(monkeypatch, llms):
     impar.id_of_question, impar.id_of_post = 13, 13
     asyncio.run(bot.forecast_questions([impar]))
     assert len(falso.llamadas) == 1
+
+
+def test_pausa_de_claude_con_fecha_de_vuelta(monkeypatch, llms):
+    monkeypatch.setenv(cm.SECRETO, "token-falso")
+    for hasta, llamadas, estado in [
+        ("2999-01-01T00:00:00+00:00", 0, "pausada"),  # pausa en vigor
+        ("2000-01-01T00:00:00+00:00", 1, "ok"),  # pausa pasada: vuelve sola
+        (None, 1, "ok"),  # sin pausa
+    ]:
+        params = cfg.cargar_params()
+        params["investigacion"]["claude_max"]["pausada_hasta_utc"] = hasta
+        falso = ClaudeFalso()
+        bot = main.construir_bot(params, publicar=False, llms={**llms, "_claude_ejecutar": falso})
+        bot.metaculus_client = MetaculusFalso([])
+        q = _binaria(120)  # número par: le toca Claude
+        asyncio.run(bot.forecast_questions([q]))
+        assert len(falso.llamadas) == llamadas
+        assert bot._investigacion[main._clave(q)]["claude_estado"] == estado
