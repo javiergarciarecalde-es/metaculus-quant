@@ -125,6 +125,9 @@ automática que hace git después de guardar).
   y con la clave real en ensayo).
 
 ## Para el mando
+- **Pendiente de entregar** (desde la nube no se llega al mando «Mando 26/09/2026 (2)»): orden 26,
+  las tres mejoras hechas y en `main` (vigilancia, gasto por parte, curva en sombra); 189 pruebas en
+  verde. «Para leer por el usuario»: la sección «Las tres mejoras de esta noche».
 - Orden 26: criterio de terminado cumplido el 27/09 (salvo mirar el perfil en la web, que es del
   usuario). Parte de cierre pendiente (cierre B, lo decide el usuario).
 - Carpeta de trabajo `stoic-burnell-55dfc1` (vieja): sin ficheros ajenos fuera de git (solo cachés de
