@@ -6,6 +6,16 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-27 noche (decisión del usuario ~22:40: lista semanal de preguntas perdidas)
+
+Motivo: comprobar con datos reales que la vigilancia no deja escapar preguntas (mejora 1c de
+docs/ESTUDIO_BOTS.md). No cambia qué pronostica el bot.
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `marcador.dias_preguntas_perdidas` | no existía | 7 | El marcador de los lunes lista las preguntas cerradas esa semana sin pronóstico nuestro |
+| Registro de las preguntas que deja el tope | solo un aviso | además una línea «dejadas» en `presupuesto_*.jsonl` | Para separar las perdidas a propósito (tope de gasto) de las perdidas sin explicar |
+
 ## 2026-09-27 noche (orden 26 del mando: curva numérica suave en sombra)
 
 Motivo: decisión del usuario del 27/09 (~21:55); mejora 3 de docs/ESTUDIO_BOTS.md. **No cambia lo

@@ -916,12 +916,14 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
                 return decision  # la respuesta de OpenRouter cambió de forma: error claro
             aviso(decision.motivo)
             if decision.sin_dinero:
+                _anotar_dejadas(torneo, preguntas, "sin_dinero")
                 break
             if len(preguntas) > decision.max_preguntas:
                 aviso(
                     f"Tope de gasto: se dejan {len(preguntas) - decision.max_preguntas} preguntas "
                     "para otra ejecución (las que cierran más tarde)."
                 )
+                _anotar_dejadas(torneo, preguntas[decision.max_preguntas :], "tope")
             preguntas = preguntas[: decision.max_preguntas]
         if not preguntas:
             continue
@@ -957,6 +959,21 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
             f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba."
         )
     return 0
+
+
+def _anotar_dejadas(torneo, preguntas: list, motivo: str) -> None:
+    """Apunta las preguntas que el tope deja A PROPÓSITO (27/09/2026): la lista semanal de
+    preguntas perdidas (bot/perdidas.py) las separa de las perdidas sin explicar."""
+    if preguntas:
+        registro.anotar(
+            {
+                "consulta": "dejadas",
+                "torneo": torneo,
+                "motivo": motivo,
+                "preguntas": [[q.id_of_post, q.id_of_question] for q in preguntas],
+            },
+            nombre="presupuesto",
+        )
 
 
 def _decidir_gasto(consulta, params: dict, con_ritmo: bool, gastado: float):
