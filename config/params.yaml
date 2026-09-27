@@ -114,6 +114,7 @@ investigacion:
     simultaneas: 3               # preguntas investigadas a la vez
     tope_usd_por_pregunta: 3     # freno de Claude Code (en $ equivalentes de API)
     minutos_minimos_antes_del_cierre: 30  # si la pregunta cierra antes, se salta esta investigación (25/09/2026)
+    una_de_cada: 2               # decisión del usuario del 27/09/2026: Claude investiga solo las preguntas de número par (mitad del gasto de su plan) y las impares son el grupo de comparación; 1 = todas
 
 # --- Tiempos (el flujo de GitHub corta a los 60 min; la investigación con Claude Max suma hasta 5) ---
 tiempos:

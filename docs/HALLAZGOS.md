@@ -347,3 +347,33 @@ un escéptico por cada mejora candidata). Lo esencial:
   (sí/no y opciones). Control: la variante «mediana (la actual)» da 0. Decididas de antemano: media,
   sin google, límites 1-99 %. Regla: ≥150 resueltas y ganar en las dos mitades.
 - 98 pruebas en verde; ruff limpio.
+
+## 27/09/2026 — Orden 26: clave de créditos, tope de gasto y encendido
+- **Clave:** el secreto `OPENROUTER_API_KEY` existe (comprobado solo el nombre). Ensayo sin envío
+  lanzado a mano: **verde, «Terminado: 3 pronósticos de ensayo»** (ejecuciones 36338357573 y
+  36339352166). Un fallo pasajero de Gemini (503) lo cubrió su respaldo.
+- **La clave de Metaculus gasta como «byok»:** en la consulta real `usage` = 0 y lo gastado va en
+  `byok_usage`, que cuenta en el límite. Límite **100 $**, sin renovación. Si el código hubiera
+  mirado solo `usage`, habría creído que nunca gastaba. Se suma `usage` + `byok_usage`; lo que queda
+  se toma de `limit_remaining`.
+- **Coste real:** el primer ensayo (3 preguntas) costó **0,91 $** según la clave, es decir **~0,30 $ por
+  pregunta**. La librería solo contó 0,55 $ porque no mide la búsqueda `:online`. 100 $ ≈ 330
+  preguntas; hasta enero salen ~420 de MiniBench y 300-400 de la temporada.
+- **Tope de gasto** (`bot/presupuesto.py`): antes de cada torneo pregunta a la clave cuánto queda.
+  La reserva es de 3 $. La MiniBench va primero y solo la para la reserva. La temporada va al ritmo
+  de una línea: 25 % desde el primer día y el resto repartido por igual hasta el 06/01. Previsión
+  de 0,40 $ por pregunta para contar cuántas caben, y freno de 1,50 $ por pregunta (solo de lo que
+  mide la librería). Sin dinero: aviso amarillo, sin rojo. Si OpenRouter contesta 402 a mitad, no
+  cuenta como fallo. Con estos números la temporada tendrá pocas preguntas hasta que llegue más
+  dinero: la MiniBench (~18 $ por ronda) va por delante de la línea desde la 2.ª ronda.
+- **Plan de Claude (investigación con agentes):** entre 2,2 y 2,8 $ equivalentes por pregunta. Una
+  tanda de 3 preguntas movió ~9-11 puntos la ventana de 5 horas (medido con la sesión de desarrollo
+  también en marcha, así que es una cota alta) y ~1 punto el tope semanal (88 → 89 → 90 %). Una de 3
+  investigaciones se pasó de los 300 s.
+- **Experimento «Claude sí / Claude no»** (decisión del usuario del 27/09; reglas escritas ANTES de ver
+  resultados, regla común 3): Claude investiga solo las preguntas de **número par**; las impares son
+  el grupo de comparación. Cómo se mide: la puntuación de pares media por pregunta resuelta en cada
+  grupo, con los números del marcador. Solo se decide con **≥150 preguntas resueltas en total**. Se
+  da por bueno que Claude ayuda si su grupo gana **en las dos mitades** (ordenadas por fecha de
+  cierre), la misma regla que el comparador. Hasta enero solo se verían diferencias grandes, de unos
+  5-10 puntos.

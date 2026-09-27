@@ -143,8 +143,42 @@ def test_registro_completo(monkeypatch, llms, tmp_path):
     lineas = [json.loads(linea) for linea in f.read_text(encoding="utf-8").splitlines()]
     for linea in lineas:
         assert linea["investigacion"]["base_estado"] == "ok"
-        assert linea["investigacion"]["claude_estado"] == "sin_secreto"
+        # una de cada dos (27/09/2026): las de número impar quedan fuera del reparto
+        par = linea["id_pregunta"] % 2 == 0
+        esperado = "sin_secreto" if par else "fuera_del_reparto"
+        assert linea["investigacion"]["claude_estado"] == esperado
         assert "Noticias simuladas" in linea["investigacion"]["base"]
         assert "criterios" in linea and "letra_pequena" in linea and "cierre_utc" in linea
         assert linea["fecha_para_modelos"] == datetime.now(UTC).strftime("%Y-%m-%d")
         assert all(m["razonamiento"] for m in linea["miembros"])
+
+
+# ---------------------------------------- reparto de Claude: una de cada dos (27/09/2026)
+
+
+def test_claude_solo_en_las_preguntas_de_numero_par(monkeypatch, llms):
+    monkeypatch.setenv(cm.SECRETO, "token-falso")
+    falso = ClaudeFalso()
+    bot = main.construir_bot(
+        cfg.cargar_params(), publicar=False, llms={**llms, "_claude_ejecutar": falso}
+    )
+    bot.metaculus_client = MetaculusFalso([])
+    par, impar = _binaria(120), _binaria(120)
+    impar.id_of_question, impar.id_of_post, impar.page_url = 13, 13, "https://ejemplo/13"
+    asyncio.run(bot.forecast_questions([par, impar]))
+    assert len(falso.llamadas) == 1  # solo la par
+    assert bot._investigacion[main._clave(par)]["claude_estado"] == "ok"
+    assert bot._investigacion[main._clave(impar)]["claude_estado"] == "fuera_del_reparto"
+
+
+def test_con_una_de_cada_1_claude_investiga_todas(monkeypatch, llms):
+    monkeypatch.setenv(cm.SECRETO, "token-falso")
+    params = cfg.cargar_params()
+    params["investigacion"]["claude_max"]["una_de_cada"] = 1
+    falso = ClaudeFalso()
+    bot = main.construir_bot(params, publicar=False, llms={**llms, "_claude_ejecutar": falso})
+    bot.metaculus_client = MetaculusFalso([])
+    impar = _binaria(120)
+    impar.id_of_question, impar.id_of_post = 13, 13
+    asyncio.run(bot.forecast_questions([impar]))
+    assert len(falso.llamadas) == 1

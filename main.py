@@ -206,6 +206,16 @@ class QuantBot(ForecastBot):
             cierre = cierre.replace(tzinfo=UTC)
         return (cierre - datetime.now(UTC)).total_seconds() / 60
 
+    def _toca_claude(self, question: MetaculusQuestion) -> bool:
+        """Reparto fijo por el número de la pregunta: con `una_de_cada` = 2, solo las de número
+        par llevan investigación de Claude (grupo con Claude) y las impares no (grupo de control).
+        Se decide por el número y no a mano, para poder comparar los dos grupos sin sesgo."""
+        una_de_cada = int(ajustes.p("investigacion.claude_max.una_de_cada", self.params))
+        numero = question.id_of_question or question.id_of_post
+        if numero is None or una_de_cada <= 1:
+            return True
+        return int(numero) % una_de_cada == 0
+
     async def run_research(self, question: MetaculusQuestion) -> str:
         base = await self._investigacion_base(question)
         research = base
@@ -217,7 +227,10 @@ class QuantBot(ForecastBot):
                 ajustes.p("investigacion.claude_max.minutos_minimos_antes_del_cierre", self.params)
             )
             quedan = self._minutos_para_cerrar(question)
-            if quedan is not None and quedan < minimo:
+            if not self._toca_claude(question):
+                # decisión del usuario del 27/09/2026: una de cada dos, para medir si ayuda
+                datos["claude_estado"] = "fuera_del_reparto"
+            elif quedan is not None and quedan < minimo:
                 # mejora 1b: con poco margen, la investigación lenta pondría en riesgo la pregunta
                 datos["claude_estado"] = "saltada_poco_tiempo"
                 logger.warning(
@@ -236,7 +249,7 @@ class QuantBot(ForecastBot):
                 datos["claude_estado"] = self._claude_max.estados.pop(str(k), "desconocido")
                 if research != base:
                     datos["claude"] = research[len(base) :]
-        if datos["claude_estado"] not in ("ok", "no_usada", "sin_secreto"):
+        if datos["claude_estado"] not in ("ok", "no_usada", "sin_secreto", "fuera_del_reparto"):
             logger.warning(
                 f"{question.page_url}: investigación de Claude -> {datos['claude_estado']}"
             )
