@@ -44,14 +44,18 @@ del momento Y su proyección cae entre los 20 primeros de la temporada. Si no, s
 - El reloj de GitHub Actions no es fiable (a otro participante solo lanzó ~22 % de las veces) y en
   repositorios públicos se apaga tras 60 días sin commits.
 
+- La clave de créditos de Metaculus gasta como «byok»: en OpenRouter `usage` da 0 y lo gastado sale en
+  `byok_usage`. Quien mire solo `usage` creerá que no se gasta nada (visto el 27/09/2026).
+- La librería no mide el coste de la búsqueda `:online`: cuenta ~60 % de lo gastado. La cifra buena es
+  la de la clave (`bot/presupuesto.py`).
 - Cambiar un parámetro a propósito hace fallar `tests/test_configuracion_igual.py` (la foto de la
   configuración): se regenera con `python -m tests.test_configuracion_igual` en el mismo commit que
   la entrada de `CHANGELOG.md`. Si falla sin haber cambiado nada, algo cambió el comportamiento.
 
 ## Estructura
 - `main.py` — punto de entrada (igual que la plantilla oficial de Metaculus).
-- `bot/` — lógica del bot (pronóstico, agregación, registro, interruptores). Los parámetros se leen
-  con `bot/params.py` (`ajustes.p("seccion.nombre")`), que falla si falta uno: nunca hay valor por defecto.
+- `bot/` — lógica del bot (pronóstico, agregación, registro, interruptores; tope de gasto en
+  `presupuesto.py`). Los parámetros se leen con `bot/params.py` (`ajustes.p("seccion.nombre")`), que falla si falta uno: nunca hay valor por defecto.
 - `tests/` — pruebas automáticas (pytest) con API y modelo simulados. `pytest -q`, `ruff format --check .` y
   `ruff check .` deben dar verde (Python 3.12).
 - `.github/workflows/` — ejecución cada 20 minutos + manual; marcador semanal los lunes.

@@ -87,7 +87,7 @@ pronostico:
   prob_min: 0.02                 # nunca por debajo del 2 % (igual que nostreambot)
   prob_max: 0.98                 # nunca por encima del 98 %
   minimo_por_opcion: 0.01        # en preguntas de opciones, ninguna por debajo del 1 %
-  max_preguntas_ensayo: 3        # en ensayo manual, solo estas preguntas (ahorra créditos)
+  max_preguntas_ensayo: 3        # en ensayo manual y en la zona de pruebas (también con envío, desde el 27/09/2026), solo estas preguntas (ahorra créditos)
 
 # --- Investigación ---
 # basica   = una búsqueda de noticias (como hasta ahora).

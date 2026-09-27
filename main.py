@@ -821,13 +821,12 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
     gastado = 0.0  # lo que la librería ha contado en esta ejecución (la clave puede ir por detrás)
     for torneo in torneos:
         preguntas = cliente.get_all_open_questions_from_tournament(torneo)
-        if not envio:
-            # Ensayo: no hay nada enviado, así que no sirve «saltar las ya pronosticadas»;
-            # se limita el número de preguntas para no gastar créditos.
+        if not envio or modo == "test_questions":
+            # Ensayo, o prueba en la zona de pruebas (con o sin envío): no sirve «saltar las ya
+            # pronosticadas» y se limita el número de preguntas para no gastar créditos ni plan.
+            # Hasta el 27/09/2026 la zona de pruebas con envío hacía TODAS sus preguntas.
             bot.skip_previously_forecasted_questions = False
             preguntas = preguntas[: int(ajustes.p("pronostico.max_preguntas_ensayo", params))]
-        if modo == "test_questions":
-            bot.skip_previously_forecasted_questions = False
         if bot.skip_previously_forecasted_questions:
             # antes de contar cuántas caben: las ya enviadas no gastan y no deben ocupar sitio
             preguntas = [q for q in preguntas if not q.already_forecasted]

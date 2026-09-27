@@ -407,7 +407,7 @@
   },
   "envio=True/test_questions/workflow_dispatch": {
    "codigo": 0,
-   "preguntas_pronosticadas": 6,
+   "preguntas_pronosticadas": 3,
    "torneos_pedidos": [
     "bot-testing-area"
    ]

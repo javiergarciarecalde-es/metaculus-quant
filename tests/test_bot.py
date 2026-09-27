@@ -177,3 +177,14 @@ def test_dos_tandas_seguidas_no_fallan(monkeypatch, llms):
     _, falso = _ejecutar(monkeypatch, llms, envio=True, evento="schedule", modo="tournament")
     tipos = [t for t, _ in falso.envios]
     assert tipos.count("binaria") == 2 and tipos.count("numerica") == 2
+
+
+def test_zona_de_pruebas_con_envio_solo_hace_3_preguntas(monkeypatch, llms):
+    # 27/09/2026: con el envío encendido, la prueba a mano hacía TODAS las preguntas de práctica
+    monkeypatch.setenv("METACULUS_TOKEN", "token-de-prueba")
+    monkeypatch.setenv("ENVIO_REAL", "true")
+    falso = MetaculusFalso(preguntas_ejemplo() * 3)  # 9 preguntas
+    assert main.ejecutar("test_questions", cliente=falso, llms=llms) == 0
+    assert falso.torneos_pedidos == ["bot-testing-area"]
+    enviados = [e for e in falso.envios if e[0] != "comentario"]
+    assert len(enviados) == cfg.cargar_params()["pronostico"]["max_preguntas_ensayo"]
