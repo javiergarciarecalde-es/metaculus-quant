@@ -1,6 +1,6 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 27/09/2026, 22:25 (hora de Madrid). Sesión en la nube «tres mejoras antes
+**Última actualización:** 27/09/2026, 22:45 (hora de Madrid). Sesión en la nube «tres mejoras antes
 de la temporada (orden 26)».
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
@@ -17,33 +17,18 @@ automática que hace git después de guardar).
 | Investigación con Claude | **en pausa hasta el 28/09 a las 11:00** (tu tope semanal está al 92 %); luego vuelve sola a **una de cada dos preguntas** (las de número par). Decisiones tuyas del 27/09 |
 | Gastado de los 100 $ | **5,36 $** (pruebas del 27/09); ~0,35 $ por pregunta |
 | Vigilancia que reacciona sola | **encendida** (27/09, 22:20): dos veces por hora; primera ejecución real en verde, «todo en orden» |
-| Pruebas automáticas | **189 de 189 en verde** y ruff (revisor de estilo) sin quejas |
-
-## Lo último que se hizo (27/09, orden 26 del mando)
-| Paso | Resultado |
-|---|---|
-| ¿Existe la clave de créditos en GitHub? | sí (solo se miró el nombre, nunca el valor) |
-| Prueba sin envío, lanzada a mano | **verde: «Terminado: 3 pronósticos de ensayo»**, dos veces |
-| Dinero de la clave (lo dice la propia clave) | límite **100 $**; las 3 preguntas de la 1.ª prueba costaron **0,91 $** (~0,30 $ por pregunta) |
-| Tope de gasto | hecho, con 31 pruebas propias |
-| Envío real | encendido con tu «sí». Prueba en la zona de pruebas: **8 pronósticos enviados** («Posted prediction» de Metaculus) |
-| Primera ejecución automática en torneo (21:18) | **verde, 1 pronóstico enviado en la temporada** (pregunta 45707); la MiniBench no tenía preguntas abiertas |
-| Fallo encontrado y arreglado | con el envío encendido, la prueba a mano en la zona de pruebas hacía todas las preguntas de práctica; ahora solo 3 |
+| Pruebas automáticas | **199 de 199 en verde** y ruff (revisor de estilo) sin quejas |
 
 ## Las tres mejoras de esta noche (tu decisión de las 21:55; ninguna cambia lo que se envía)
 1. **Vigilancia que reacciona sola, sin avisarte.** Un proceso aparte de GitHub (a :13 y :43 de cada
    hora) mira si el bot lleva más de 45 min sin terminar bien, si su última ejecución falló o si hay
    preguntas abiertas hace más de 1 h sin pronóstico que el tope de gasto sí dejaría hacer. Si pasa:
-   **relanza el bot**. Si tras 2 relanzamientos en 3 h sigue igual, **despierta a Claude** (gasta tu
-   plan, con topes: 40 turnos, 5 $ equivalentes, como mucho una vez cada 12 h y nunca durante la pausa
-   de Claude). Claude solo ve las líneas de error; no pronostica, no toca los parámetros ni lo que
-   decide los pronósticos y no puede subir nada a `main`: como mucho deja un arreglo en una rama
-   aparte (`vigilancia/…`) y un **issue** (una nota en GitHub) para la siguiente sesión o el mando.
+   **relanza el bot**; si 2 relanzamientos en 3 h no bastan, **despierta a Claude** (tu plan, con
+   topes; una vez cada 12 h como mucho). Claude no pronostica ni toca los parámetros: como mucho deja
+   un arreglo en una rama aparte y un **issue** (una nota en GitHub) para la siguiente sesión.
 2. **Medir en qué se va el dinero.** Cada pregunta guarda cuánto costó cada parte (búsqueda de
-   noticias, cada modelo, el lector). Cada lunes el marcador añade «En qué se va el dinero»: lo
-   gastado según la clave frente a lo que ve la librería (la diferencia ≈ la búsqueda), frente a la
-   línea de ritmo, y cuántas semanas quedan a ese ritmo. El cambio de modelos, si lo hay, se te
-   propone con esos datos tras la primera semana.
+   noticias, cada modelo, el lector). Cada lunes el marcador resume el gasto frente a la línea de
+   ritmo. El cambio de modelos, si lo hay, se te propone con esos datos tras la primera semana.
 3. **Curva suave en sombra** para las preguntas numéricas: se calcula y se guarda junto a la enviada;
    no se envía. Se compararán con preguntas resueltas (hacen falta ≥150).
 
@@ -77,6 +62,15 @@ automática que hace git después de guardar).
 - **Es una suposición que ayude:** no hay datos nuestros. Por eso el reparto par/impar: en enero se
   compara (reglas escritas antes, en HALLAZGOS del 27/09). Solo se verá si la diferencia es grande.
 
+## También hecho esta noche (tu «adelante» de las 22:40)
+- **Lista semanal de preguntas perdidas** en el marcador: las cerradas sin pronóstico nuestro,
+  separando las que el tope dejó a propósito (el bot ahora las apunta) de las «sin explicar».
+- **Piezas de GitHub actualizadas** (GitHub quitó la versión vieja, Node 20, el 23/09).
+- **La curva suave es ahora una de las 3 comparaciones decididas de antemano** (sustituye a
+  «límites 1-99 %») y el marcador ya la puntúa frente a la curva enviada.
+- El Gmail conectado a esta sesión no es el tuyo de Metaculus (es otra cuenta): no se ha leído ni
+  mandado nada desde él.
+
 ## Lo que queda por hacer
 1. **Tú:** entra en metaculus.com con tu cuenta y mira el perfil de Kyou-bot (Ajustes → My
    Forecasting Bots): deben verse pronósticos en la zona de pruebas y uno en la temporada (45707).
@@ -97,7 +91,15 @@ automática que hace git después de guardar).
    la primera semana.
 4. **Reloj apagado tras 60 días sin cambios** (repositorios públicos): mientras haya sesiones que
    guarden algo al menos una vez al mes, no pasa.
-5. **Opcional, noticias gratis (AskNews):** hay que escribirles con tu nombre y LinkedIn; lo harías tú.
+5. **Noticias gratis (AskNews), lo pediste el 27/09:** (1) crea tu cuenta en my.asknews.app (tiene
+   que ser tuya: yo no creo cuentas ni acepto condiciones); (2) manda desde tu correo a
+   rob@asknews.app el texto preparado (abajo). Dan ~3.000 consultas al mes por bot. Cuando lleguen
+   las claves, se ponen como secretos `ASKNEWS_CLIENT_ID` y `ASKNEWS_SECRET`; **no se ponen aún**: el
+   bot las usaría al momento en vez de la búsqueda actual. El cambio se decide tras la 1.ª semana,
+   con el gasto medido y en fecha anunciada.
+   Texto: «Hi Rob, I'm registering my bot for the Metaculus Fall 2026 FutureEval bot tournament and
+   MiniBench. AskNews account email: [el de tu cuenta]. Metaculus bot username: Kyou-bot. I plan to
+   use /news. Thanks! [tu nombre]»
 
 ## Normas del torneo que conviene recordar
 - Inscribirse y enviar pronósticos equivale a aceptar las normas.
@@ -126,12 +128,11 @@ automática que hace git después de guardar).
 
 ## Para el mando
 - **Pendiente de entregar** (desde la nube no se llega al mando «Mando 26/09/2026 (2)»): orden 26,
-  las tres mejoras hechas y en `main` (vigilancia, gasto por parte, curva en sombra); 189 pruebas en
-  verde. «Para leer por el usuario»: la sección «Las tres mejoras de esta noche».
+  las tres mejoras hechas y en `main` (vigilancia, gasto por parte, curva en sombra), más la lista de
+  preguntas perdidas, las piezas de GitHub al día y la curva suave entre las 3 comparaciones
+  decididas de antemano; 199 pruebas en verde. «Para leer por el usuario»: «Las tres mejoras de esta
+  noche» y «También hecho esta noche».
 - Orden 26: criterio de terminado cumplido el 27/09 (salvo mirar el perfil en la web, que es del
   usuario). Parte de cierre pendiente (cierre B, lo decide el usuario).
-- Carpeta de trabajo `stoic-burnell-55dfc1` (vieja): sin ficheros ajenos fuera de git (solo cachés de
-  Python y ruff). Las ramas sueltas `elastic-maxwell`, `lucid-dewdney` y `stoic-burnell` ya están
-  fusionadas en `main` (sin commits propios).
 - A las comunes §7 les falta decir qué hacer con un documento propio como `docs/DECISIONES.md`.
 - Gasto del plan: ver la tabla «Tu plan de Claude». El tope semanal está al 90 %.

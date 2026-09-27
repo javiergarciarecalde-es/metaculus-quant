@@ -1,0 +1,289 @@
+# Hallazgos archivados (25/09/2026, hasta la orden 14)
+
+Movido de docs/HALLAZGOS.md el 27/09/2026 al pasar de ~400 líneas (CLAUDE.md, límites de tamaño). Texto sin cambios.
+
+## 25/09/2026 — Sesión 2 (local, Windows)
+
+### Entorno
+- Pruebas: **22 de 22 en verde** en Windows (Python 3.12, entorno en `C:\t\mqv` por las rutas largas).
+- Desde local **sí cargan** metaculus.com y la lista pública de modelos de OpenRouter. Se leyeron
+  directamente el anuncio de otoño (notebook 45615), el análisis de primavera (45373) y la
+  página de recursos (38928). Ver `FUENTES.md`.
+- Gancho `post-commit` instalado (sube cada commit a GitHub, igual que cripto-quant y bolsa-quant).
+  Vive en `.git/hooks/` (no se versiona); vale también para las sesiones en worktrees.
+- La sesión en la nube de esta mañana no subió nada a GitHub (main seguía en 52c900f): la pregunta
+  «3 modelos o un Opus» se contesta aquí desde cero.
+
+### Fallo encontrado y arreglado
+- `openai/gpt-4o-search-preview` (el modelo de búsqueda de noticias) **ya no existe** en OpenRouter.
+  El bot no habría dado error rojo: habría pronosticado **sin noticias**, en silencio. Cambiado a
+  `openai/gpt-5.6-sol:online` (búsqueda nativa de OpenAI, la que cubren los créditos según la página
+  de recursos de Metaculus) con esfuerzo bajo. Añadido `python -m bot.modelos`: en cada ejecución
+  comprueba contra la lista pública de OpenRouter que todos los modelos siguen existiendo y avisa.
+- Los tres pronosticadores actuales existen: `gpt-5.6-sol`, `claude-opus-4.8`, `gemini-3.5-flash`.
+  Pero ya hay sucesores: `openai/gpt-6-sol` y `anthropic/claude-opus-5.5` (publicados el 22/09/2026).
+  nostreambot cambió a esos dos el 22/09 (su `docs/roster_history.md`), con esfuerzo `xhigh`.
+
+### Reglas de otoño leídas en directo (antes eran de segunda mano)
+| Dato | Valor |
+|---|---|
+| Formulario de participación | **obligatorio para todos** (3 preguntas); el mismo sirve para pedir créditos |
+| Créditos | más selectivos que antes: **~100 $ iniciales**, más si la MiniBench va por encima de la media; **bots de código abierto: ~el doble** tras un periodo de evaluación. Puede que no den nada |
+| Preguntas | temporada **300-400**; MiniBench ~60 cada 2 semanas (casi todas en los primeros días) |
+| Fechas | MiniBench de calentamiento desde el 21/09; preguntas de otoño desde el **28/09** (las 1-2 primeras semanas, pocas); se puede entrar en cualquier momento (empieza con 0) |
+| Encuesta del bot | obligatoria cada temporada para cobrar |
+| Bots comerciales | sin premio salvo que abran el código (un aficionado solo no está afectado) |
+| Google | límite compartido de 150 peticiones/min entre todos; Gemini 3.1 Pro mal configurado en los créditos |
+| Zona de pruebas | `bot-testing-area` = id 32977 |
+
+### ¿3 modelos de 3 empresas o un solo Opus 5.5 con varios «agentes»? (pregunta del usuario)
+Lo medido por otros:
+1. **Metaculus, primavera 2026** (65 bots propios con el mismo prompt): GPT-5.1-high 11,3 puntos/pregunta;
+   Claude Sonnet 4.5-high 8,9; GPT-5.2-high 8,6 (diferencias dentro del ruido). Más razonamiento
+   ganó 8 de 8 comparaciones.
+2. **Encuesta a 58 creadores**: usar GPT-5.4 para el pronóstico final = la señal más fuerte
+   (correlación 0,42); **usar Opus: correlación ~0**. Los 10 mejores que contestaron usaban todos un
+   GPT-5.x en su conjunto. Nada es estadísticamente significativo (33 pruebas).
+3. **Metaculus, tamaño de equipo**: juntar los 2-10 mejores bots (~-2) mejoró al mejor bot solo
+   (-4,5) frente a los profesionales. Combinar pronosticadores buenos ayuda; añadir malos, no.
+4. **nostreambot** (FUTURE.md, banco de agregación del 15/09/2026, n=262): la mediana gana a su miembro
+   medio por **+6,3 [+4,7, +7,9]** (log-puntos por pregunta), por «consenso de posición». Pero
+   «la diversidad de empresa con 3 miembros» da **delta nulo** en todos los tipos de pregunta.
+   Bajaron de 6 modelos a 3 (uno por empresa) sin pérdida medible. Su autor (blog): mejor llamar a
+   varios modelos que varias veces al mismo. Nadie ha medido «un modelo × 3» frente al trío.
+5. **Opus 5.5 salió el 22/09/2026**: no tiene ningún historial de pronóstico medido.
+6. Código (forecasting-tools 0.3.1): hace falta que funcionen al menos la mitad de las pasadas
+   (2 de 3). Con 3 empresas, si una cae, se pronostica igual; con un solo Opus, si Anthropic cae (o
+   se niega a contestar, como le pasó a nostreambot con fable-5), se pierde la pregunta.
+Conclusión: lo medido es que **combinar 3 pronósticos** ayuda; no está medido que las 3 empresas
+añadan algo por sí mismas. Pero quitar GPT es quitar el modelo con más evidencia a favor, y un solo
+proveedor es un único punto de fallo. Recomendación: seguir con 3 empresas y meter Opus 5.5 en el
+hueco de Anthropic (y GPT-6-sol en el de OpenAI). Pendiente del «sí» del usuario.
+
+### Costes (precios en vivo de OpenRouter, 25/09/2026; $ por millón de tokens)
+| Modelo | Entrada | Salida |
+|---|---|---|
+| openai/gpt-6-sol y gpt-5.6-sol | 2 | 10 |
+| anthropic/claude-opus-5.5 | 4 | 20 |
+| anthropic/claude-opus-4.8 | 5 | 25 |
+| google/gemini-3.5-flash | 1,5 | 9 |
+| búsqueda web nativa (`:online`) | 0,01 $ por búsqueda | — |
+
+Estimación propia por pregunta (≈5.000 tokens de entrada; 6.000-8.000 de razonamiento+respuesta):
+GPT ~0,09 $, Opus 5.5 ~0,14 $, Opus 4.8 ~0,18 $, Gemini Flash ~0,06 $, búsqueda ~0,05 $.
+nostreambot midió 0,24-0,27 $ por modelo y pregunta con prompts mucho más largos: es nuestro techo.
+El registro guarda `coste_usd` por pregunta: tras la primera ejecución real se cambia por lo medido.
+
+### Minutos de GitHub (documentación de GitHub, leída hoy)
+- Plan gratuito: 2.000 min/mes en privados; **públicos gratis**; exceso Linux **0,006 $/min**; sin
+  tarjeta, se **bloquea** al agotarlos. Cada trabajo redondea al minuto.
+- Con el envío encendido: 72 lanzamientos/día × ~1,5-3 min (instalar + mirar preguntas) ≈
+  3.000-6.500 min/mes → privado con tarjeta ≈ 6-27 $/mes.
+- Riesgo de hacerlo público: los registros de las ejecuciones (y el artefacto `registro/`) los
+  puede ver cualquiera, con los pronósticos mientras la pregunta está abierta (~1,5 h). Mismo caso
+  que nostreambot y la plantilla. Los secretos no se ven nunca.
+
+## 25/09/2026 — Sesión en la nube: «3 modelos o un Opus con agentes» (estudio con agentes) y cambios
+Se estudió con un equipo de 9 agentes (2 recogen pruebas, 3 diseñan, 3 critican, 1 juez). Coincide
+con la sesión 2. Datos nuevos verificados en los documentos de nostreambot:
+- Probabilidad extrema dada por **un solo** modelo sin que otro lo acompañe: acertó **4 de 9**;
+  con otro modelo de acuerdo: **21 de 23** (performance_analysis.md). La pregunta q44874, publicada
+  con un solo modelo (0,03), sacó −105 puntos. Desde entonces limitan a 5-95 % si publica uno solo.
+- Probaron y **rechazaron** agentes que debaten, juez, combinador y que cada pronosticador investigue
+  por su cuenta con agentes (FUTURE.md). Los agentes que SÍ usan están en la **investigación
+  compartida** («búsqueda de huecos»: comprobar los 2-3 datos clave), porque sus peores fallos
+  vienen de un dato erróneo que se creen todos los modelos (q44267, −95,66 puntos).
+- Diseños evaluados (coste estimado por pregunta): Opus con 8-12 papeles ~1,65-3 $ (**descartado**:
+  no cabe en los créditos, un solo proveedor, sin evidencia de mejora); híbrido completo ~1-2,4 $
+  (descartado por calendario y coste); cambio mínimo + opciones configurables (**elegido**).
+
+Cambios hechos (código probado con modelos simulados; 35 pruebas en verde):
+1. Modelos por defecto: **gpt-6-sol + claude-opus-5.5 + gemini-3.5-flash** (la opción que
+   recomiendan las dos sesiones). Cada puesto tiene un **respaldo** (el modelo anterior de la
+   misma empresa) que responde si el principal falla o contesta vacío.
+2. `pronostico.modo`: `tres_empresas` (por defecto) o `un_modelo` (3 pasadas de Opus 5.5, la idea
+   del usuario). Se cambia con una línea de `config/params.yaml`.
+3. El registro guarda **cada pronóstico individual** (modelo y valor), no solo la mediana: sin eso
+   nunca se podrá medir qué modo va mejor.
+4. `investigacion.modo: ampliada` (APAGADA): un director (Opus 5.5) elige hasta 2 datos clave y
+   2 buscadores los comprueban a la vez; lo encontrado se AÑADE al final del informe, con tope de
+   240 s; si algo falla, se sigue con el informe normal. Coste extra estimado: +0,05-0,35 $/pregunta.
+5. El comprobador de modelos (`python -m bot.modelos`) revisa también respaldos, director y buscador.
+
+## 25/09/2026 — Sesión 2 (cont.): la sesión de la nube y la local trabajaron a la vez
+- La sesión de la nube subió 4 commits a `main` (05:24-05:26 UTC) mientras la local trabajaba;
+  la local los integró sin conflictos (mezcla limpia, **35 de 35 pruebas en verde** en Windows).
+  La nota «gpt-6-sol y claude-opus-5.5 NO comprobados» de `params.yaml` estaba desfasada: la
+  sesión local los comprobó en vivo el 25/09. Corregida.
+
+## 25/09/2026 — Respuesta del usuario: «Opus 5.5 ultracode con mi cuenta de Claude Max»
+Qué dicen las fuentes oficiales (leídas hoy; «ultracode» = modo de Claude Code que reparte el
+trabajo entre muchos agentes):
+| Punto | Fuente oficial | Qué dice |
+|---|---|---|
+| ¿Se puede usar la suscripción en GitHub Actions? | code.claude.com/docs/en/github-actions | **Sí**: secreto `CLAUDE_CODE_OAUTH_TOKEN` (lo genera el usuario con `claude setup-token`); «runs use your Claude subscription instead of API billing». Vale también en ejecución programada |
+| ¿De qué cupo tira? | support.claude.com, artículo 15036540 | `claude -p`, Agent SDK y **GitHub Actions gastan el mismo cupo de la suscripción** que claude.ai y Claude Code interactivo. Anthropic anunció un crédito aparte (100-200 $/mes en Max) para el 15/06/2026 y lo **pausó**: puede cambiar en cualquier momento |
+| Límites de Max | support.claude.com, artículo 11049741 | límite por sesión de 5 h y **límite semanal** para todos los modelos; se reinicia a una hora fija por semana |
+| Condiciones | code.claude.com/docs/en/legal-and-compliance | Max va con las Condiciones de consumidor. El inicio de sesión con suscripción es para el «uso ordinario» de Claude Code; «los límites anunciados de Pro y Max suponen un uso ordinario, individual». Lo prohibido expresamente es que terceros enruten peticiones de otros por credenciales de Max; el uso propio del titular no está prohibido expresamente. Anthropic se reserva actuar «sin previo aviso» |
+| Coste de «ultracode» | code.claude.com/docs/en/workflows (vía agente) | «un flujo lanza muchos agentes, así que puede gastar bastante más» que hacerlo en una conversación |
+
+Consecuencias para metaculus-quant:
+- **Dinero:** 0 € extra si el usuario ya paga Max: elimina la dependencia de los ~100 $ de créditos.
+- **Cupo compartido:** el bot competiría por el mismo cupo semanal que usan cripto-quant,
+  bolsa-quant, mando-quant y estas sesiones. Las rondas de MiniBench sacan ~60 preguntas en pocos
+  días: en esos picos el bot (o las sesiones del usuario) podría quedarse sin cupo. Pregunta sin
+  pronóstico = 0 puntos.
+- **Uso automático cada 20 min durante 3 meses** no es claramente «uso ordinario individual»: zona
+  gris. Riesgo: que Anthropic limite la cuenta, que es la que usa el usuario para todo lo demás.
+- **Evidencia de acierto:** no cambia: solo Opus = sin GPT (la señal más fuerte de la encuesta) y
+  un solo proveedor. «Ultracode» con agentes que debaten o juzgan es justo lo que nostreambot probó
+  y rechazó; donde los agentes sí ayudan es en la **investigación** compartida.
+- Técnicamente factible: instalar Claude Code en el ejecutor de GitHub y llamarlo con `claude -p`
+  desde el bot. No construido: espera la confirmación del usuario tras conocer estos riesgos.
+
+## 25/09/2026 — GitHub público: el reloj se apaga tras 60 días sin actividad
+- Documentación de GitHub (citada en la página oficial de Claude Code GitHub Actions): en
+  repositorios públicos, **GitHub desactiva el reloj tras 60 días sin actividad** en el repositorio.
+  La temporada dura hasta el 06/01/2027 (~100 días). Mientras haya sesiones con commits al menos
+  una vez al mes no pasa; si no, hay que añadir un commit automático mensual. Anotado en «Pendiente».
+- Al hacerlo público, el primer commit (creado desde la web de GitHub) deja ver el correo personal
+  del usuario. No hay claves en ningún commit (revisado todo el historial).
+
+### 25/09/2026 — Revisión con agentes del cambio anterior: 5 fallos confirmados, arreglados
+| Fallo | Qué habría pasado | Arreglo |
+|---|---|---|
+| Turno de investigación compartido entre tandas (viene de la plantilla oficial) | la **MiniBench entera** (segunda tanda de cada ejecución) podía fallar con «bound to a different event loop» | un turno nuevo por tanda; prueba nueva |
+| Modelos repartidos con una rueda común a todas las preguntas | sin clave de OpenRouter, si un modelo del proxy caía, se perdía 1 de cada 2 preguntas | la pasada n de cada pregunta usa el puesto n; respaldo también en el proxy |
+| Modelo colgado: 2 intentos × 10 min, y después el respaldo | una sola pregunta podía pasar de los 40 min del flujo y **cortar la ejecución** | 1 intento si hay respaldo; tope de 15 min por pasada; búsqueda 3 min; no se empiezan preguntas tras 28 min |
+| Registro solo al final de la tanda | si se cortaba, no quedaba nada apuntado | se apunta cada pregunta en cuanto termina |
+| Subpreguntas de un grupo con la misma dirección web | el registro por modelo se mezclaba | clave = id de la pregunta |
+Pruebas: **42 de 42 en verde**.
+
+## 25/09/2026 — Sesión 2 (cont.): esquema mixto construido (investigación con Claude Max)
+Decisión del usuario (DECISIONES 25/09): 3 empresas con créditos + investigación con agentes de
+Opus 5.5 pagada con su Claude Max. Construido en `bot/claude_max.py`:
+- `investigacion.modo: claude_max` (por defecto ya). Tras la búsqueda normal, el bot llama a
+  Claude Code (`claude -p`, modelo `claude-opus-5-5`), que lanza hasta 3 investigadores en paralelo
+  (fuente de resolución, últimas noticias, tasas base) con búsqueda web y lectura de páginas. Sus
+  notas se **añaden** al final del informe con la cabecera «Investigación con agentes».
+- Seguridad: no puede ejecutar órdenes ni tocar ficheros (`--disallowedTools Bash Edit Write`);
+  corre en una carpeta vacía (no lee el CLAUDE.md del repositorio); no recibe las otras claves
+  (token de Metaculus, OpenRouter); el texto va por la entrada estándar (no por la línea de órdenes).
+- Topes: 300 s por pregunta, 30 turnos, 3 preguntas a la vez, freno de 3 $ equivalentes por pregunta
+  (`--max-budget-usd`). Si el cupo de Max se agota, deja de llamar el resto de la ejecución.
+- Sin el secreto `CLAUDE_CODE_OAUTH_TOKEN`, sin el programa, con error o sin tiempo: sigue con el
+  informe normal (nunca bloquea un pronóstico). El flujo instala Claude Code solo si está el secreto.
+- El registro guarda `claude_max_usd_equivalente` por pregunta (lo que costaría por API): así se mide
+  cuánto cupo de Max gasta el bot.
+- No se usa el modo «ultracode» (decenas de agentes): gastaría el cupo de Max muy deprisa. Si con
+  los datos del registro sobra cupo, se puede subir `agentes`.
+- Flujo de GitHub: límite de 60 min (antes 40) por la investigación extra; Node 22 para Claude Code.
+- Arreglada una prueba de la nube que fallaba solo en Windows (el reloj avanza a saltos de ~15 ms y
+  «más de 0 min» salía falso). **53 de 53 pruebas en verde** en Windows.
+
+Sin verificar (hace falta el secreto real; se verá en el primer ensayo):
+- Que `claude -p --output-format json` devuelva los campos `result`, `is_error` y `total_cost_usd`
+  (así los usa el Agent SDK; si cambian, el bot sigue sin esta investigación y se ve en el registro).
+- Que `--max-budget-usd` se aplique con suscripción, y el texto exacto del aviso de cupo agotado.
+- Cuánto cupo semanal de Max gasta cada pregunta.
+- **Sesiones a la vez:** hoy la sesión de la nube y la local han subido a `main` al mismo tiempo
+  (3 veces hubo que juntar cambios). Funciona, pero conviene que trabaje una sola sesión cada vez.
+
+## 25/09/2026 — Puesta en marcha hecha por el usuario con Claude Cowork (informe de Cowork)
+Hecho por el usuario: bot creado en Metaculus (**Kyou-bot**); formulario de participación y créditos
+enviado (aficionado, código abierto, se piden 270 $); repositorio **público**; secretos
+`METACULUS_TOKEN` y `CLAUDE_CODE_OAUTH_TOKEN` puestos (comprobado con `gh secret list`). Falta
+`OPENROUTER_API_KEY` (la clave de créditos aún no ha llegado; Metaculus avisa de que suele caer en spam).
+
+Lo que Cowork leyó en Metaculus (anuncio 45615, recursos 38928, /tournament-rules) y matiza lo anterior:
+| Punto | Qué dice |
+|---|---|
+| Aceptar condiciones | no hay botón: inscribirse o enviar pronósticos equivale a aceptarlas |
+| Identidad | se pide al cobrar, no ahora. Pago por Ramp (comprobar que admite España/EUR), documentos de identidad y formulario W-8BEN; impuestos a cargo del ganador; pago ~1-2 meses tras resolverse |
+| Token | el botón se llama «Copiar token de API» (no «Show Bot Token») |
+| Créditos dobles por código abierto | llegan **tras un periodo de evaluación**, no desde el principio; «puede cambiar» |
+| Comentarios | obligatorios, deben reflejar el razonamiento real y ser **notas privadas**; comentarios largos sin valor = spam (puede desactivar la cuenta); privados aceptados «dentro de límites razonables». Comprobado en forecasting-tools 0.3.1: `post_question_comment` publica con `is_private=True` por defecto; el texto es el de la plantilla (resumen + investigación + razonamientos, tope 150.000 caracteres) |
+| Comentarios archivados | >30 días y >1.000 caracteres: el listado da 200 caracteres; texto completo con api/comments/[id]/ (8 llamadas / 10 s). No nos afecta: el bot no lee sus comentarios |
+| Para cobrar | código o descripción (y cambios importantes), aceptar inspección (enseñar código, demostración, preguntas), encuesta |
+| Un bot con premio por persona | los secundarios llevan «v2» y se vinculan en Ajustes |
+Otras notas: `claude` no quedó en la lista de carpetas de Windows tras instalarlo (se usó la ruta
+`%USERPROFILE%\.local\bin\claude.exe`); el formulario de créditos es «solo para humanos» y se declaró
+que lo rellenó el usuario con ayuda de IA; Metaculus pide que las IAs no les escriban sin guía humana.
+Pedido por el usuario: quitar su correo de Gmail del primer commit (repositorio ya público).
+
+## 25/09/2026 — Primer ensayo real en GitHub Actions (ejecución 36118516529, sin envío)
+- Lanzado con `gh workflow run` (modo test_questions, zona de pruebas). Secretos presentes:
+  METACULUS_TOKEN y CLAUDE_CODE_OAUTH_TOKEN; sin OPENROUTER_API_KEY.
+- Instalación bien: Claude Code 2.1.282 con Node 22; comprobador de modelos: todos existen.
+- Sin clave de OpenRouter el bot usa el bloque `proxy_metaculus`: Metaculus contestó
+  «You don't have an allowance for model <gpt-5>», «<claude-sonnet-4-5>» y «<gpt-4o-search-preview>»
+  (sin cupo), y una vez «Cannot authenticate user» (página HTML) en la ruta de Anthropic.
+  Resultado: **0 de 3 pronósticos**. Sin la clave de créditos el bot no puede pronosticar.
+- La investigación con Claude Max no dio error (hubo ~2 min entre la búsqueda y los pronósticos),
+  pero su texto no se registraba en ningún sitio y las preguntas fallaron: sin confirmar.
+- **Fallo de diseño:** el flujo acabó en VERDE con 0 pronósticos. Arreglado: fallo total → rojo
+  (`::error::`, código 1); fallo parcial → amarillo; aviso si falta OPENROUTER_API_KEY. Las preguntas
+  que se dejan por falta de tiempo no cuentan como fallo. La investigación con Claude Max apunta
+  en el registro de la ejecución su longitud, su coste equivalente y el principio del texto.
+  **55 de 55 pruebas en verde.**
+
+## 25/09/2026 — Historial reescrito para quitar el correo del usuario (decisión del usuario)
+- Copia de seguridad previa: `C:/t/mq-respaldo-antes-de-reescribir.bundle` (todas las ramas; comprobada).
+- `git filter-branch --env-filter` en un clon limpio: el autor del primer commit pasa de su Gmail a
+  `327065986+javiergarciarecalde-es@users.noreply.github.com` (la dirección anónima de GitHub).
+  Contenido idéntico (sin diferencias de ficheros); cambian los identificadores de los 23 commits.
+- Subido con `--force-with-lease` a `main` y a `claude/elastic-maxwell-4718c9`: nuevo `main` = cf8c20e.
+  Copias locales (principal y worktree) puestas al día; estaban limpias.
+- **Límite:** GitHub sigue sirviendo el commit viejo 4bc7453 si se pide por su identificador exacto
+  (comprobado con la API). Solo el soporte de GitHub puede purgarlo del todo (lo tendría que pedir el
+  usuario). Las ejecuciones antiguas de Actions apuntan a commits viejos.
+- **Aviso a la sesión de la nube:** su copia tiene el historial viejo. Antes de trabajar debe
+  descargar de nuevo (`git fetch` + `git reset --hard origin/main` si no tiene cambios propios); si
+  sube el historial viejo, el correo volvería.
+
+## 25/09/2026 — ¿Se puede usar la suscripción Google AI Pro del usuario en el bot? (pregunta del usuario)
+Fuentes oficiales leídas hoy: ai.google.dev/gemini-api/docs/google-ai-plans y
+geminicli.com/docs/resources/quota-and-pricing; más búsquedas (visto en web) sobre Antigravity CLI.
+| Vía | Qué dicen | ¿Sirve al bot? |
+|---|---|---|
+| Suscripción AI Pro → Gemini API | «las ventajas del plan para desarrolladores solo valen dentro de la web de Google AI Studio. El uso directo de la API (claves o aplicaciones externas) se factura y gestiona aparte» | **No** |
+| Gemini CLI con la cuenta AI Pro (1.500 peticiones/día) | Google **dejó de atender** Gemini CLI para AI Pro/Ultra el 18/06/2026 y quitó el acceso con cuenta personal; lo sustituye Antigravity CLI | **No** |
+| Antigravity CLI con la cuenta | en modo automático usa credenciales guardadas de un inicio de sesión manual en esa máquina; para CI la vía documentada es una clave de API, no la suscripción (visto en web). Habría que copiar credenciales de la cuenta al servidor de GitHub | No recomendable: frágil y manipula credenciales |
+| Clave gratuita de AI Studio | solo modelos Flash; ~250 peticiones/día en total y **~20/día para Gemini 3.8 Flash** (visto en web; los límites exactos solo se ven en la consola de cada proyecto); Gemini 3.1 Pro no tiene nivel gratuito; lo enviado puede usarse para mejorar productos de Google | Muy justo para los picos de la MiniBench (~60 preguntas en pocos días) |
+| Clave de pago de Google (facturación de Cloud) | Gemini 3.1 Pro ~2 $/12 $ por millón de tokens → ~0,08 $ por pregunta, ~65 $ hasta enero (estimación) | Sí, pero **cuesta dinero** aparte de la suscripción |
+Conclusión: la suscripción AI Pro no se puede aprovechar en el bot. El puesto de Google ya lo pagan los
+créditos de Metaculus (gemini-3.5-flash). No se cambia nada salvo decisión del usuario.
+
+## 25/09/2026 — Limpieza de reglas (orden 12e del mando): CLAUDE.md solo con lo propio
+Desde hoy las reglas comunes a todos los proyectos están en `C:\Users\Administrador\Proyectos\CLAUDE.md`
+(se cargan solas). El CLAUDE.md del proyecto sigue en 58 líneas, pero ahora solo con lo propio
+(crece por las trampas y la sección de excepciones). Ninguna regla ha cambiado de sentido.
+| Bloque del CLAUDE.md viejo | Dónde queda |
+|---|---|
+| Protocolo 1 (leer ESTADO primero) y 3 (actualizar ESTADO al final) | comunes §1. Se queda como matiz: «ESTADO corto y en presente» |
+| Protocolo 2 (tramos pequeños, commit y push tras cada uno) | comunes §4 y §3.4; el push lo hace el gancho. Se queda como matiz: «mensajes de commit en español» |
+| Protocolo 4 (HALLAZGOS solo crece) | comunes §7 |
+| Protocolo 5 (`docs/DECISIONES.md`, solo decisiones del usuario) | **se queda** (documento propio) |
+| Protocolo 6 (FUENTES «verificado» / «visto en web») | comunes §7 |
+| Protocolo 7 (trabajar en `main`) | comunes §1. Se queda como matiz: «si el push a main se rechaza, rama y aviso en ESTADO» |
+| «Cómo hablar al usuario» entero | comunes §2 |
+| Reglas duras 1-4 (dinero, claves, `ENVIO_REAL`, sin gasto en API, flujo inofensivo) | **se quedan enteras** |
+| Regla dura 5 (commit + push, en español) | comunes §4 (lo de «en español», como matiz en el protocolo) |
+| Regla dura 6 (no pulir sin fin) | comunes §4 |
+| Regla dura 7 (prohibido intervenir a mano) | **se queda** (ahora es la 5) |
+| Puerta de la fase 0 | **se queda literal**; copia también en `docs/MAESTRO.md` |
+| Trampas: Windows, órdenes de >8.000 caracteres, rutas largas | comunes §10 |
+| Trampa: metaculus.com bloqueada desde la nube | **se queda** como matiz propio |
+| Estructura | **se queda**, más la sección «Excepciones a las reglas comunes» (`main.py` + `bot/` en vez de `src/` + `scripts/`) |
+Añadido: 4 trampas que ya estaban en HALLAZGOS pero no en CLAUDE.md (sesiones a la vez en `main`,
+historial reescrito, reloj de Windows a saltos de 15 ms, reloj de GitHub poco fiable y apagado a
+los 60 días). Nuevos: `CHANGELOG.md` (cambios de parámetros del 24-25/09, sacados de git) y
+`docs/MAESTRO.md` (especificación corta). Pruebas: **62 de 62 en verde**.
+
+Choques con las comunes §6 encontrados (no se toca código en esta orden; quedan en ESTADO):
+- Python 3.11 en los flujos y en `pyproject.toml` (las comunes piden 3.12).
+- Sin `ruff` (el revisor de formato) configurado ni usado.
+- Los parámetros se leen como diccionario, no con `params.p("seccion.nombre")`, y alguno tiene valor
+  por defecto en el código (p. ej. `pronostico.modo` → `tres_empresas`); algunos números elegidos
+  viven en los flujos (horario, tope de 60 min), no en `params.yaml`.
+- El CLAUDE.md no tiene tabla de límites de tamaño ni prueba que la lea (comunes §7).
