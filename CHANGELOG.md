@@ -6,6 +6,15 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-27 noche (orden 26 del mando: curva numérica suave en sombra)
+
+Motivo: decisión del usuario del 27/09 (~21:55); mejora 3 de docs/ESTUDIO_BOTS.md. **No cambia lo
+que se envía**: la curva suave solo se guarda. Sin parámetros nuevos.
+
+| Pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `sombra_pchip` en cada numérica del registro | no existía | curva enviada (rectas) y curva PCHIP (suave), 201 puntos cada una | Poder comparar gratis con preguntas resueltas; se activaría solo con ≥150 resueltas y ganando en las dos mitades |
+
 ## 2026-09-27 noche (orden 26 del mando: medir en qué se va el dinero)
 
 Motivo: decisión del usuario del 27/09 (~21:55): estirar los 100 $ midiendo primero. No cambia qué

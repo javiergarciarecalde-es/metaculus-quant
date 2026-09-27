@@ -54,7 +54,7 @@ from forecasting_tools import (  # noqa: E402
 )
 
 from bot import agregacion as ag  # noqa: E402
-from bot import claude_max, presupuesto, registro  # noqa: E402
+from bot import claude_max, presupuesto, registro, sombra  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
 from bot import params as ajustes  # noqa: E402
@@ -106,6 +106,8 @@ class QuantBot(ForecastBot):
         # coste de cada parte de cada pregunta, según la librería (orden 26: medir en qué se va
         # el dinero). La búsqueda «:online» sale casi a 0: la librería no la sabe medir.
         self._costes: dict[tuple, list[dict]] = {}
+        # curva numérica suave «en sombra» (mejora 3, orden 26): se guarda, no se envía
+        self._sombra: dict[tuple, dict] = {}
         self._tope_pasada = float(ajustes.p("tiempos.tope_pasada_segundos", params))
         self._tope_busqueda = float(ajustes.p("tiempos.tope_busqueda_segundos", params))
         minutos = float(ajustes.p("tiempos.dejar_de_empezar_tras_minutos", params))
@@ -665,12 +667,30 @@ class QuantBot(ForecastBot):
             probs = ag.agregar_opciones(listas, question.options, self.minimo_por_opcion)
             return _a_lista(probs)
         # numéricas y fechas: mediana de las CDF (función de la librería)
-        return await super()._aggregate_predictions(predictions, question)
+        real = await super()._aggregate_predictions(predictions, question)
+        if isinstance(question, NumericQuestion):  # las de fecha no (son otra clase)
+            self._sombra[_clave(question)] = _calcular_sombra(predictions, question, real)
+        return real
 
 
 def _clave(question: MetaculusQuestion) -> tuple:
     """Identifica una pregunta concreta: las subpreguntas de un grupo comparten page_url."""
     return (question.id_of_question or question.page_url, question.conditional_type)
+
+
+def _calcular_sombra(predicciones, question, real: NumericDistribution) -> dict:
+    """Curva PCHIP en sombra junto a la enviada (mejora 3). Nunca tumba el pronóstico real."""
+    try:
+        enviada = real.get_cdf()
+        return {
+            "estado": "ok",
+            "valores": [round(p.value, 6) for p in enviada],
+            "cdf_enviada": [round(p.percentile, 6) for p in enviada],
+            "cdf_pchip": sombra.sombra(predicciones, question)["cdf"],
+        }
+    except Exception as e:  # la sombra es solo para medir: si falla, se apunta y ya
+        logger.warning(f"Curva en sombra fallida en {question.page_url}: {e!r}")
+        return {"estado": "fallo", "error": registro.resumir(repr(e), 300)}
 
 
 def _a_lista(probs: dict[str, float]) -> PredictedOptionList:
@@ -798,6 +818,8 @@ def registrar(informes, torneo, publicado: bool, bot: QuantBot | None = None) ->
                 # «:online» sale ~0 porque la librería no la mide: la cifra buena es la de la clave
                 # (el marcador compara las dos cada semana, bot/gasto.py)
                 "coste_partes": bot._costes_de(q) if bot else {},
+                # numéricas: curva suave PCHIP calculada y NO enviada, junto a la enviada (mejora 3)
+                "sombra_pchip": bot._sombra.pop(_clave(q), None) if bot else None,
                 # registro completo (mejora 2, 25/09/2026): lo necesario para comparar después
                 "criterios": q.resolution_criteria,
                 "letra_pequena": q.fine_print,
