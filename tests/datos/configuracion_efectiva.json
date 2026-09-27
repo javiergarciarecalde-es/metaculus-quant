@@ -443,6 +443,21 @@
      "tope_minutos": 60
     }
    }
+  },
+  "vigilancia.yaml": {
+   "horarios": [
+    "13,43 * * * *"
+   ],
+   "trabajos": {
+    "claude": {
+     "si": "needs.revisar.outputs.accion == 'relanzar_y_claude'",
+     "tope_minutos": 30
+    },
+    "revisar": {
+     "si": "vars.ENVIO_REAL == 'true'",
+     "tope_minutos": 10
+    }
+   }
   }
  },
  "sin_clave_openrouter/tres_empresas": {

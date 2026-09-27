@@ -153,3 +153,21 @@ presupuesto:
 
 red:
   tiempo_espera_segundos: 30         # espera máxima de cada consulta a Metaculus o a la lista de OpenRouter
+
+vigilancia:
+  # Vigilancia que reacciona sola (orden 26 del mando; decisión del usuario del 27/09/2026 ~21:55:
+  # «que no me avise a mí»). Flujo .github/workflows/vigilancia.yaml, lógica en bot/vigilancia.py.
+  # Solo actúa con ENVIO_REAL=true. Nunca pronostica: relanza el bot y, si no basta, despierta a Claude.
+  flujo_bot: "run_bot_on_tournament.yaml"   # el flujo que vigila y relanza
+  ejecuciones_a_mirar: 30                   # últimas ejecuciones del bot que lee de GitHub (~10 h con una cada 20 min)
+  minutos_sin_ejecucion_buena: 45           # silencio: más que esto sin una ejecución de torneo terminada bien (el bot sale cada 20 min)
+  minutos_margen_pregunta_nueva: 60         # una pregunta sin pronóstico solo cuenta como olvidada si lleva abierta más que esto (el bot tiene 3 ejecuciones para cogerla)
+  ventana_horas_relanzamientos: 3           # relanzamientos de la vigilancia que se cuentan para despertar a Claude
+  relanzamientos_antes_de_claude: 2         # si ya van estos relanzamientos en la ventana y el problema sigue: nivel 2 (Claude)
+  horas_entre_claude: 12                    # como mucho un despertar de Claude (un issue) cada tantas horas, para cuidar el plan del usuario
+  max_caracteres_errores: 20000             # líneas de error del registro que se le enseñan a Claude
+  claude:
+    modelo: "claude-opus-5-5"
+    max_turnos: 40
+    tope_usd: 5                  # freno de Claude Code en $ equivalentes de la API (gasta el plan del usuario, no dinero)
+    tope_segundos: 1200          # 20 min; el trabajo del flujo corta a los 30

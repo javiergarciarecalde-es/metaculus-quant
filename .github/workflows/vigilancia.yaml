@@ -1,0 +1,119 @@
+# Vigilancia que reacciona sola (decisión del usuario del 27/09/2026: «que no me avise a mí»).
+# Dos veces por hora, desfasada del bot (el bot sale a :07, :27 y :47), mira si el bot se ha
+# callado, si su última ejecución falló o si hay preguntas olvidadas que el tope de gasto sí
+# permitiría hacer. Lógica y pruebas en bot/vigilancia.py; números en config/params.yaml
+# (sección vigilancia).
+# - Nivel 1: relanza el flujo del bot (modo torneo).
+# - Nivel 2: si varios relanzamientos seguidos no bastan, despierta a Claude Code (plan del usuario,
+#   con topes) para diagnosticar. Claude nunca pronostica, no toca config/params.yaml ni lo que
+#   decide los pronósticos, no sube nada a main: como mucho un arreglo en una rama aparte y un issue.
+# INOFENSIVA con el envío apagado: sin ENVIO_REAL=true el trabajo sale «omitido» (gris).
+# Dos veces por hora y no una: el reloj de GitHub no es fiable (a otro bot solo le lanzó ~22 %).
+name: Vigilancia
+
+on:
+  schedule:
+    - cron: "13,43 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vigilancia
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    if: vars.ENVIO_REAL == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write # para relanzar el flujo del bot (workflow_dispatch)
+      issues: read   # para saber si ya se despertó a Claude hace poco
+    outputs:
+      accion: ${{ steps.revisar.outputs.accion }}
+      fallidas: ${{ steps.revisar.outputs.fallidas }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Mirar el bot y relanzarlo si hace falta
+        id: revisar
+        run: python -m bot.vigilancia revisar --rama "${{ github.event.repository.default_branch }}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}       # solo lectura: contar preguntas olvidadas
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }} # solo la consulta gratuita del saldo
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }} # solo se mira si existe
+
+  claude:
+    needs: revisar
+    if: needs.revisar.outputs.accion == 'relanzar_y_claude'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # solo para subir el arreglo a una rama «vigilancia/…» (nunca a main)
+      actions: read   # para bajar el registro de las ejecuciones fallidas
+      issues: write   # para dejar el diagnóstico
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false # Claude no puede subir nada por su cuenta
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar Claude Code
+        run: npm install -g @anthropic-ai/claude-code && claude --version
+      - name: Bajar solo las líneas de error de las ejecuciones fallidas
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m bot.vigilancia errores --ids "${{ needs.revisar.outputs.fallidas }}" --salida errores_vigilancia.txt
+      - name: Claude diagnostica (con topes de turnos y de dinero)
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python -m bot.vigilancia claude --errores errores_vigilancia.txt \
+            --problemas "La vigilancia relanzó el bot varias veces y el problema sigue"
+      - name: Comprobar el arreglo (si lo hay) y subirlo a una rama aparte
+        id: arreglo
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m bot.vigilancia comprobar-arreglo --base "origin/${{ github.event.repository.default_branch }}"
+          if grep -q '^subir=si' "$GITHUB_OUTPUT"; then
+            rama="vigilancia/arreglo-${{ github.run_id }}"
+            git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$rama"
+            echo "rama=$rama" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Dejar el diagnóstico en un issue (para la siguiente sesión o el mando)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "La vigilancia relanzó el bot varias veces y el problema seguía, así que despertó a Claude."
+            echo "Ejecución de la vigilancia: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            if [ -n "${{ steps.arreglo.outputs.rama }}" ]; then
+              echo "Arreglo propuesto (sin juntar con main): rama \`${{ steps.arreglo.outputs.rama }}\`"
+            fi
+            echo
+            if [ -s diagnostico_vigilancia.md ]; then cat diagnostico_vigilancia.md; else echo "Claude no dejó diagnóstico."; fi
+          } > cuerpo_issue.md
+          gh issue create --repo "${{ github.repository }}" \
+            --title "[vigilancia] El bot no se recupera solo ($(date -u +%Y-%m-%dT%H:%MZ))" \
+            --body-file cuerpo_issue.md

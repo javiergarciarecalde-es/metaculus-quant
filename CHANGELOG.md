@@ -6,6 +6,22 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-27 noche (orden 26 del mando: vigilancia que reacciona sola)
+
+Motivo: decisión del usuario del 27/09 (~21:55): si el bot se calla o falla, que algo automático lo
+relance y, si no basta, despierte a Claude; sin avisarle a él. No cambia qué pronostica el bot.
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| Flujo `vigilancia.yaml` | no existía | a :13 y :43 de cada hora, solo con `ENVIO_REAL=true` | Dos veces por hora: el reloj de GitHub no es fiable |
+| `vigilancia.minutos_sin_ejecucion_buena` | no existía | 45 | El bot sale cada 20 min: 45 = dos salidas perdidas |
+| `vigilancia.minutos_margen_pregunta_nueva` | no existía | 60 | Una pregunta recién abierta aún no es «olvidada» |
+| `vigilancia.ventana_horas_relanzamientos` / `relanzamientos_antes_de_claude` | no existían | 3 h / 2 | Dos relanzamientos sin arreglo en 3 h = nivel 2 (Claude) |
+| `vigilancia.horas_entre_claude` | no existía | 12 | Como mucho un despertar de Claude cada 12 h (cuida el plan) |
+| `vigilancia.claude.*` | no existía | Opus 5.5, 40 turnos, 5 $ equivalentes, 20 min | Topes de Claude Code al diagnosticar |
+| `vigilancia.flujo_bot`, `ejecuciones_a_mirar`, `max_caracteres_errores` | no existían | el flujo del bot, 30, 20.000 | Qué mira y cuánto registro de errores le enseña a Claude |
+| Título de cada ejecución del bot (`run-name`) | «Pronosticar en el torneo» | lleva el modo y cómo se lanzó | Para distinguir las de torneo de las pruebas a mano |
+
 ## 2026-09-27 (orden 26 del mando: tope de gasto de los 100 $ de créditos)
 
 Motivo: llegó la clave de créditos de Metaculus (100 $ para FutureEval y MiniBench; sube sola si la

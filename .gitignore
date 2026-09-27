@@ -5,3 +5,5 @@ __pycache__/
 registro/
 .pytest_cache/
 registro_descargas/
+diagnostico_vigilancia.md
+errores_vigilancia.txt

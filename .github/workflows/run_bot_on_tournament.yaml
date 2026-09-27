@@ -8,6 +8,9 @@
 #   (bot-testing-area), sin enviar nada.
 # Dónde se ponen: GitHub → Settings → Secrets and variables → Actions.
 name: Pronosticar en el torneo
+# El título de cada ejecución lleva el modo: la vigilancia (vigilancia.yaml) distingue así las de
+# torneo de las pruebas lanzadas a mano (27/09/2026).
+run-name: "Pronosticar (${{ inputs.modo || 'tournament' }}, ${{ github.event_name }})"
 
 on:
   workflow_dispatch:
