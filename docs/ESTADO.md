@@ -1,7 +1,7 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 27/09/2026, 21:45 (hora de Madrid). Sesión «Metaculus: encender el bot con
-los 100 $ (orden 26)».
+**Última actualización:** 27/09/2026, 22:25 (hora de Madrid). Sesión en la nube «tres mejoras antes
+de la temporada (orden 26)».
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
@@ -16,7 +16,8 @@ automática que hace git después de guardar).
 | Tope de gasto de los créditos | **puesto y probado** (ver abajo) |
 | Investigación con Claude | **en pausa hasta el 28/09 a las 11:00** (tu tope semanal está al 92 %); luego vuelve sola a **una de cada dos preguntas** (las de número par). Decisiones tuyas del 27/09 |
 | Gastado de los 100 $ | **5,36 $** (pruebas del 27/09); ~0,35 $ por pregunta |
-| Pruebas automáticas | **135 de 135 en verde** y ruff (revisor de estilo) sin quejas |
+| Vigilancia que reacciona sola | **encendida** (27/09, 22:20): dos veces por hora; primera ejecución real en verde, «todo en orden» |
+| Pruebas automáticas | **189 de 189 en verde** y ruff (revisor de estilo) sin quejas |
 
 ## Lo último que se hizo (27/09, orden 26 del mando)
 | Paso | Resultado |
@@ -28,6 +29,23 @@ automática que hace git después de guardar).
 | Envío real | encendido con tu «sí». Prueba en la zona de pruebas: **8 pronósticos enviados** («Posted prediction» de Metaculus) |
 | Primera ejecución automática en torneo (21:18) | **verde, 1 pronóstico enviado en la temporada** (pregunta 45707); la MiniBench no tenía preguntas abiertas |
 | Fallo encontrado y arreglado | con el envío encendido, la prueba a mano en la zona de pruebas hacía todas las preguntas de práctica; ahora solo 3 |
+
+## Las tres mejoras de esta noche (tu decisión de las 21:55; ninguna cambia lo que se envía)
+1. **Vigilancia que reacciona sola, sin avisarte.** Un proceso aparte de GitHub (a :13 y :43 de cada
+   hora) mira si el bot lleva más de 45 min sin terminar bien, si su última ejecución falló o si hay
+   preguntas abiertas hace más de 1 h sin pronóstico que el tope de gasto sí dejaría hacer. Si pasa:
+   **relanza el bot**. Si tras 2 relanzamientos en 3 h sigue igual, **despierta a Claude** (gasta tu
+   plan, con topes: 40 turnos, 5 $ equivalentes, como mucho una vez cada 12 h y nunca durante la pausa
+   de Claude). Claude solo ve las líneas de error; no pronostica, no toca los parámetros ni lo que
+   decide los pronósticos y no puede subir nada a `main`: como mucho deja un arreglo en una rama
+   aparte (`vigilancia/…`) y un **issue** (una nota en GitHub) para la siguiente sesión o el mando.
+2. **Medir en qué se va el dinero.** Cada pregunta guarda cuánto costó cada parte (búsqueda de
+   noticias, cada modelo, el lector). Cada lunes el marcador añade «En qué se va el dinero»: lo
+   gastado según la clave frente a lo que ve la librería (la diferencia ≈ la búsqueda), frente a la
+   línea de ritmo, y cuántas semanas quedan a ese ritmo. El cambio de modelos, si lo hay, se te
+   propone con esos datos tras la primera semana.
+3. **Curva suave en sombra** para las preguntas numéricas: se calcula y se guarda junto a la enviada;
+   no se envía. Se compararán con preguntas resueltas (hacen falta ≥150).
 
 ## El tope de gasto (qué hace ahora el bot que antes no hacía)
 - Antes de cada torneo **pregunta a la clave cuánto queda** (consulta gratuita) y solo empieza las
@@ -95,6 +113,11 @@ automática que hace git después de guardar).
   FutureEval: el bot no entra en esos dos.
 
 ## Cuánto queda sin verificar (de frente)
+- La vigilancia **relanzando** el bot y **despertando a Claude**: probado solo con fallos simulados
+  (40 pruebas). En real solo se ha visto el caso «todo en orden». El permiso de GitHub para relanzar
+  está puesto, pero no se ha ejercido en vivo.
+- Si el reloj de GitHub deja de lanzar **todo**, también se para la vigilancia (usa el mismo reloj).
+  Por eso va dos veces por hora; no hay otra red por debajo.
 - Que los pronósticos enviados aparecen en el perfil: Metaculus contestó «Posted prediction» a los 9,
   pero nadie lo ha mirado en la web (lo haces tú).
 - Que la pausa de Claude vuelve sola el 28/09 a las 11:00: probado con pruebas simuladas, no en vivo.

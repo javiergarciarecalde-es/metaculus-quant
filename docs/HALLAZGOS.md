@@ -391,3 +391,15 @@ un escéptico por cada mejora candidata). Lo esencial:
 - **Pausa de Claude hasta el 28/09 a las 11:00** (decisión del usuario): el tope semanal estaba al
   92 %. Para el experimento par/impar, **las preguntas pronosticadas durante la pausa se quitan de
   los dos grupos** (escrito antes de ver resultados).
+- **Tres mejoras antes de que abra la temporada** (27/09 noche, decisión del usuario, orden 26):
+  (1) **vigilancia que reacciona sola** (`vigilancia.yaml`, a :13 y :43): si el bot se calla más de
+  45 min, si su última ejecución falla o si hay preguntas abiertas hace más de 1 h sin pronóstico que
+  el tope sí permitiría, lo relanza; tras 2 relanzamientos en 3 h sin arreglo, despierta a Claude
+  (40 turnos, 5 $ equivalentes, una vez cada 12 h como mucho, respetando la pausa del plan). Claude
+  solo ve líneas de error, no puede subir nada: un paso aparte comprueba que su arreglo no toca lo
+  prohibido y lo deja en una rama `vigilancia/…` más un issue. 40 pruebas con fallos simulados.
+  (2) **coste por parte** en cada pregunta (`coste_partes`) y resumen semanal del gasto en el
+  marcador (clave frente a librería y frente a la línea). La medida por parte suma exactamente el
+  total de la librería (probado). (3) **curva PCHIP en sombra** en las numéricas (`sombra_pchip`):
+  misma construcción que la librería (mismos puntos y escala), solo cambia rectas por curva suave;
+  coincide con la de scipy hasta 1e-12. Ninguna cambia lo que se envía.
