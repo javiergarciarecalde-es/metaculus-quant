@@ -16,10 +16,11 @@ def resumir(texto: str, n: int) -> str:
     return texto if len(texto) <= n else texto[: n - 1] + "…"
 
 
-def anotar(entrada: dict, carpeta: Path | None = None) -> Path:
+def anotar(entrada: dict, carpeta: Path | None = None, nombre: str = "pronosticos") -> Path:
+    """`nombre`: «pronosticos» (una línea por pregunta) o «presupuesto» (consultas de la clave)."""
     carpeta = carpeta or CARPETA
     carpeta.mkdir(parents=True, exist_ok=True)
-    ruta = carpeta / f"pronosticos_{datetime.now(UTC):%Y-%m}.jsonl"
+    ruta = carpeta / f"{nombre}_{datetime.now(UTC):%Y-%m}.jsonl"
     entrada = {"cuando_utc": datetime.now(UTC).isoformat(timespec="seconds"), **entrada}
     with open(ruta, "a", encoding="utf-8") as f:
         f.write(json.dumps(entrada, ensure_ascii=False, default=str) + "\n")

@@ -6,6 +6,23 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-27 (orden 26 del mando: tope de gasto de los 100 $ de créditos)
+
+Motivo: llegó la clave de créditos de Metaculus (100 $ para FutureEval y MiniBench; sube sola si la
+MiniBench va por encima de la media). Sin tope, el bot gastaría al ritmo de las preguntas que salgan
+(~0,34 $ cada una, ~800 preguntas hasta enero ≈ 270 $) y se quedaría sin dinero a mitad de otoño.
+No cambia qué pronostica el bot en cada pregunta: solo cuántas empieza y en qué orden.
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `presupuesto.total_usd` | no existía | 100 | Correo de Metaculus del 27/09; solo si la clave no trae su propio límite |
+| `presupuesto.reserva_usd` | no existía | 3 $ | Por debajo, no se empieza nada (aviso amarillo, sin rojo cada 20 min) |
+| `presupuesto.coste_previsto_por_pregunta_usd` | no existía | 0,40 $ | Para contar cuántas preguntas caben; ensayo del 27/09: 0,11-0,23 $ sin la búsqueda de noticias |
+| `presupuesto.tope_por_pregunta_usd` | no existía | 1,50 $ | Freno por pregunta (solo lo que la librería sabe medir) |
+| `presupuesto.ritmo.*` | no existía | 28/09/2026 → 06/01/2027, colchón 25 % | La temporada va al ritmo de una línea de gasto; la MiniBench, no |
+| Orden de los torneos | temporada, luego MiniBench | MiniBench, luego temporada | La MiniBench decide si llega más dinero |
+| Preguntas ya enviadas | las quitaba la librería | se quitan antes de contar cuántas caben | Para que no ocupen sitio en el tope |
+
 ## 2026-09-25 (noche, mejoras A, B y C: decisión del usuario, antes de que abra el torneo)
 
 Motivo: estudio de bots rivales (`docs/ESTUDIO_BOTS.md`). Cambian los textos que reciben los modelos

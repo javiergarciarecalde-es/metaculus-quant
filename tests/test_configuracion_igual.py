@@ -163,9 +163,13 @@ def test_configuracion_efectiva_igual_que_antes(monkeypatch):
 if __name__ == "__main__":  # regenerar la foto (solo tras un cambio de ajuste decidido)
     os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
     with pytest.MonkeyPatch.context() as mp:
+        import bot.presupuesto as presupuesto
         import bot.registro as r
+        from tests.conftest import CLAVE_NUEVA
 
         mp.setattr(r, "CARPETA", Path(tempfile.mkdtemp()) / "registro")
+        # como en las pruebas (conftest): nunca se pregunta a OpenRouter de verdad
+        mp.setattr(presupuesto, "consultar_clave", lambda *a, **k: CLAVE_NUEVA)
         for v in ("METACULUS_TOKEN", "ENVIO_REAL", "OPENROUTER_API_KEY", "GITHUB_EVENT_NAME"):
             mp.delenv(v, raising=False)
         FOTO.parent.mkdir(parents=True, exist_ok=True)

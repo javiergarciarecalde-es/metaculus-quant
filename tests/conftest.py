@@ -15,12 +15,17 @@ from forecasting_tools import (
     NumericQuestion,
 )
 
+from bot.presupuesto import EstadoClave
+
 RESPUESTA_BINARIA = "(a) ... razonamiento ...\nProbability: 72%"
 RESPUESTA_OPCIONES = "razonamiento\nRojo: 50%\nVerde: 30%\nAzul: 20%"
 RESPUESTA_NUMERICA = (
     "razonamiento\nPercentile 10: 12\nPercentile 20: 20\nPercentile 40: 35\n"
     "Percentile 60: 48\nPercentile 80: 65\nPercentile 90: 80"
 )
+
+
+CLAVE_NUEVA = EstadoClave(gastado=0.0, gastado_hoy=0.0, limite=100.0, restante=100.0)
 
 
 class ModeloFalso(GeneralLlm):
@@ -119,7 +124,10 @@ def entorno_limpio(monkeypatch, tmp_path):
         "CLAUDE_CODE_OAUTH_TOKEN",
     ]:
         monkeypatch.delenv(v, raising=False)
+    import bot.presupuesto as presupuesto
     import bot.registro as r
 
     monkeypatch.setattr(r, "CARPETA", tmp_path / "registro")
+    # Ninguna prueba pregunta a OpenRouter de verdad: la clave simulada tiene 100 $ sin gastar.
+    monkeypatch.setattr(presupuesto, "consultar_clave", lambda *a, **k: CLAVE_NUEVA)
     yield

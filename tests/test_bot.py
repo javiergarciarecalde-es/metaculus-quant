@@ -142,9 +142,10 @@ def test_ensayo_nunca_toca_el_torneo(monkeypatch, llms):
     assert falso.torneos_pedidos == ["bot-testing-area"]
 
 
-def test_envio_real_va_a_temporada_y_minibench(monkeypatch, llms):
+def test_envio_real_va_a_minibench_y_luego_temporada(monkeypatch, llms):
+    # MiniBench primero desde el 27/09/2026 (orden 26): es la que decide si llega más dinero
     _, falso = _ejecutar(monkeypatch, llms, envio=True, evento="schedule", modo="tournament")
-    assert falso.torneos_pedidos == [33121, "minibench"]
+    assert falso.torneos_pedidos == ["minibench", 33121]
 
 
 def test_extremizar_configurable(llms):

@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import os
 import sys
 import time
 import warnings
@@ -39,6 +40,7 @@ from forecasting_tools import (  # noqa: E402
     ForecastBot,
     GeneralLlm,
     MetaculusQuestion,
+    MonetaryCostManager,
     MultipleChoiceQuestion,
     NumericDistribution,
     NumericQuestion,
@@ -51,7 +53,7 @@ from forecasting_tools import (  # noqa: E402
 )
 
 from bot import agregacion as ag  # noqa: E402
-from bot import claude_max, registro  # noqa: E402
+from bot import claude_max, presupuesto, registro  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
 from bot import params as ajustes  # noqa: E402
@@ -161,9 +163,13 @@ class QuantBot(ForecastBot):
 
     async def _run_individual_question(self, question: MetaculusQuestion):
         """Igual que la librería, pero apunta la pregunta en el registro en cuanto termina
-        (si la ejecución se corta, lo ya hecho queda apuntado)."""
+        (si la ejecución se corta, lo ya hecho queda apuntado). Con freno de gasto por pregunta:
+        pasado el tope, las llamadas que falten a los modelos se cortan (solo si la librería conoce
+        el precio del modelo; el freno de verdad es el de la clave, en `ejecutar`)."""
+        tope = float(ajustes.p("presupuesto.tope_por_pregunta_usd", self.params))
         try:
-            informe = await super()._run_individual_question(question)
+            with MonetaryCostManager(tope):
+                informe = await super()._run_individual_question(question)
         finally:
             self._pasadas.pop(_clave(question), None)
         if self._torneo_actual is not None:
@@ -754,8 +760,11 @@ def aviso(msg: str) -> None:
     print(f"::notice::{msg}")
 
 
-def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> int:
-    """Devuelve el código de salida (0 = limpio)."""
+def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, consulta=None) -> int:
+    """Devuelve el código de salida (0 = limpio).
+
+    `consulta`: función sin argumentos que devuelve el estado de la clave de OpenRouter (en las
+    pruebas, una simulada); si falta, se pregunta a OpenRouter de verdad (gratis)."""
     params = params or cfg.cargar_params()
     if not cfg.hay("METACULUS_TOKEN"):
         aviso(
@@ -775,18 +784,28 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
     cliente = bot.metaculus_client
     # En ensayo NUNCA se tocan preguntas del torneo: las reglas prohíben «previsualizar»
     # pronósticos en preguntas del torneo. Solo la zona de pruebas oficial.
+    temporada = ajustes.p("torneos.temporada", params)
     if envio and modo == "tournament":
-        torneos = [ajustes.p("torneos.temporada", params), ajustes.p("torneos.minibench", params)]
+        # MiniBench primero (orden 26, 27/09/2026): es la que decide si Metaculus da más dinero
+        torneos = [ajustes.p("torneos.minibench", params), temporada]
     else:
         torneos = [ajustes.p("torneos.prueba", params)]
     print(f"Modo {modo}. Envío real: {'SÍ' if envio else 'NO (ensayo)'}. Torneos: {torneos}")
-    if not cfg.hay("OPENROUTER_API_KEY"):
+    hay_clave = cfg.hay("OPENROUTER_API_KEY")
+    if hay_clave and consulta is None:
+        espera = float(ajustes.p("red.tiempo_espera_segundos", params))
+
+        def consulta():
+            return presupuesto.consultar_clave(os.environ["OPENROUTER_API_KEY"].strip(), espera)
+
+    if not hay_clave:
         aviso(
             "Falta OPENROUTER_API_KEY (la clave de los créditos): se prueban los modelos de "
             "Metaculus sin clave, que el 25/09/2026 no tenían cupo. Lo normal es que falle."
         )
 
-    total = fallos = 0
+    total = fallos = sin_saldo = 0
+    gastado = 0.0  # lo que la librería ha contado en esta ejecución (la clave puede ir por detrás)
     for torneo in torneos:
         preguntas = cliente.get_all_open_questions_from_tournament(torneo)
         if not envio:
@@ -796,16 +815,47 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
             preguntas = preguntas[: int(ajustes.p("pronostico.max_preguntas_ensayo", params))]
         if modo == "test_questions":
             bot.skip_previously_forecasted_questions = False
+        if bot.skip_previously_forecasted_questions:
+            # antes de contar cuántas caben: las ya enviadas no gastan y no deben ocupar sitio
+            preguntas = [q for q in preguntas if not q.already_forecasted]
         preguntas = _primero_lo_que_cierra_antes(preguntas)
+        if hay_clave and preguntas:
+            decision = _decidir_gasto(consulta, params, torneo == temporada and envio, gastado)
+            if decision is None:
+                return 0  # no se pudo leer el saldo: se reintenta en la siguiente ejecución
+            if isinstance(decision, int):
+                return decision  # la respuesta de OpenRouter cambió de forma: error claro
+            aviso(decision.motivo)
+            if decision.sin_dinero:
+                break
+            if len(preguntas) > decision.max_preguntas:
+                aviso(
+                    f"Tope de gasto: se dejan {len(preguntas) - decision.max_preguntas} preguntas "
+                    "para otra ejecución (las que cierran más tarde)."
+                )
+            preguntas = preguntas[: decision.max_preguntas]
+        if not preguntas:
+            continue
         bot._torneo_actual, bot._publicado = torneo, envio
         informes = asyncio.run(bot.forecast_questions(preguntas, return_exceptions=True))
         bot._torneo_actual = None
         # las buenas ya se apuntaron al terminar cada una; aquí solo los errores
         registrar([r for r in informes if isinstance(r, BaseException)], torneo, envio, bot=bot)
-        total += sum(not isinstance(r, BaseException) for r in informes)
-        fallos += sum(isinstance(r, BaseException) and not _es_falta_de_tiempo(r) for r in informes)
+        errores = [r for r in informes if isinstance(r, BaseException)]
+        buenos = [r for r in informes if not isinstance(r, BaseException)]
+        total += len(buenos)
+        gastado += sum(r.price_estimate or 0.0 for r in buenos)
+        sin_saldo += sum(presupuesto.es_falta_de_saldo(r) for r in errores)
+        fallos += sum(
+            not _es_falta_de_tiempo(r) and not presupuesto.es_falta_de_saldo(r) for r in errores
+        )
         bot.log_report_summary(informes, raise_errors=False)
     print(f"Terminado: {total} pronósticos {'ENVIADOS' if envio else 'de ensayo (no enviados)'}.")
+    if sin_saldo:
+        aviso(
+            f"OpenRouter dice que la clave no tiene saldo ({sin_saldo} preguntas sin hacer). "
+            "No es un fallo del bot: espera a que Metaculus recargue la clave."
+        )
     if fallos and not total:
         # antes acababa en verde con 0 pronósticos (25/09/2026): un fallo total tiene que verse
         print(
@@ -818,6 +868,24 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None) -> 
             f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba."
         )
     return 0
+
+
+def _decidir_gasto(consulta, params: dict, con_ritmo: bool, gastado: float):
+    """Pregunta a la clave cuánto queda y decide. None = no se pudo leer (aviso amarillo);
+    un número = código de salida por respuesta con forma inesperada (error rojo)."""
+    try:
+        estado = consulta()
+    except presupuesto.EsquemaClaveError as e:
+        print(f"::error::La respuesta de OpenRouter sobre la clave cambió de forma: {e}")
+        return 1
+    except Exception as e:
+        # sin saldo leído no se gasta: se reintenta en 20 min (sin mostrar nada de la clave)
+        print(
+            f"::warning::No se pudo leer el saldo de la clave ({type(e).__name__}): "
+            "no se pronostica en esta ejecución."
+        )
+        return None
+    return presupuesto.decidir(estado, params, datetime.now(UTC), con_ritmo, gastado)
 
 
 def _primero_lo_que_cierra_antes(preguntas: list) -> list:

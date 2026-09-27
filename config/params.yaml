@@ -136,5 +136,18 @@ marcador:
     minimo_preguntas: 150            # resueltas, antes de dar por buena una variante
     limites_alternativos: [0.01, 0.99]  # la variante «límites 1%-99%» (el bot usa 2-98 %)
 
+presupuesto:
+  # Tope de gasto de los créditos de Metaculus (orden 26 del mando, 27/09/2026). Lo gastado y lo
+  # que queda se leen de la propia clave de OpenRouter (bot/presupuesto.py); estos números solo
+  # deciden cuánto se deja empezar. Solo actúan si existe OPENROUTER_API_KEY.
+  total_usd: 100                  # correo de Metaculus del 27/09/2026: 100 $ para FutureEval y MiniBench (se pidieron 270). Solo se usa si la clave no trae su propio límite
+  reserva_usd: 3                  # por debajo de esto no se empieza nada (aviso, sin error rojo): cubre lo que OpenRouter tarda en sumar y el error de la previsión; ~9 preguntas
+  coste_previsto_por_pregunta_usd: 0.40  # para contar cuántas caben: ensayo del 27/09 = 0,11-0,23 $ medidos por la librería SIN la búsqueda de noticias (que no mide); estimación previa 0,34; con margen
+  tope_por_pregunta_usd: 1.50     # freno por pregunta: pasado esto, se cortan las llamadas que falten (solo cuenta lo que la librería sabe medir; ~6 veces lo medido)
+  ritmo:                          # solo para la temporada: la MiniBench va primero (decide si llega más dinero)
+    inicio: "2026-09-28"          # abre la temporada de otoño (anuncio, notebook 45615)
+    fin: "2027-01-06"             # últimos pronósticos de la temporada (docs/MAESTRO.md)
+    colchon_inicial: 0.25         # fracción del dinero que se puede llevar gastada desde el primer día (una ronda de MiniBench ~60 preguntas ≈ 20-25 $); el resto, repartido por igual hasta el final
+
 red:
   tiempo_espera_segundos: 30         # espera máxima de cada consulta a Metaculus o a la lista de OpenRouter
