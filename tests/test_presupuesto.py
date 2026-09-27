@@ -48,7 +48,7 @@ MITAD = datetime(2026, 11, 17, tzinfo=UTC)  # 50 de 100 días de temporada
 
 def _estado(gastado: float, limite: float | None = 100.0) -> EstadoClave:
     restante = None if limite is None else limite - gastado
-    return EstadoClave(gastado=gastado, gastado_hoy=0.0, limite=limite, restante=restante)
+    return EstadoClave(gastado=gastado, limite=limite, restante=restante)
 
 
 # ------------------------------ lectura de la clave ------------------------------
@@ -56,7 +56,47 @@ def _estado(gastado: float, limite: float | None = 100.0) -> EstadoClave:
 
 def test_lee_la_respuesta_documentada():
     e = presupuesto.leer_estado(RESPUESTA_DOCS)
-    assert (e.gastado, e.gastado_hoy, e.limite, e.restante) == (3.0, 1.0, 10.0, 7.0)
+    assert (e.gastado, e.limite, e.restante) == (3.0, 10.0, 7.0)
+
+
+# Respuesta real de la clave de Metaculus (27/09/2026, 18:06 UTC, ya sin etiqueta ni
+# identificadores): gasta como «byok», así que «usage» da 0 y lo gastado va en «byok_usage».
+RESPUESTA_REAL_27_09 = {
+    "data": {
+        "is_management_key": False,
+        "is_provisioning_key": False,
+        "limit": 100,
+        "limit_reset": None,
+        "limit_remaining": 99.0942706,
+        "include_byok_in_limit": True,
+        "usage": 0,
+        "usage_daily": 0,
+        "usage_weekly": 0,
+        "usage_monthly": 0,
+        "byok_usage": 0.9057294,
+        "byok_usage_daily": 0.9057294,
+        "byok_usage_weekly": 0.9057294,
+        "byok_usage_monthly": 0.9057294,
+        "is_free_tier": False,
+        "expires_at": None,
+        "allowed_data_regions": ["global"],
+        "free_model_daily_requests": {"used": 0, "limit": 1000, "remaining": 1000},
+    }
+}
+
+
+def test_lee_la_respuesta_real_de_la_clave_de_metaculus():
+    e = presupuesto.leer_estado(RESPUESTA_REAL_27_09)
+    assert e.gastado == pytest.approx(0.9057294)  # lo gastado en «byok», no en «usage»
+    assert (e.limite, e.restante) == (100.0, pytest.approx(99.0942706))
+    d = presupuesto.decidir(e, cfg.cargar_params(), INICIO, con_ritmo=True)
+    assert "llevamos 0.91 $" in d.motivo
+
+
+def test_sin_limite_propio_cuenta_tambien_lo_gastado_en_byok():
+    datos = {"data": {**RESPUESTA_REAL_27_09["data"], "limit": None, "limit_remaining": None}}
+    e = presupuesto.leer_estado(datos)
+    assert presupuesto.restante(e, cfg.cargar_params()) == pytest.approx(100 - 0.9057294)
 
 
 def test_clave_sin_limite_propio_usa_el_del_correo():
@@ -71,7 +111,7 @@ def test_clave_sin_limite_propio_usa_el_del_correo():
     [
         {"usage": None},
         {"usage": "3"},
-        {"usage_daily": True},
+        {"byok_usage": True},
         {"limit": "10"},
     ],
 )
@@ -102,7 +142,8 @@ def test_consulta_archiva_la_respuesta_sin_la_etiqueta_de_la_clave(tmp_path):
 
     def get(url, headers, timeout):
         pedido.update(url=url, headers=headers, timeout=timeout)
-        return _Respuesta(RESPUESTA_DOCS)
+        datos = {**RESPUESTA_DOCS["data"], "creator_user_id": "user_x", "workspace_id": "w"}
+        return _Respuesta({"data": datos})
 
     e = consultar_de_verdad("CLAVE-SECRETA-DE-PRUEBA", 30, get=get)
     assert e.gastado == 3.0
@@ -111,6 +152,7 @@ def test_consulta_archiva_la_respuesta_sin_la_etiqueta_de_la_clave(tmp_path):
     [f] = list((tmp_path / "registro").glob("presupuesto_*.jsonl"))
     texto = f.read_text(encoding="utf-8")
     assert "CLAVE-SECRETA" not in texto and "sk-or" not in texto and "label" not in texto
+    assert "user_x" not in texto and "workspace_id" not in texto
     assert json.loads(texto)["respuesta"]["data"]["usage"] == 3
 
 
@@ -217,7 +259,7 @@ def test_el_tope_limita_cuantas_preguntas_se_empiezan(monkeypatch, llms, tmp_pat
     params["presupuesto"]["reserva_usd"] = 1.0
     params["presupuesto"]["coste_previsto_por_pregunta_usd"] = 1.0
     # quedan 3 $: 2 $ por encima de la reserva -> 2 preguntas en la MiniBench; la temporada, igual
-    estado = EstadoClave(gastado=0.0, gastado_hoy=0.0, limite=3.0, restante=3.0)
+    estado = EstadoClave(gastado=0.0, limite=3.0, restante=3.0)
     codigo, _ = _ejecutar(monkeypatch, llms, estado, params=params)
     assert codigo == 0
     salida = capsys.readouterr().out
@@ -265,7 +307,7 @@ def test_las_ya_enviadas_no_ocupan_sitio(monkeypatch, llms, tmp_path):
     preguntas[0].already_forecasted = True
     preguntas[1].already_forecasted = True
     # cabe 1 pregunta por torneo: debe ser la que falta, no una de las ya enviadas
-    estado = EstadoClave(gastado=0.0, gastado_hoy=0.0, limite=2.5, restante=2.5)
+    estado = EstadoClave(gastado=0.0, limite=2.5, restante=2.5)
     _ejecutar(monkeypatch, llms, estado, preguntas=preguntas, params=params)
     lineas = (tmp_path / "registro").glob("pronosticos_*.jsonl")
     urls = {

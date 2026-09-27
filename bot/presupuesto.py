@@ -37,11 +37,15 @@ from bot import params as ajustes
 from bot import registro
 
 URL_CLAVE = "https://openrouter.ai/api/v1/key"
-# Campos que usamos de la respuesta (docs de OpenRouter, «API Key Status», 27/09/2026).
-CAMPOS_NUMERICOS = ("usage", "usage_daily")
+# Campos que usamos de la respuesta (docs de OpenRouter, «API Key Status», 27/09/2026). La clave
+# de Metaculus gasta como «byok» (con claves de las empresas que pone Metaculus): en la consulta
+# real del 27/09 «usage» daba 0 y lo gastado salía en «byok_usage», que cuenta en el límite
+# («include_byok_in_limit»: true). Por eso lo gastado es la suma de los dos.
+CAMPOS_NUMERICOS = ("usage", "byok_usage")
 CAMPOS_OPCIONALES = ("limit", "limit_remaining")  # null = la clave no tiene límite propio
-# Nunca se guarda ni se muestra: puede contener parte de la clave.
-CAMPOS_PROHIBIDOS = ("label",)
+# Nunca se guardan ni se muestran: la etiqueta puede contener parte de la clave; los demás son
+# identificadores de la cuenta de Metaculus en OpenRouter (el registro sale como artefacto público).
+CAMPOS_PROHIBIDOS = ("label", "creator_user_id", "organization_id", "workspace_id")
 # Cómo dice OpenRouter que no queda saldo: HTTP 402 «Payment Required» / «insufficient credits».
 SIN_SALDO = re.compile(
     r"\b402\b|payment required|insufficient credits|insufficient_quota|more credits", re.I
@@ -54,8 +58,7 @@ class EsquemaClaveError(ValueError):
 
 @dataclass(frozen=True)
 class EstadoClave:
-    gastado: float  # $ gastados con la clave desde que existe («usage»)
-    gastado_hoy: float  # $ gastados hoy, día UTC («usage_daily»)
+    gastado: float  # $ gastados con la clave desde que existe («usage» + «byok_usage»)
     limite: float | None  # límite de la clave en $ («limit»); None = sin límite propio
     restante: float | None  # $ que quedan según OpenRouter («limit_remaining»)
 
@@ -82,15 +85,14 @@ def leer_estado(respuesta: Any) -> EstadoClave:
         if valor is not None and (not isinstance(valor, (int, float)) or isinstance(valor, bool)):
             raise EsquemaClaveError(f"el campo «{campo}» de la clave no es un número")
     return EstadoClave(
-        gastado=float(datos["usage"]),
-        gastado_hoy=float(datos["usage_daily"]),
+        gastado=float(datos["usage"]) + float(datos["byok_usage"]),
         limite=None if datos["limit"] is None else float(datos["limit"]),
         restante=None if datos["limit_remaining"] is None else float(datos["limit_remaining"]),
     )
 
 
 def sin_campos_prohibidos(respuesta: Any) -> Any:
-    """Copia de la respuesta sin la etiqueta de la clave (para archivarla)."""
+    """Copia de la respuesta sin la etiqueta ni los identificadores (para archivarla)."""
     if isinstance(respuesta, dict) and isinstance(respuesta.get("data"), dict):
         datos = {k: v for k, v in respuesta["data"].items() if k not in CAMPOS_PROHIBIDOS}
         return {**respuesta, "data": datos}

@@ -25,7 +25,7 @@ RESPUESTA_NUMERICA = (
 )
 
 
-CLAVE_NUEVA = EstadoClave(gastado=0.0, gastado_hoy=0.0, limite=100.0, restante=100.0)
+CLAVE_NUEVA = EstadoClave(gastado=0.0, limite=100.0, restante=100.0)
 
 
 class ModeloFalso(GeneralLlm):
