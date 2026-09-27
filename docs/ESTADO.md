@@ -1,6 +1,6 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 27/09/2026, 21:10 (hora de Madrid). Sesión «Metaculus: encender el bot con
+**Última actualización:** 27/09/2026, 21:45 (hora de Madrid). Sesión «Metaculus: encender el bot con
 los 100 $ (orden 26)».
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
@@ -14,8 +14,9 @@ automática que hace git después de guardar).
 | Secretos en GitHub (claves guardadas) | `METACULUS_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` y `OPENROUTER_API_KEY` (la clave de créditos de Metaculus, la puso el usuario el 27/09) |
 | Interruptor `ENVIO_REAL` | **`true` desde el 27/09 a las 21:04** (decisión del usuario): envía de verdad |
 | Tope de gasto de los créditos | **puesto y probado** (ver abajo) |
-| Investigación con Claude | solo en **una de cada dos preguntas** (las de número par; decisión del usuario del 27/09) |
-| Pruebas automáticas | **133 de 133 en verde** y ruff (revisor de estilo) sin quejas |
+| Investigación con Claude | **en pausa hasta el 28/09 a las 11:00** (tu tope semanal está al 92 %); luego vuelve sola a **una de cada dos preguntas** (las de número par). Decisiones tuyas del 27/09 |
+| Gastado de los 100 $ | **5,36 $** (pruebas del 27/09); ~0,35 $ por pregunta |
+| Pruebas automáticas | **135 de 135 en verde** y ruff (revisor de estilo) sin quejas |
 
 ## Lo último que se hizo (27/09, orden 26 del mando)
 | Paso | Resultado |
@@ -24,7 +25,9 @@ automática que hace git después de guardar).
 | Prueba sin envío, lanzada a mano | **verde: «Terminado: 3 pronósticos de ensayo»**, dos veces |
 | Dinero de la clave (lo dice la propia clave) | límite **100 $**; las 3 preguntas de la 1.ª prueba costaron **0,91 $** (~0,30 $ por pregunta) |
 | Tope de gasto | hecho, con 31 pruebas propias |
-| Envío real | encendido con tu «sí»; prueba en la zona de pruebas: PENDIENTE DE RESULTADO |
+| Envío real | encendido con tu «sí». Prueba en la zona de pruebas: **8 pronósticos enviados** («Posted prediction» de Metaculus) |
+| Primera ejecución automática en torneo (21:18) | **verde, 1 pronóstico enviado en la temporada** (pregunta 45707); la MiniBench no tenía preguntas abiertas |
+| Fallo encontrado y arreglado | con el envío encendido, la prueba a mano en la zona de pruebas hacía todas las preguntas de práctica; ahora solo 3 |
 
 ## El tope de gasto (qué hace ahora el bot que antes no hacía)
 - Antes de cada torneo **pregunta a la clave cuánto queda** (consulta gratuita) y solo empieza las
@@ -57,8 +60,9 @@ automática que hace git después de guardar).
   compara (reglas escritas antes, en HALLAZGOS del 27/09). Solo se verá si la diferencia es grande.
 
 ## Lo que queda por hacer
-1. **Ahora:** ver que la prueba con envío acaba en verde y que los pronósticos salen en el perfil de
-   Kyou-bot en metaculus.com.
+1. **Tú:** entra en metaculus.com con tu cuenta y mira el perfil de Kyou-bot (Ajustes → My
+   Forecasting Bots): deben verse pronósticos en la zona de pruebas y uno en la temporada (45707).
+   Yo no puedo verlo: sin tu cuenta, la web no lo enseña.
 2. **Lunes 28/09 y martes:** mirar las primeras ejecuciones del reloj (cada 20 min): que pronostica en
    MiniBench y temporada, y cuánto gasta de verdad (registro `presupuesto_*.jsonl` en los artefactos).
 3. **Semana del 05/10:** primera revisión: preguntas llegadas y perdidas, gasto de créditos frente a la
@@ -91,12 +95,17 @@ automática que hace git después de guardar).
   FutureEval: el bot no entra en esos dos.
 
 ## Cuánto queda sin verificar (de frente)
-- Que los pronósticos enviados aparecen en el perfil (prueba en marcha).
-- El primer pronóstico en un torneo de verdad: será con el reloj, a partir de ahora.
+- Que los pronósticos enviados aparecen en el perfil: Metaculus contestó «Posted prediction» a los 9,
+  pero nadie lo ha mirado en la web (lo haces tú).
+- Que la pausa de Claude vuelve sola el 28/09 a las 11:00: probado con pruebas simuladas, no en vivo.
 - Que el tope se comporta bien con una ronda entera de MiniBench (solo probado con pruebas simuladas
   y con la clave real en ensayo).
 
 ## Para el mando
-- Orden 26: parte de cierre pendiente (cierre B, lo decide el usuario).
+- Orden 26: criterio de terminado cumplido el 27/09 (salvo mirar el perfil en la web, que es del
+  usuario). Parte de cierre pendiente (cierre B, lo decide el usuario).
+- Carpeta de trabajo `stoic-burnell-55dfc1` (vieja): sin ficheros ajenos fuera de git (solo cachés de
+  Python y ruff). Las ramas sueltas `elastic-maxwell`, `lucid-dewdney` y `stoic-burnell` ya están
+  fusionadas en `main` (sin commits propios).
 - A las comunes §7 les falta decir qué hacer con un documento propio como `docs/DECISIONES.md`.
 - Gasto del plan: ver la tabla «Tu plan de Claude». El tope semanal está al 90 %.
