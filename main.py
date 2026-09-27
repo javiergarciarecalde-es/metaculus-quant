@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import logging
 import os
 import sys
@@ -102,6 +103,9 @@ class QuantBot(ForecastBot):
         self._miembros: dict[tuple, list[dict]] = {}  # pronósticos individuales por pregunta
         # investigación de cada pregunta, entera y con su estado (mejora 2: registro completo)
         self._investigacion: dict[tuple, dict] = {}
+        # coste de cada parte de cada pregunta, según la librería (orden 26: medir en qué se va
+        # el dinero). La búsqueda «:online» sale casi a 0: la librería no la sabe medir.
+        self._costes: dict[tuple, list[dict]] = {}
         self._tope_pasada = float(ajustes.p("tiempos.tope_pasada_segundos", params))
         self._tope_busqueda = float(ajustes.p("tiempos.tope_busqueda_segundos", params))
         minutos = float(ajustes.p("tiempos.dejar_de_empezar_tras_minutos", params))
@@ -134,6 +138,28 @@ class QuantBot(ForecastBot):
         if time.monotonic() - self._inicio >= self._limite_ejecucion:
             raise TimeoutError("sin tiempo en esta ejecución: se deja para la siguiente")
 
+    @contextlib.contextmanager
+    def _medir(self, question: MetaculusQuestion, parte: str):
+        """Apunta lo que la librería mide del coste de un trozo de la pregunta. Solo mide: un
+        medidor con límite 0 no frena nada (el freno sigue siendo el de cada pregunta). Se lee al
+        registrar la pregunta, no aquí: la librería puede sumar el coste un poco después."""
+        apunte = {"parte": parte, "medidor": MonetaryCostManager(0)}
+        self._costes.setdefault(_clave(question), []).append(apunte)
+        with apunte["medidor"]:
+            yield apunte
+
+    def _costes_de(self, question: MetaculusQuestion) -> dict[str, float]:
+        """{parte: $ que mide la librería}; «pronostico <modelo>» = el que contestó de verdad."""
+        res: dict[str, float] = {}
+        for a in self._costes.pop(_clave(question), []):
+            res[a["parte"]] = res.get(a["parte"], 0.0) + a["medidor"].current_usage
+        return {k: round(v, 6) for k, v in sorted(res.items())}
+
+    async def _leer(self, question: MetaculusQuestion, *args, **kwargs):
+        """El «lector» (structure_output), con su coste medido aparte."""
+        with self._medir(question, "lector"):
+            return await structure_output(*args, **kwargs)
+
     # Puestos: la pasada n de CADA pregunta usa el puesto n (modelo + respaldo), sin depender de
     # lo que pasara en otras preguntas.
     async def _pensar(self, prompt: str, question: MetaculusQuestion) -> tuple[str, str]:
@@ -141,7 +167,12 @@ class QuantBot(ForecastBot):
         n = self._pasadas.get(k, 0)
         self._pasadas[k] = n + 1
         llm, respaldo = self._puestos[n % len(self._puestos)]
-        return await asyncio.wait_for(self._pedir(llm, respaldo, prompt), timeout=self._tope_pasada)
+        with self._medir(question, "pronostico") as apunte:
+            texto, modelo = await asyncio.wait_for(
+                self._pedir(llm, respaldo, prompt), timeout=self._tope_pasada
+            )
+            apunte["parte"] = f"pronostico {modelo}"
+        return texto, modelo
 
     async def _pedir(self, llm, respaldo, prompt: str) -> tuple[str, str]:
         try:
@@ -295,16 +326,17 @@ class QuantBot(ForecastBot):
             )
             estado = "ok"
             try:
-                if cfg.hay("ASKNEWS_CLIENT_ID") and cfg.hay("ASKNEWS_SECRET"):
-                    # AskNews (noticias): lo usa como fuente principal nostreambot
-                    research = await AskNewsSearcher().call_preconfigured_version(
-                        "asknews/news-summaries", prompt
-                    )
-                else:
-                    research = await asyncio.wait_for(
-                        self.get_llm("researcher", "llm").invoke(prompt),
-                        timeout=self._tope_busqueda,
-                    )
+                with self._medir(question, "busqueda"):
+                    if cfg.hay("ASKNEWS_CLIENT_ID") and cfg.hay("ASKNEWS_SECRET"):
+                        # AskNews (noticias): lo usa como fuente principal nostreambot
+                        research = await AskNewsSearcher().call_preconfigured_version(
+                            "asknews/news-summaries", prompt
+                        )
+                    else:
+                        research = await asyncio.wait_for(
+                            self.get_llm("researcher", "llm").invoke(prompt),
+                            timeout=self._tope_busqueda,
+                        )
             except Exception as e:  # sin investigación (o sin tiempo) se sigue pronosticando
                 logger.warning(f"Investigación fallida en {question.page_url}: {e!r}")
                 research = ""
@@ -314,18 +346,22 @@ class QuantBot(ForecastBot):
             self._investigacion.setdefault(_clave(question), {})["base_estado"] = estado
         # La ampliada va FUERA del semáforo: las de varias preguntas no hacen cola entre sí.
         if ajustes.p("investigacion.modo", self.params) == "ampliada":
-            research = await inv.ampliar(
-                research,
-                question.question_text,
-                question.resolution_criteria or "",
-                director=self.get_llm("director", "llm"),
-                buscador=self.get_llm("buscador", "llm"),
-                n=int(ajustes.p("investigacion.max_datos_clave", self.params)),
-                tope_segundos=float(ajustes.p("investigacion.tope_total_segundos", self.params)),
-                max_caracteres=int(ajustes.p("investigacion.max_caracteres_informe", self.params)),
-            )
+            with self._medir(question, "ampliada"):
+                research = await self._ampliar(question, research)
         logger.info(f"Investigación para {question.page_url}:\n{research[:2000]}")
         return research
+
+    async def _ampliar(self, question: MetaculusQuestion, research: str) -> str:
+        return await inv.ampliar(
+            research,
+            question.question_text,
+            question.resolution_criteria or "",
+            director=self.get_llm("director", "llm"),
+            buscador=self.get_llm("buscador", "llm"),
+            n=int(ajustes.p("investigacion.max_datos_clave", self.params)),
+            tope_segundos=float(ajustes.p("investigacion.tope_total_segundos", self.params)),
+            max_caracteres=int(ajustes.p("investigacion.max_caracteres_informe", self.params)),
+        )
 
     ##################################### BINARIAS #####################################
 
@@ -371,7 +407,8 @@ class QuantBot(ForecastBot):
         texto, modelo = await self._pensar(prompt, question)
         p = ag.leer_probabilidad(texto)
         if p is None:
-            pred: BinaryPrediction = await structure_output(
+            pred: BinaryPrediction = await self._leer(
+                question,
                 texto,
                 BinaryPrediction,
                 model=self.get_llm("parser", "llm"),
@@ -430,7 +467,8 @@ class QuantBot(ForecastBot):
         texto, modelo = await self._pensar(prompt, question)
         leidas = ag.leer_opciones(texto, question.options)
         if leidas is None:
-            lista: PredictedOptionList = await structure_output(
+            lista: PredictedOptionList = await self._leer(
+                question,
                 text_to_structure=texto,
                 output_type=PredictedOptionList,
                 model=self.get_llm("parser", "llm"),
@@ -513,7 +551,8 @@ class QuantBot(ForecastBot):
             leidos = ag.monotono(leidos)
             percentiles = [Percentile(percentile=k, value=v) for k, v in leidos.items()]
         else:
-            percentiles = await structure_output(
+            percentiles = await self._leer(
+                question,
                 texto,
                 list[Percentile],
                 model=self.get_llm("parser", "llm"),
@@ -568,7 +607,8 @@ class QuantBot(ForecastBot):
             """
         )
         texto, modelo = await self._pensar(prompt, question)
-        fechas: list[DatePercentile] = await structure_output(
+        fechas: list[DatePercentile] = await self._leer(
+            question,
             texto,
             list[DatePercentile],
             model=self.get_llm("parser", "llm"),
@@ -754,6 +794,10 @@ def registrar(informes, torneo, publicado: bool, bot: QuantBot | None = None) ->
                 "claude_max_usd_equivalente": bot._claude_max.costes.pop(str(_clave(q)), None)
                 if bot
                 else None,
+                # coste de cada parte medido por la librería (orden 26, 27/09/2026); la búsqueda
+                # «:online» sale ~0 porque la librería no la mide: la cifra buena es la de la clave
+                # (el marcador compara las dos cada semana, bot/gasto.py)
+                "coste_partes": bot._costes_de(q) if bot else {},
                 # registro completo (mejora 2, 25/09/2026): lo necesario para comparar después
                 "criterios": q.resolution_criteria,
                 "letra_pequena": q.fine_print,

@@ -9,7 +9,8 @@ Pasos:
    (score_data de my_forecasts: spot_peer_score = la puntuación de pares que cuenta en el torneo).
 3. Calcula, por modelo, puntuaciones propias (log y Brier) para comparar a los tres miembros.
 4. Compara formas de juntar a los 3 modelos (bot/comparador.py).
-5. Escribe docs/MARCADOR.md (en llano) y datos/marcador.json. El texto largo de cada pregunta
+5. Resume en qué se va el dinero frente a la línea de ritmo (bot/gasto.py; orden 26, 27/09/2026).
+6. Escribe docs/MARCADOR.md (en llano) y datos/marcador.json. El texto largo de cada pregunta
    (investigación entera, razonamientos) va aparte, a datos/detalle/, un fichero por pregunta.
 
 Uso: python -m bot.marcador [--descargas carpeta]
@@ -30,6 +31,7 @@ from pathlib import Path
 import requests
 
 from . import comparador as cmp
+from . import gasto
 from . import params as ajustes
 from .config import RAIZ
 
@@ -369,10 +371,12 @@ def main(argv=None) -> int:
 
     conf = conf_comparador()
     m = calcular(filas, resueltas, conf)
+    m["gasto"] = gasto.resumen(nuevas, ajustes.todos(), ahora)
     SALIDA_JSON.write_text(
         json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8"
     )
-    SALIDA_MD.write_text(informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf), encoding="utf-8")
+    texto = informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf)
+    SALIDA_MD.write_text(texto + "\n".join(gasto.informe_md(m["gasto"])) + "\n", encoding="utf-8")
     print(
         f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "
         f"suma de pares {m['spot_peer_suma']}. Preguntas que no cargaron: {fallos}."

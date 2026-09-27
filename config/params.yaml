@@ -131,6 +131,7 @@ registro:
 marcador:
   horas_de_espera: 24                # solo cuenta pronósticos de hace más de esto (pregunta ya cerrada)
   pausa_entre_preguntas_segundos: 0.5  # sin prisas con la API de Metaculus
+  dias_resumen_gasto: 7              # «en qué se va el dinero» (orden 26, 27/09/2026): días que resume el marcador de cada lunes
   # Comparador de formas de juntar a los 3 modelos (decisión del usuario del 25/09/2026).
   # Decididas de antemano (docs/ESTUDIO_BOTS.md §3): como mucho 3; el resto es exploratorio.
   comparador:

@@ -6,6 +6,16 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-27 noche (orden 26 del mando: medir en qué se va el dinero)
+
+Motivo: decisión del usuario del 27/09 (~21:55): estirar los 100 $ midiendo primero. No cambia qué
+pronostica el bot ni los modelos (el cambio de modelos se propone con datos tras la primera semana).
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `coste_partes` en cada línea del registro | no existía | coste de cada parte según la librería (búsqueda, cada modelo, lector) | Saber qué parte pesa; la búsqueda «:online» sale ~0 porque la librería no la mide |
+| `marcador.dias_resumen_gasto` | no existía | 7 | El marcador de cada lunes resume el gasto de la semana: clave frente a librería y frente a la línea de ritmo |
+
 ## 2026-09-27 noche (orden 26 del mando: vigilancia que reacciona sola)
 
 Motivo: decisión del usuario del 27/09 (~21:55): si el bot se calla o falla, que algo automático lo
