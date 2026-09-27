@@ -36,8 +36,8 @@ jobs:
       accion: ${{ steps.revisar.outputs.accion }}
       fallidas: ${{ steps.revisar.outputs.fallidas }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -62,17 +62,17 @@ jobs:
       actions: read   # para bajar el registro de las ejecuciones fallidas
       issues: write   # para dejar el diagnóstico
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false # Claude no puede subir nada por su cuenta
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
       - name: Instalar dependencias
         run: pip install -r requirements-dev.txt
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
       - name: Instalar Claude Code

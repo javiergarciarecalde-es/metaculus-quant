@@ -51,8 +51,8 @@ jobs:
           fi
       - name: Descargar el repositorio
         if: steps.token.outputs.hay == 'si'
-        uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+        uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         if: steps.token.outputs.hay == 'si'
         with:
           python-version: "3.12"
@@ -60,7 +60,7 @@ jobs:
       - name: Instalar dependencias
         if: steps.token.outputs.hay == 'si'
         run: pip install -r requirements.txt
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
         with:
           node-version: "22"   # Claude Code pide Node 22 o más
@@ -82,7 +82,7 @@ jobs:
           ENVIO_REAL: ${{ vars.ENVIO_REAL }}
       - name: Guardar el registro de pronósticos
         if: always() && steps.token.outputs.hay == 'si'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: registro-${{ github.run_id }}
           path: registro/
