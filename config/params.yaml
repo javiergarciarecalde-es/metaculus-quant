@@ -52,7 +52,7 @@ modelos:
     investigacion_respaldo: "openrouter/openai/gpt-6-sol:online"  # 28/09/2026: si la búsqueda principal falla o sale vacía, busca este (antes se pronosticaba sin noticias). null = sin respaldo
     investigacion_esfuerzo: "low"
     clasificador: "openrouter/google/gemini-3.8-flash"  # 28/09/2026, en sombra: dice si cada pregunta es fácil/normal/difícil (fracciones de céntimo); no decide nada. null = apagado
-    lector: "openrouter/openai/gpt-4o-mini"
+    lector: "openrouter/openai/gpt-6-sol"  # decisión del usuario del 28/09/2026 (~11:35): antes gpt-4o-mini; solo actúa si la lectura automática de la respuesta falla
     director: "openrouter/anthropic/claude-opus-5.5"      # solo con investigacion.modo = ampliada
     buscador: "openrouter/anthropic/claude-opus-5.5:online"  # solo con investigacion.modo = ampliada (esfuerzo = investigacion_esfuerzo); 28/09/2026: igual que la búsqueda
   proxy_metaculus:
@@ -71,7 +71,7 @@ modelos:
   tiempo_max_segundos: 600
   # Los siguientes estaban fijos en main.py hasta el 25/09/2026 (orden 14: sin números escondidos
   # en el código). Mismos valores que tenían; los de lector y resumidor, los de la plantilla oficial.
-  temperatura_lector: 0.0       # «lector» = modelo que lee la respuesta si las expresiones regulares fallan
+  temperatura_lector: null      # «lector» = modelo que lee la respuesta si las expresiones regulares fallan. 28/09/2026: null (antes 0.0) porque GPT-6 Sol razona y puede no aceptar temperatura 0
   temperatura_resumidor: 0.3    # el resumen de la investigación está apagado; se conserva como la plantilla
   lector_validaciones: 2        # lecturas que deben coincidir al leer una respuesta con el lector (plantilla)
   intentos:                     # cuántas veces se prueba cada modelo antes de darlo por fallido

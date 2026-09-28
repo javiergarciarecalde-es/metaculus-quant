@@ -73,11 +73,11 @@
    "parser": {
     "extra_body": null,
     "intentos": 2,
-    "model": "openrouter/openai/gpt-4o-mini",
-    "nombre": "openrouter/openai/gpt-4o-mini",
+    "model": "openrouter/openai/gpt-6-sol",
+    "nombre": "openrouter/openai/gpt-6-sol",
     "reasoning_effort": null,
-    "temperature": 0.0,
-    "timeout": 40
+    "temperature": null,
+    "timeout": 60
    },
    "researcher": {
     "extra_body": {
@@ -95,11 +95,11 @@
    "summarizer": {
     "extra_body": null,
     "intentos": 2,
-    "model": "openrouter/openai/gpt-4o-mini",
-    "nombre": "openrouter/openai/gpt-4o-mini",
+    "model": "openrouter/openai/gpt-6-sol",
+    "nombre": "openrouter/openai/gpt-6-sol",
     "reasoning_effort": null,
     "temperature": 0.3,
-    "timeout": 40
+    "timeout": 60
    }
   },
   "opciones_minimo": 0.01,
@@ -250,11 +250,11 @@
    "parser": {
     "extra_body": null,
     "intentos": 2,
-    "model": "openrouter/openai/gpt-4o-mini",
-    "nombre": "openrouter/openai/gpt-4o-mini",
+    "model": "openrouter/openai/gpt-6-sol",
+    "nombre": "openrouter/openai/gpt-6-sol",
     "reasoning_effort": null,
-    "temperature": 0.0,
-    "timeout": 40
+    "temperature": null,
+    "timeout": 60
    },
    "researcher": {
     "extra_body": {
@@ -272,11 +272,11 @@
    "summarizer": {
     "extra_body": null,
     "intentos": 2,
-    "model": "openrouter/openai/gpt-4o-mini",
-    "nombre": "openrouter/openai/gpt-4o-mini",
+    "model": "openrouter/openai/gpt-6-sol",
+    "nombre": "openrouter/openai/gpt-6-sol",
     "reasoning_effort": null,
     "temperature": 0.3,
-    "timeout": 40
+    "timeout": 60
    }
   },
   "opciones_minimo": 0.01,
@@ -526,7 +526,7 @@
     "model": "gpt-4o-mini",
     "nombre": "metaculus/gpt-4o-mini",
     "reasoning_effort": null,
-    "temperature": 0.0,
+    "temperature": null,
     "timeout": 40
    },
    "researcher": {
@@ -667,7 +667,7 @@
     "model": "gpt-4o-mini",
     "nombre": "metaculus/gpt-4o-mini",
     "reasoning_effort": null,
-    "temperature": 0.0,
+    "temperature": null,
     "timeout": 40
    },
    "researcher": {

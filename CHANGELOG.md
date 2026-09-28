@@ -6,6 +6,13 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 mediodía (decisión del usuario: el lector pasa a GPT-6 Sol)
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `modelos.openrouter.lector` | `openai/gpt-4o-mini` | `openai/gpt-6-sol` | Decisión del usuario: de OpenAI, GPT-6 Sol para uso común. Solo actúa si la lectura automática de la respuesta falla (poco frecuente); 2/10 $ frente a 0,15/0,6 $ por millón de tokens |
+| `modelos.temperatura_lector` | 0.0 | null (la que decida el modelo) | GPT-6 Sol razona y puede no aceptar temperatura 0; con null no hay riesgo de que la lectura falle por eso |
+
 ## 2026-09-28 (lista de perdidas: solo desde que el bot está encendido)
 
 | Parámetro | Antes | Después | Motivo |

@@ -197,3 +197,8 @@ un escéptico por cada mejora candidata). Lo esencial:
     línea, perdidas, clasificadores, Max frente a pago), aplica solo las reglas escritas de
     antemano, revisa la salud (vigilancia, reloj, clave, plan) y propone decisiones al usuario sin
     cambiar pronósticos, modelos ni parámetros por su cuenta; actualiza ESTADO y HALLAZGOS.
+- **28/09 ~09:35 UTC, decisiones del usuario:** el **lector** pasa a GPT-6 Sol (con
+  `temperatura_lector` null: los modelos que razonan pueden rechazar temperatura 0; la librería le
+  pone además 60 s de espera en vez de 40). **AskNews:** cuenta creada y correo enviado por el
+  usuario; pendiente de respuesta. Al llegar las claves: no ponerlas sin decidirlo con datos (el
+  bot cambiaría al momento de fuente de noticias; pérdida de lectura de las páginas de resolución).

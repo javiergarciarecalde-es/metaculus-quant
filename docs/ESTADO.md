@@ -1,6 +1,6 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 28/09/2026, 11:05 (hora de Madrid). Sesión cerrada. Sesión en la nube «tres mejoras antes
+**Última actualización:** 28/09/2026, 11:40 (hora de Madrid). Sesión cerrada (segundo cierre). Sesión en la nube «tres mejoras antes
 de la temporada (orden 26)» y cambios de modelos del 28/09.
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
@@ -14,7 +14,7 @@ automática que hace git después de guardar).
 | Secretos en GitHub (claves guardadas) | `METACULUS_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` y `OPENROUTER_API_KEY` (la clave de créditos de Metaculus, la puso el usuario el 27/09) |
 | Interruptor `ENVIO_REAL` | **`true` desde el 27/09 a las 21:04** (decisión del usuario): envía de verdad |
 | Tope de gasto de los créditos | **puesto y probado** (ver abajo) |
-| Modelos (tu decisión del 28/09) | pronostican GPT-6 Sol, Claude Opus 5.5 y Gemini 3.8 Flash; busca noticias Opus 5.5 (respaldo GPT-6 Sol). Detalle en CHANGELOG |
+| Modelos (tu decisión del 28/09) | pronostican GPT-6 Sol, Claude Opus 5.5 y Gemini 3.8 Flash; busca noticias Opus 5.5 (respaldo GPT-6 Sol); lector GPT-6 Sol. Detalle en CHANGELOG |
 | Investigación con Claude | **en pausa hasta hoy 28/09 a las 11:00**; luego, en las preguntas pares, **sustituye a la búsqueda de pago** (opción A, tu decisión del 28/09) |
 | Clasificadores en sombra | Gemini 3.8 Flash y Opus 5.5 «extra» (tu plan) dicen si cada pregunta es fácil o difícil; **no deciden nada** |
 | Gastado de los 100 $ | **5,36 $** (pruebas del 27/09); ~0,35 $ por pregunta |
@@ -29,8 +29,8 @@ automática que hace git después de guardar).
 | Marcador: puntos, gasto, preguntas perdidas, comparaciones, clasificadores | lunes 08:30 | GitHub |
 | **Revisión semanal**: lee el marcador, aplica las reglas escritas y te dice si hay que decidir algo | lunes 09:12, desde el 05/10 | esta conversación de Claude |
 | Pausa de Claude, recarga de la clave por Metaculus, curva suave y clasificadores en sombra | solos | bot |
-**No va solo:** decidir cambios que tocan los pronósticos (te los propone la revisión), AskNews
-(tu cuenta) y, al final, la encuesta y el cobro. Si el reloj de GitHub se parara del todo, se
+**No va solo:** decidir cambios que tocan los pronósticos (te los propone la revisión), avisar
+cuando AskNews conteste y, al final, la encuesta y el cobro. Si el reloj de GitHub se parara del todo, se
 pararían bot y vigilancia; la revisión del lunes lo detectaría.
 
 ## El tope de gasto (qué hace ahora el bot que antes no hacía)
@@ -72,12 +72,11 @@ pararían bot y vigilancia; la revisión del lunes lo detectaría.
 4. **Al final de la temporada:** la encuesta del bot (obligatoria para cobrar). Te lo recordaré.
 
 ## Decisiones pendientes tuyas
-1. **AskNews (noticias gratis):** crear tu cuenta en my.asknews.app y mandar el correo (texto
-   completo en HALLAZGOS del 28/09). Las claves **no se ponen aún** en GitHub: se decide tras la
-   1.ª semana.
-2. **Lector** (GPT-4o mini): ¿pasarlo a GPT-6 Sol? Hoy se queda por barato y probado.
-3. **Reparto del dinero** entre MiniBench y temporada: con los datos de la 1.ª semana.
-4. **Tu correo en el primer commit:** GitHub aún enseña la versión vieja a quien tenga su
+1. **AskNews (noticias gratis):** cuenta creada y correo mandado (28/09); **esperando respuesta**.
+   Cuando lleguen las claves, **no las pongas aún** en GitHub (el bot dejaría de usar la búsqueda
+   actual al momento): dímelo y se decide en la revisión del lunes, con el gasto medido.
+2. **Reparto del dinero** entre MiniBench y temporada: con los datos de la 1.ª semana.
+3. **Tu correo en el primer commit:** GitHub aún enseña la versión vieja a quien tenga su
    identificador exacto. Para borrarla del todo: soporte de GitHub (opcional).
 
 ## Normas del torneo que conviene recordar
@@ -101,14 +100,15 @@ pararían bot y vigilancia; la revisión del lunes lo detectaría.
 - Si el reloj de GitHub se para del todo, se paran bot y vigilancia hasta la revisión del lunes.
 - El tope de gasto con una ronda entera de MiniBench (solo simulado y en ensayo).
 
-## Para el mando (parte de cierre de la sesión en la nube, 28/09/2026 ~11:05)
+## Para el mando (parte de cierre de la sesión en la nube, 28/09/2026 ~11:40)
 - **Hecho (orden 26 y peticiones del usuario del 27-28/09), todo en `main`, 234 pruebas en verde:**
   vigilancia que reacciona sola; coste por parte y resumen semanal del gasto; curva PCHIP en sombra
   (entre las 3 comparaciones decididas de antemano); lista de preguntas perdidas; piezas de GitHub
   sobre Node 24; consulta gratuita de modelos de la clave (solo OpenAI, Anthropic y Google);
   modelos nuevos (Gemini 3.8 Flash; búsqueda con Opus 5.5 y respaldo GPT-6 Sol; OpenAI Sol/Astra;
-  Anthropic solo Opus 5.5); opción A (Claude Max sustituye a la búsqueda de pago en las pares);
+  Anthropic solo Opus 5.5; lector GPT-6 Sol); opción A (Claude Max sustituye a la búsqueda de pago en las pares);
   dos clasificadores en sombra (Gemini y Opus «xhigh»); arreglo del marcador del 28/09.
+  AskNews: el usuario creó la cuenta y mandó el correo; pendiente de respuesta.
 - **Rutinas de Claude Code** (disparan en la conversación de la sesión
   `session_013btsc97onUdDY6X7v9VEE3`: **no archivarla**): `trig_01X5xNNWkveFfeTSNe6no1xy`
   (comprobación de hoy 09:48 UTC) y `trig_01Jpv6Pfyp3yo3SxcknZAs4f` (revisión cada lunes 07:12

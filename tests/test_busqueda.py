@@ -72,6 +72,8 @@ def test_modelos_elegidos_por_el_usuario_el_28_09(monkeypatch):
     bot = main.construir_bot(params, publicar=False)
     usados = [llm.model for par in bot._puestos for llm in par if llm is not None]
     usados += [bot.get_llm("researcher", "llm").model, bot._respaldo_busqueda.model]
+    usados.append(bot.get_llm("parser", "llm").model)  # el lector: GPT-6 Sol desde el 28/09
+    assert bot.get_llm("parser", "llm").model == "openrouter/openai/gpt-6-sol"
     claude = {u for u in usados if "anthropic/" in u}
     openai = {u for u in usados if "openai/" in u}
     google = {u for u in usados if "google/" in u}
