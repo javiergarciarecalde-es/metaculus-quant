@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: pip install --retries 10 --timeout 60 -r requirements.txt || (sleep 60 && pip install --retries 10 --timeout 60 -r requirements.txt)
       - name: Descargar los registros de las ejecuciones de los últimos 10 días (y lo gastado del plan)
         env:
           GH_TOKEN: ${{ github.token }}

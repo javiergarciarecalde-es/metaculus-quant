@@ -25,3 +25,15 @@ def test_piezas_de_github_sobre_node_24():
             assert int(version) >= MINIMAS[pieza], f"{f.name}: {pieza}@v{version} es de Node 20"
             vistas.add(pieza)
     assert vistas == set(MINIMAS)
+
+
+def test_la_instalacion_aguanta_un_corte_de_pypi():
+    """28/09/2026 (orden 27): pypi.org no contestaba a las máquinas de GitHub (esperas de 15 s
+    agotadas en python-dateutil) y dos ejecuciones del bot salieron en rojo. Los flujos que van
+    solos reintentan con más paciencia y, si aun así falla, otra vez al minuto."""
+    for nombre in ("run_bot_on_tournament.yaml", "vigilancia.yaml", "marcador.yaml"):
+        texto = (FLUJOS / nombre).read_text("utf-8")
+        instalaciones = re.findall(r"run: (pip install .*-r requirements.*)", texto)
+        assert instalaciones, nombre
+        for orden in instalaciones:
+            assert "--retries 10 --timeout 60" in orden and "|| (sleep 60 &&" in orden, nombre

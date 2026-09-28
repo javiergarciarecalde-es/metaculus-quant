@@ -60,7 +60,7 @@ jobs:
           cache: pip
       - name: Instalar dependencias
         if: steps.token.outputs.hay == 'si'
-        run: pip install -r requirements.txt
+        run: pip install --retries 10 --timeout 60 -r requirements.txt || (sleep 60 && pip install --retries 10 --timeout 60 -r requirements.txt)
       - uses: actions/setup-node@v5
         if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
         with:

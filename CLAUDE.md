@@ -10,6 +10,9 @@ Aquí solo lo propio de este proyecto.
 ## Protocolo de sesión (matices propios)
 - `docs/DECISIONES.md` (documento propio, no está en las comunes §7): solo decisiones del
   USUARIO, con fecha (hora de Madrid).
+- `docs/REVISION_SEMANAL.md` (documento propio): ¿qué dijo la revisión automática de este lunes?
+  Lo sobrescribe entero cada lunes la rutina de Claude (desde el 05/10/2026); nadie más lo toca.
+  El mando lo recoge los lunes. `docs/MARCADOR.md` lo genera el marcador; tampoco se toca a mano.
 - `docs/ESTADO.md`: corto y siempre en presente.
 - Mensajes de commit en español.
 - Si el push a `main` se rechaza, usar una rama y decirlo en ESTADO.

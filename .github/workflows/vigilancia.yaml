@@ -47,7 +47,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: pip install --retries 10 --timeout 60 -r requirements.txt || (sleep 60 && pip install --retries 10 --timeout 60 -r requirements.txt)
       - name: Mirar el bot y relanzarlo si hace falta
         id: revisar
         run: python -m bot.vigilancia revisar --rama "${{ github.event.repository.default_branch }}" ${{ inputs.probar_relanzamiento && '--probar-relanzamiento' || '' }}
@@ -76,7 +76,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Instalar dependencias
-        run: pip install -r requirements-dev.txt
+        run: pip install --retries 10 --timeout 60 -r requirements-dev.txt || (sleep 60 && pip install --retries 10 --timeout 60 -r requirements-dev.txt)
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
