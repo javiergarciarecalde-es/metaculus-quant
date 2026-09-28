@@ -88,3 +88,15 @@ def test_lista_con_precios():
         "  google/gemini-3.8-flash: 0.5 $ / 3 $ por millón de tokens (entrada / salida)",
         "  google/raro: precio desconocido por millón de tokens (entrada / salida)",
     ]
+
+
+def test_listado_completo_por_empresa():
+    lineas = modelos.listado_completo({"openai/a", "~openai/b"}, {"openai/a", "deepseek/d"})
+    assert lineas == [
+        "== deepseek: 1 modelos (0 permitidos por la clave)",
+        "  deepseek/d",
+        "== openai: 1 modelos (1 permitidos por la clave)",
+        "  openai/a  [CLAVE]",
+        "== ~openai: 1 modelos (1 permitidos por la clave)",
+        "  ~openai/b  [CLAVE]",
+    ]

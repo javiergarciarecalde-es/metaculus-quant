@@ -105,6 +105,17 @@ def lista_con_precios(permitidos: set[str], tarifa: dict, empresas: tuple[str, .
     return lineas
 
 
+def listado_completo(permitidos: set[str], publicos: set[str]) -> list[str]:
+    """Todos los modelos (públicos y los de la clave), por empresa; «[CLAVE]» = la clave lo deja
+    usar (28/09/2026: el usuario pidió la lista en bruto de todas las empresas)."""
+    lineas = []
+    for empresa, ids in sorted(por_empresa(permitidos | publicos).items()):
+        n = sum(i in permitidos for i in ids)
+        lineas.append(f"== {empresa}: {len(ids)} modelos ({n} permitidos por la clave)")
+        lineas += [f"  {i}{'  [CLAVE]' if i in permitidos else ''}" for i in ids]
+    return lineas
+
+
 def consultar_clave(params: dict, get=requests.get) -> int:
     """Pregunta a OpenRouter qué modelos deja usar la clave (gratis). Solo lee."""
     if not cfg.hay("OPENROUTER_API_KEY"):
@@ -121,6 +132,9 @@ def consultar_clave(params: dict, get=requests.get) -> int:
     publica.raise_for_status()
     datos = publica.json()
     for linea in informe_clave(permitidos, ids_de(datos), params):
+        print(linea)
+    print("LISTADO COMPLETO (todas las empresas):")
+    for linea in listado_completo(permitidos, ids_de(datos)):
         print(linea)
     print("Modelos de Google permitidos (28/09/2026: el usuario propone Gemini Flash 3.8):")
     for linea in lista_con_precios(permitidos, precios(datos), ("google",)):
