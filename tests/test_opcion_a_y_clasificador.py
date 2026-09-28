@@ -176,3 +176,77 @@ def test_resumen_por_etiqueta_para_el_marcador():
     assert r["dificil"]["discrepancia_media"] == 0.6 and r["dificil"]["resueltas"] == 0
     assert r["sin_clasificar"]["preguntas"] == 1
     assert "Clasificador en sombra" in "\n".join(clf.informe_md(r))
+
+
+# --------------------------------------------------------------------------- clasificador con Opus
+
+
+def _filas_opus(monkeypatch, tmp_path, claude_clasif, secreto=True, pausa=False):
+    import bot.params as ajustes
+
+    if pausa:
+        ajustes.todos()["investigacion"]["claude_max"]["pausada_hasta_utc"] = (
+            "2099-01-01T00:00:00+00:00"
+        )
+    if secreto:
+        monkeypatch.setenv(cm.SECRETO, "token-falso")
+    modelo = ModeloFalso()
+    llms = {"default": modelo, "summarizer": modelo, "researcher": modelo, "parser": modelo}
+    llms["_claude_clasificar"] = claude_clasif
+    llms["_clasificador"] = ClasificadorFalso(BUENA.replace("hard", "easy"))
+    monkeypatch.setenv("METACULUS_TOKEN", "t")
+    # pregunta impar: sin investigación de Claude, para ver solo al clasificador
+    main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()[:1]), llms=llms)
+    [f] = list((tmp_path / "registro").glob("pronosticos_*.jsonl"))
+    return json.loads(f.read_text(encoding="utf-8").splitlines()[0])
+
+
+def test_opus_clasifica_en_paralelo_con_esfuerzo_extra_y_sin_herramientas(monkeypatch, tmp_path):
+    claude = ClaudeFalso(BUENA)
+    fila = _filas_opus(monkeypatch, tmp_path, claude)
+    assert fila["clasificador_opus"]["estado"] == "ok"
+    assert fila["clasificador_opus"]["dificultad"] == "dificil"
+    assert fila["clasificador_opus"]["usd_equivalente"] == 0.8  # lo que dice Claude Code
+    assert fila["clasificador"]["dificultad"] == "facil"  # Gemini, por su lado
+    [llamada] = claude.llamadas
+    args = llamada["args"]
+    assert args[args.index("--effort") + 1] == "xhigh"
+    assert args[args.index("--model") + 1] == "claude-opus-5-5"
+    assert args[args.index("--disallowedTools") + 1] == "*"
+    assert "Do NOT forecast" in llamada["entrada"]
+    assert "METACULUS_TOKEN" not in llamada["env"]  # no recibe otras claves
+
+
+def test_opus_sin_secreto_o_en_pausa_no_llama(monkeypatch, tmp_path):
+    claude = ClaudeFalso(BUENA)
+    fila = _filas_opus(monkeypatch, tmp_path, claude, secreto=False)
+    assert fila["clasificador_opus"] == {"estado": "sin_secreto"} and claude.llamadas == []
+
+
+def test_opus_en_pausa_no_llama(monkeypatch, tmp_path):
+    claude = ClaudeFalso(BUENA)
+    fila = _filas_opus(monkeypatch, tmp_path, claude, pausa=True)
+    assert fila["clasificador_opus"] == {"estado": "pausada"} and claude.llamadas == []
+
+
+def test_si_opus_falla_la_pregunta_sigue_igual(monkeypatch, tmp_path):
+    fila = _filas_opus(monkeypatch, tmp_path, ClaudeFalso(is_error=True, resultado="Error"))
+    assert fila["clasificador_opus"]["estado"] == "fallo"
+    assert fila["pronostico"] and fila["clasificador"]["estado"] == "ok"
+
+
+def test_opus_sin_cupo_no_insiste(monkeypatch, tmp_path):
+    claude = ClaudeFalso(is_error=True, resultado="Claude AI usage limit reached")
+    fila = _filas_opus(monkeypatch, tmp_path, claude)
+    assert fila["clasificador_opus"]["estado"] == "sin_cupo"
+
+
+def test_el_marcador_muestra_los_dos_clasificadores(tmp_path, monkeypatch):
+    from bot import marcador as mc
+
+    for nombre in ("HISTORICO", "RESUELTAS", "SALIDA_JSON", "SALIDA_MD"):
+        monkeypatch.setattr(mc, nombre, tmp_path / getattr(mc, nombre).name)
+    assert mc.main(["--descargas", str(tmp_path / "nada")]) == 0
+    md = (tmp_path / "MARCADOR.md").read_text(encoding="utf-8")
+    assert "Clasificador en sombra: Gemini 3.8 Flash" in md
+    assert "Clasificador en sombra: Claude Opus 5.5 (xhigh, plan Max)" in md

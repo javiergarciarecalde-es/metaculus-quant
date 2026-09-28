@@ -126,6 +126,14 @@ investigacion:
 clasificador:
   tope_segundos: 30              # si tarda más, se sigue sin clasificación (no retrasa la pregunta)
   max_caracteres: 3000           # letras de la pregunta y sus condiciones que se le pasan
+  claude:                        # el mismo clasificador, en paralelo, con Claude Code y el plan Max del usuario (decisión del 28/09/2026); sin herramientas; respeta la pausa de investigacion.claude_max
+    activo: true
+    modelo: "claude-opus-5-5"
+    esfuerzo: "xhigh"            # «extra alto», pedido por el usuario (docs de Claude Code: low, medium, high, xhigh, max)
+    max_turnos: 2                # sin herramientas basta con 1; 2 de margen
+    tope_usd: 1                  # freno de Claude Code en $ equivalentes de API (gasta plan, no créditos)
+    tope_segundos: 180           # corre a la vez que la pregunta; si tarda más, se apunta «tiempo»
+    simultaneas: 3               # clasificaciones con Claude a la vez
 
 # --- Tiempos (el flujo de GitHub corta a los 60 min; la investigación con Claude Max suma hasta 5) ---
 tiempos:

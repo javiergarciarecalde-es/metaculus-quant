@@ -6,6 +6,12 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 mañana (decisión del usuario: segundo clasificador en sombra con Opus 5.5 «xhigh»)
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `clasificador.claude.*` (nuevo) | no existía | Opus 5.5 con esfuerzo `xhigh` (extra alto), plan Max, sin herramientas, 2 turnos, tope 1 $ equivalente, 180 s, 3 a la vez | Decisión del usuario: ver si un modelo más potente clasifica mejor que Gemini 3.8 Flash. Los dos en paralelo y en sombra; no deciden nada |
+
 ## 2026-09-28 mañana (decisión del usuario: opción A con Claude Max y clasificador en sombra)
 
 **Cambia la investigación en las preguntas de número par** desde el 28/09/2026 (~08:20 UTC):

@@ -2,10 +2,15 @@
 
 Idea del usuario: un primer agente que calibre cuánto esfuerzo merece cada pregunta y, según eso,
 decida qué modelos y con cuánto razonamiento actúan. Nadie ha medido que un agente así acierte,
-así que primero se hace **en sombra**: antes de investigar, un modelo barato
-(`modelos.*.clasificador`, hoy Gemini 3.8 Flash) mira la pregunta y dice si es fácil, normal o
-difícil, qué esfuerzo pediría y si merece investigación a fondo. **Se guarda en el registro y no
-decide nada.**
+así que primero se hace **en sombra**: antes de investigar, dos clasificadores miran la pregunta
+y dicen si es fácil, normal o difícil, qué esfuerzo pediría y si merece investigación a fondo.
+**Se guarda en el registro y no decide nada.**
+- Gemini 3.8 Flash (`modelos.*.clasificador`, créditos, fracciones de céntimo): campo
+  «clasificador» del registro.
+- Claude Opus 5.5 con esfuerzo «xhigh» (extra alto), con el plan Max del usuario y sin
+  herramientas (`clasificador.claude`; decisión del usuario del 28/09/2026, para ver si un modelo
+  más potente acierta más): campo «clasificador_opus». Si no hay secreto, está en pausa o falla,
+  se apunta y ya.
 
 Además se calcula una señal gratuita y objetiva: **cuánto discrepan los 3 modelos** en su
 pronóstico (si uno dice 20 % y otro 70 %, la pregunta seguramente era difícil).
@@ -18,10 +23,14 @@ que su margen del 95 %) con al menos 30 preguntas resueltas en cada grupo.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import math
+import os
 import re
 from statistics import mean, stdev
+
+from bot import claude_max as cm
 
 DIFICULTAD = {"easy": "facil", "medium": "normal", "hard": "dificil"}
 ESFUERZO = {"low": "bajo", "medium": "medio", "high": "alto"}
@@ -69,6 +78,68 @@ def leer(texto: str) -> dict:
         "a_fondo": a_fondo,
         "motivo": str(datos.get("reason", ""))[:300],
     }
+
+
+class ClasificadorClaudeMax:
+    """Clasificación con Claude Code (plan Max): una sola respuesta de texto, sin herramientas.
+    `conf` = `clasificador.claude` de config/params.yaml (sin valores por defecto)."""
+
+    CAMPOS = ("modelo", "esfuerzo", "max_turnos", "tope_usd", "tope_segundos", "simultaneas")
+    ORDEN_CORTA = "Follow the instructions given on stdin. Reply only with the JSON."
+
+    def __init__(self, conf: dict, ejecutar=None):
+        faltan = [c for c in self.CAMPOS if c not in conf]
+        if faltan:
+            raise KeyError(f"a clasificador.claude le falta {faltan} en config/params.yaml")
+        self.conf = conf
+        self._ejecutar = ejecutar or cm._ejecutar_de_verdad
+        self._turnos: dict = {}
+        self.sin_cupo = False
+
+    def orden(self) -> list[str]:
+        return [
+            "claude",
+            "-p",
+            self.ORDEN_CORTA,
+            "--model",
+            str(self.conf["modelo"]),
+            "--effort",
+            str(self.conf["esfuerzo"]),
+            "--output-format",
+            "json",
+            "--max-turns",
+            str(int(self.conf["max_turnos"])),
+            "--max-budget-usd",
+            str(self.conf["tope_usd"]),
+            "--disallowedTools",
+            "*",  # sin ninguna herramienta: solo piensa y contesta
+            "--no-session-persistence",
+        ]
+
+    def _turno(self) -> asyncio.Semaphore:
+        bucle = asyncio.get_running_loop()
+        if bucle not in self._turnos:
+            self._turnos = {bucle: asyncio.Semaphore(int(self.conf["simultaneas"]))}
+        return self._turnos[bucle]
+
+    async def clasificar(self, texto_prompt: str) -> dict:
+        if not (os.getenv(cm.SECRETO) or "").strip():
+            return {"estado": "sin_secreto"}
+        if self.sin_cupo:
+            return {"estado": "sin_cupo"}
+        env = {k: v for k, v in os.environ.items() if k not in cm.OTRAS_CLAVES}
+        try:
+            async with self._turno():
+                codigo, salida, error = await self._ejecutar(
+                    self.orden(), texto_prompt, env, float(self.conf["tope_segundos"])
+                )
+            texto, coste = cm.comprobar_salida(codigo, salida, error)
+        except Exception as e:  # nunca tumba la pregunta
+            if any(p in str(e).lower() for p in cm.PALABRAS_CUPO):
+                self.sin_cupo = True
+                return {"estado": "sin_cupo"}
+            return {"estado": "tiempo" if isinstance(e, TimeoutError) else "fallo"}
+        return {**leer(texto), "usd_equivalente": coste}
 
 
 def _centro_y_ancho(valor: dict) -> tuple[float, float] | None:
@@ -121,12 +192,13 @@ def _media_y_margen(xs: list[float]) -> tuple[float | None, float | None]:
     return round(mean(xs), 2), (round(margen, 2) if margen is not None else None)
 
 
-def resumir(filas: list[dict], resueltas: dict, clave) -> dict:
-    """Por etiqueta del clasificador: cuántas preguntas, discrepancia media de los modelos y, en
-    las resueltas, puntuación de pares media (con su margen del 95 %)."""
+def resumir(filas: list[dict], resueltas: dict, clave, campo: str = "clasificador") -> dict:
+    """Por etiqueta de un clasificador (`campo` del registro: «clasificador» = Gemini,
+    «clasificador_opus» = Opus): cuántas preguntas, discrepancia media de los modelos y, en las
+    resueltas, puntuación de pares media (con su margen del 95 %)."""
     grupos: dict[str, dict] = {}
     for f in filas:
-        c = f.get("clasificador") or {}
+        c = f.get(campo) or {}
         etiqueta = c.get("dificultad") if c.get("estado") == "ok" else "sin_clasificar"
         g = grupos.setdefault(etiqueta, {"n": 0, "discrepancias": [], "puntos": []})
         g["n"] += 1
@@ -154,16 +226,17 @@ def resumir(filas: list[dict], resueltas: dict, clave) -> dict:
     return salida
 
 
-def informe_md(r: dict) -> list[str]:
+def informe_md(r: dict, nombre: str = "Gemini 3.8 Flash") -> list[str]:
     lineas = [
         "",
-        "## Clasificador en sombra (¿sabe qué preguntas son difíciles?)",
+        f"## Clasificador en sombra: {nombre} (¿sabe qué preguntas son difíciles?)",
         "",
-        "Antes de investigar, un modelo barato dice si cada pregunta es fácil, normal o difícil. "
+        "Antes de investigar, un modelo dice si cada pregunta es fácil, normal o difícil. "
         "**No decide nada todavía**: aquí se mira si acierta. Si acierta, las «difíciles» deberían "
         "tener más discrepancia entre los 3 modelos y peor puntuación de pares. Solo pasará a "
         "decidir si las difíciles puntúan claramente peor que las fáciles (más que el margen) con "
-        "al menos 30 resueltas en cada grupo.",
+        "al menos 30 resueltas en cada grupo. Hay dos clasificadores a la vez (Gemini y Opus): "
+        "se comparan con la misma regla.",
         "",
         "| Etiqueta | Preguntas | Discrepancia media de los modelos | Resueltas | Puntos de pares "
         "(media) | Margen 95 % |",

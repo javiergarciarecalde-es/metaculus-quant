@@ -86,6 +86,7 @@ class QuantBot(ForecastBot):
         claude_ejecutar=None,
         respaldo_busqueda=None,
         clasificador=None,
+        clasificador_opus=None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -114,6 +115,10 @@ class QuantBot(ForecastBot):
         # clasificador en sombra (28/09/2026): dice si la pregunta es fácil o difícil; no decide
         self._clasificador = clasificador
         self._clasificacion: dict[tuple, dict] = {}
+        # el mismo, en paralelo, con Opus 5.5 «xhigh» y el plan Max (28/09/2026); tampoco decide
+        self._clasificador_opus = clasificador_opus
+        self._tareas_opus: dict[tuple, asyncio.Task] = {}
+        self._clasificacion_opus: dict[tuple, dict] = {}
         # curva numérica suave «en sombra» (mejora 3, orden 26): se guarda, no se envía
         self._sombra: dict[tuple, dict] = {}
         self._tope_pasada = float(ajustes.p("tiempos.tope_pasada_segundos", params))
@@ -213,6 +218,9 @@ class QuantBot(ForecastBot):
                 informe = await super()._run_individual_question(question)
         finally:
             self._pasadas.pop(_clave(question), None)
+            tarea = self._tareas_opus.pop(_clave(question), None)
+            if tarea is not None:  # el clasificador de Opus corre a la vez que la pregunta
+                self._clasificacion_opus[_clave(question)] = await tarea
         if self._torneo_actual is not None:
             registrar([informe], self._torneo_actual, self._publicado, bot=self)
         return informe
@@ -287,6 +295,21 @@ class QuantBot(ForecastBot):
             return {"estado": estado, "error": registro.resumir(repr(e), 200)}
         return clf.leer(texto)
 
+    async def _clasificar_con_opus(self, question: MetaculusQuestion) -> dict:
+        if self._clasificador_opus is None:
+            return {"estado": "apagado"}
+        if self._claude_en_pausa():  # misma pausa que la investigación: cuida el plan del usuario
+            return {"estado": "pausada"}
+        return await self._clasificador_opus.clasificar(
+            clf.prompt(
+                getattr(question, "question_type", type(question).__name__),
+                question.question_text,
+                question.resolution_criteria or "",
+                question.fine_print or "",
+                int(ajustes.p("clasificador.max_caracteres", self.params)),
+            )
+        )
+
     def _estado_reparto_claude(self, question: MetaculusQuestion) -> str | None:
         """None si a esta pregunta le toca investigación con Claude; si no, el motivo."""
         if ajustes.p("investigacion.modo", self.params) != "claude_max":
@@ -328,7 +351,9 @@ class QuantBot(ForecastBot):
 
     async def run_research(self, question: MetaculusQuestion) -> str:
         k = _clave(question)
-        # clasificador en sombra (28/09/2026): se guarda, no decide nada
+        # clasificadores en sombra (28/09/2026): se guardan, no deciden nada. El de Opus (plan Max)
+        # corre a la vez que todo lo demás y se recoge al terminar la pregunta.
+        self._tareas_opus[k] = asyncio.create_task(self._clasificar_con_opus(question))
         self._clasificacion[k] = await self._clasificar(question)
         datos = self._investigacion.setdefault(k, {})
         datos.update({"base": "", "claude": "", "claude_estado": "no_usada"})
@@ -793,6 +818,9 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
     temp = ajustes.p("modelos.temperatura", params)
     tmax = ajustes.p("modelos.tiempo_max_segundos", params)
     claude_ejecutar = None
+    conf_opus = ajustes.p("clasificador.claude", params)
+    # clasificador con Opus (plan Max): en las pruebas, solo si se da uno simulado
+    clasificador_opus = clf.ClasificadorClaudeMax(conf_opus) if conf_opus["activo"] else None
     tmax_busqueda = ajustes.p("tiempos.tope_busqueda_segundos", params)
     intentos = ajustes.p("modelos.intentos", params)
     if llms is None:
@@ -859,6 +887,8 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         claude_ejecutar = llms.get("_claude_ejecutar")
         respaldo_busqueda = llms.get("_respaldo_busqueda")
         clasificador = llms.get("_clasificador")
+        falso = llms.get("_claude_clasificar")
+        clasificador_opus = clf.ClasificadorClaudeMax(conf_opus, falso) if falso else None
         llms = {k: v for k, v in llms.items() if not k.startswith("_")}
         for extra in ("director", "buscador"):
             llms.setdefault(extra, llms["default"])
@@ -878,6 +908,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         claude_ejecutar=claude_ejecutar,
         respaldo_busqueda=respaldo_busqueda,
         clasificador=clasificador,
+        clasificador_opus=clasificador_opus,
     )
 
 
@@ -922,6 +953,7 @@ def registrar(informes, torneo, publicado: bool, bot: QuantBot | None = None) ->
                 "sombra_pchip": bot._sombra.pop(_clave(q), None) if bot else None,
                 # clasificador en sombra (28/09/2026): fácil/normal/difícil; no decide nada
                 "clasificador": bot._clasificacion.pop(_clave(q), None) if bot else None,
+                "clasificador_opus": bot._clasificacion_opus.pop(_clave(q), None) if bot else None,
                 # registro completo (mejora 2, 25/09/2026): lo necesario para comparar después
                 "criterios": q.resolution_criteria,
                 "letra_pequena": q.fine_print,

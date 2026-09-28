@@ -164,3 +164,9 @@ un escéptico por cada mejora candidata). Lo esencial:
     «fáciles» por más que el margen del 95 %, con ≥30 resueltas en cada grupo. La discrepancia
     entre los 3 modelos se mira con la misma regla. Revisión preliminar: semana del 05/10 (con
     pocas resueltas será solo una primera mirada, no una decisión).
+- **Dos clasificadores en sombra** (28/09 ~08:40 UTC, decisión del usuario): Gemini 3.8 Flash
+  (créditos) y Claude Opus 5.5 con `--effort xhigh` (plan Max, sin herramientas:
+  `--disallowedTools "*"`; opciones comprobadas en la documentación de Claude Code). Regla escrita
+  antes de ver resultados: se queda el que separe más la puntuación de «difíciles» y «fáciles»
+  con la regla del clasificador; si no hay diferencia clara entre los dos, Gemini (no gasta plan).
+  Coste en plan de Opus por pregunta: se apunta en `clasificador_opus.usd_equivalente`.

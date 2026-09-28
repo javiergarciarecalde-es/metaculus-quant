@@ -387,14 +387,19 @@ def main(argv=None) -> int:
     conf = conf_comparador()
     m = calcular(filas, resueltas, conf)
     m["gasto"] = gasto.resumen(nuevas, ajustes.todos(), ahora)
-    m["clasificador"] = clf.resumir(filas, resueltas, clave)
+    m["clasificador"] = {
+        "gemini": clf.resumir(filas, resueltas, clave, "clasificador"),
+        "opus": clf.resumir(filas, resueltas, clave, "clasificador_opus"),
+    }
     m["perdidas"] = perdidas.resumir(_cerradas(token, ahora), nuevas, ajustes.todos())
     SALIDA_JSON.write_text(
         json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8"
     )
     texto = informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf)
     extra = gasto.informe_md(m["gasto"]) + perdidas.informe_md(m["perdidas"])
-    texto += "\n".join(extra + clf.informe_md(m["clasificador"]))
+    extra += clf.informe_md(m["clasificador"]["gemini"], "Gemini 3.8 Flash")
+    extra += clf.informe_md(m["clasificador"]["opus"], "Claude Opus 5.5 (xhigh, plan Max)")
+    texto += "\n".join(extra)
     SALIDA_MD.write_text(texto + "\n", encoding="utf-8")
     print(
         f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "

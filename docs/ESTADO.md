@@ -16,7 +16,7 @@ automática que hace git después de guardar).
 | Tope de gasto de los créditos | **puesto y probado** (ver abajo) |
 | Modelos (tu decisión del 28/09) | pronostican GPT-6 Sol, Claude Opus 5.5 y Gemini 3.8 Flash; busca noticias Opus 5.5 (respaldo GPT-6 Sol). Detalle en CHANGELOG |
 | Investigación con Claude | **en pausa hasta hoy 28/09 a las 11:00**; luego, en las preguntas pares, **sustituye a la búsqueda de pago** (opción A, tu decisión del 28/09) |
-| Clasificador en sombra | fácil/normal/difícil de cada pregunta; **no decide nada**; se revisa la semana del 05/10 |
+| Clasificadores en sombra | Gemini 3.8 Flash y Opus 5.5 «extra» (tu plan) dicen si cada pregunta es fácil o difícil; **no deciden nada** |
 | Gastado de los 100 $ | **5,36 $** (pruebas del 27/09); ~0,35 $ por pregunta |
 | Vigilancia que reacciona sola | **encendida** (27/09, 22:20): dos veces por hora; primera ejecución real en verde, «todo en orden» |
 | Pruebas automáticas | **199 de 199 en verde** y ruff (revisor de estilo) sin quejas |
@@ -68,8 +68,6 @@ automática que hace git después de guardar).
 - **Piezas de GitHub actualizadas** (GitHub quitó la versión vieja, Node 20, el 23/09).
 - **La curva suave es ahora una de las 3 comparaciones decididas de antemano** (sustituye a
   «límites 1-99 %») y el marcador ya la puntúa frente a la curva enviada.
-- El Gmail conectado a esta sesión no es el tuyo de Metaculus (es otra cuenta): no se ha leído ni
-  mandado nada desde él.
 
 ## Lo que queda por hacer
 1. **Tú:** entra en metaculus.com con tu cuenta y mira el perfil de Kyou-bot (Ajustes → My
