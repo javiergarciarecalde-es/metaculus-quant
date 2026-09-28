@@ -1,6 +1,6 @@
 # Marcador del bot (se actualiza solo cada lunes)
 
-**Actualizado:** 28/09/2026 08:45 UTC. Lo genera `bot/marcador.py`; no se toca a mano.
+**Actualizado:** 28/09/2026 08:47 UTC. Lo genera `bot/marcador.py`; no se toca a mano.
 
 Qué es cada cosa:
 - **Puntuación de pares** (spot peer): la que da Metaculus y cuenta en el torneo. Positiva = mejor
@@ -73,43 +73,10 @@ Una pregunta sin pronóstico vale 0 puntos. «Por el tope» = el bot la dejó a 
 
 | Dato | Valor |
 |---|---|
-| Preguntas cerradas | 52 |
+| Preguntas cerradas (con el bot ya encendido) | 1 |
 | Con pronóstico nuestro | 1 |
 | Perdidas por el tope de gasto (a propósito) | 0 |
-| **Perdidas sin explicar** | **51** |
-
-| Cierre (UTC) | Torneo | Pregunta |
-|---|---|---|
-| 24/09 02:49 | minibench | https://www.metaculus.com/questions/45796 |
-| 24/09 00:10 | minibench | https://www.metaculus.com/questions/45795 |
-| 23/09 14:36 | minibench | https://www.metaculus.com/questions/45794 |
-| 23/09 05:51 | minibench | https://www.metaculus.com/questions/45793 |
-| 23/09 02:22 | minibench | https://www.metaculus.com/questions/45792 |
-| 22/09 20:32 | minibench | https://www.metaculus.com/questions/45791 |
-| 22/09 18:30 | minibench | https://www.metaculus.com/questions/45790 |
-| 22/09 17:10 | minibench | https://www.metaculus.com/questions/45789 |
-| 22/09 16:36 | minibench | https://www.metaculus.com/questions/45788 |
-| 22/09 13:19 | minibench | https://www.metaculus.com/questions/45787 |
-| 22/09 12:44 | minibench | https://www.metaculus.com/questions/45786 |
-| 22/09 10:02 | minibench | https://www.metaculus.com/questions/45785 |
-| 22/09 08:29 | minibench | https://www.metaculus.com/questions/45784 |
-| 22/09 07:41 | minibench | https://www.metaculus.com/questions/45783 |
-| 22/09 04:45 | minibench | https://www.metaculus.com/questions/45782 |
-| 22/09 03:09 | minibench | https://www.metaculus.com/questions/45781 |
-| 22/09 00:30 | minibench | https://www.metaculus.com/questions/45780 |
-| 22/09 00:29 | minibench | https://www.metaculus.com/questions/45779 |
-| 21/09 23:44 | minibench | https://www.metaculus.com/questions/45778 |
-| 21/09 23:08 | minibench | https://www.metaculus.com/questions/45777 |
-| 21/09 22:38 | minibench | https://www.metaculus.com/questions/45776 |
-| 21/09 22:15 | minibench | https://www.metaculus.com/questions/45775 |
-| 21/09 22:03 | minibench | https://www.metaculus.com/questions/45774 |
-| 21/09 22:01 | minibench | https://www.metaculus.com/questions/45773 |
-| 21/09 21:38 | minibench | https://www.metaculus.com/questions/45772 |
-| 21/09 21:21 | minibench | https://www.metaculus.com/questions/45771 |
-| 21/09 21:07 | minibench | https://www.metaculus.com/questions/45770 |
-| 21/09 21:01 | minibench | https://www.metaculus.com/questions/45769 |
-| 21/09 20:53 | minibench | https://www.metaculus.com/questions/45768 |
-| 21/09 19:54 | minibench | https://www.metaculus.com/questions/45767 |
+| **Perdidas sin explicar** | **0** |
 
 ## Clasificador en sombra: Gemini 3.8 Flash (¿sabe qué preguntas son difíciles?)
 
