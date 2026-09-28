@@ -228,7 +228,7 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
 - **Riesgos que quedan, para el usuario:** (a) el repositorio es público y los registros de GitHub
   (y los artefactos) muestran investigación y pronósticos mientras la pregunta está abierta: otro
   podría copiarlos. Las normas no lo prohíben; hacerlo privado gastaría minutos de GitHub
-  compartidos (el bot usa ~100 al día). (b) La comprobación programada de las 09:48 UTC (rutina de
+  compartidos (el bot y la vigilancia usan ~120 al día). (b) La comprobación programada de las 09:48 UTC (rutina de
   la sesión en la nube) lee el registro de preguntas abiertas: mira estados y costes, que es
   vigilancia, pero con la regla de cambios (CLAUDE.md) no debe mirar pronósticos. (c) La vigilancia
   enseña a Claude líneas de aviso que podrían incluir un trozo de texto de un modelo; sus arreglos
@@ -265,3 +265,30 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
 - **Calibrar el «5 $ por punto»:** con la tarjeta de uso de la aplicación (el % semanal) y la tabla
   «Plan de Claude» del marcador de los lunes. Si sale otra cifra, se cambia en `config/params.yaml`
   con su entrada en CHANGELOG.
+
+## 28/09/2026 (tarde) — Orden 27: lo que quedaba sin verificar y la revisión semanal
+- **Relanzamiento de la vigilancia, comprobado en GitHub de verdad** (sin preguntas abiertas, así
+  que sin pronosticar nada): (1) con el botón de prueba nuevo (vigilancia 36409654631 → bot
+  36409737166, lanzado por «github-actions[bot]», que es como la vigilancia reconoce los suyos);
+  (2) **sola**, a las 10:31 UTC (vigilancia 36410150135 → bot 36410250191), porque la ejecución
+  anterior había fallado. Ninguna despertó a Claude (hacen falta 2 relanzamientos en 3 h sin arreglo).
+- **Fallo encontrado por el camino:** esas dos ejecuciones relanzadas salieron en rojo al instalar
+  las piezas: pypi.org no contestaba a las máquinas de GitHub (5 esperas de 15 s agotadas en
+  `python-dateutil`) y pip acabó diciendo «ResolutionImpossible». No era el código (las pruebas de
+  un minuto antes instalaron lo mismo). Arreglo: la instalación de bot, vigilancia y marcador
+  reintenta 10 veces con 60 s de espera y, si aun así falla, otra vez al minuto (prueba en
+  `tests/test_flujos.py`). Una ejecución a mano a las 10:37 (0 preguntas abiertas, 0 enviados)
+  salió en verde, así que la vigilancia no llegó a despertar a Claude por un corte ya pasado.
+- **Sin poder verificar todavía** (no hay preguntas en ningún torneo desde las ~06:00 UTC): la
+  vuelta de la investigación tras la pausa, la opción A, los clasificadores y el tope de gasto con
+  una ronda de MiniBench. La página de la MiniBench da 403 desde aquí (fecha de la próxima ronda
+  desconocida).
+- **Revisión semanal rehecha** (sí del usuario, 12:07): rutina nueva `trig_01P1NPoMLt4LgerQFDWu4MZ8`
+  («metaculus-quant: revisión semanal (lunes, escribe en el repo)»), lunes 09:12 de Madrid, Sonnet 5
+  (más barato para el plan; la tarea es leer el marcador y aplicar reglas ya escritas), memoria
+  limpia en cada vuelta, sin conectores (se le quitaron Gmail, Drive y Calendar, que se añadían
+  solos), firma los commits con la dirección anónima del usuario, no arregla ni cambia nada y
+  sobrescribe `docs/REVISION_SEMANAL.md`. Apagadas (no borradas) las tres rutinas que vivían en la
+  conversación de la nube: `trig_01Jpv6Pfyp3yo3SxcknZAs4f` (revisión vieja),
+  `trig_01X5xNNWkveFfeTSNe6no1xy` (ya había corrido) y `trig_01392sLyrpnQiigTnsHXj3Qx` (la
+  encadenada cada 4 h). Esa conversación ya se puede archivar.
