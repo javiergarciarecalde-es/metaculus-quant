@@ -67,3 +67,24 @@ def test_consulta_rechazada_sale_en_rojo_sin_repetir_la_respuesta(monkeypatch, c
 
 def test_sin_clave_no_consulta(capsys):
     assert modelos.consultar_clave(cfg.cargar_params(), get=None) == 0
+
+
+def test_lista_con_precios():
+    publica = {
+        "data": [
+            {
+                "id": "google/gemini-3.8-flash",
+                "pricing": {"prompt": "0.0000005", "completion": "0.000003"},
+            },
+            {"id": "google/raro", "pricing": {}},
+        ]
+    }
+    lineas = modelos.lista_con_precios(
+        {"google/gemini-3.8-flash", "google/raro", "openai/x"},
+        modelos.precios(publica),
+        ("google",),
+    )
+    assert lineas == [
+        "  google/gemini-3.8-flash: 0.5 $ / 3 $ por millón de tokens (entrada / salida)",
+        "  google/raro: precio desconocido por millón de tokens (entrada / salida)",
+    ]

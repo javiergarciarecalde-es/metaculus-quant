@@ -83,6 +83,28 @@ def informe_clave(permitidos: set[str], publicos: set[str], params: dict) -> lis
     return lineas
 
 
+def precios(publica: dict) -> dict[str, tuple[float, float]]:
+    """{modelo: ($ por millón de tokens de entrada, de salida)} de la lista pública."""
+    res = {}
+    for x in publica.get("data") or []:
+        try:
+            p = x["pricing"]
+            res[x["id"]] = (float(p["prompt"]) * 1e6, float(p["completion"]) * 1e6)
+        except (KeyError, TypeError, ValueError):
+            continue
+    return res
+
+
+def lista_con_precios(permitidos: set[str], tarifa: dict, empresas: tuple[str, ...]) -> list[str]:
+    """Modelos permitidos de esas empresas con su precio (para elegir modelo con datos)."""
+    lineas = []
+    for i in sorted(x for x in permitidos if x.split("/")[0] in empresas):
+        entrada, salida = tarifa.get(i, (None, None))
+        precio = "precio desconocido" if entrada is None else f"{entrada:g} $ / {salida:g} $"
+        lineas.append(f"  {i}: {precio} por millón de tokens (entrada / salida)")
+    return lineas
+
+
 def consultar_clave(params: dict, get=requests.get) -> int:
     """Pregunta a OpenRouter qué modelos deja usar la clave (gratis). Solo lee."""
     if not cfg.hay("OPENROUTER_API_KEY"):
@@ -97,7 +119,17 @@ def consultar_clave(params: dict, get=requests.get) -> int:
     permitidos = ids_de(r.json())
     publica = get(URL_MODELOS, timeout=espera)
     publica.raise_for_status()
-    for linea in informe_clave(permitidos, ids_de(publica.json()), params):
+    datos = publica.json()
+    for linea in informe_clave(permitidos, ids_de(datos), params):
+        print(linea)
+    print("Modelos de Google permitidos (28/09/2026: el usuario propone Gemini Flash 3.8):")
+    for linea in lista_con_precios(permitidos, precios(datos), ("google",)):
+        print(linea)
+    print("Precio de los modelos que usa hoy el bot:")
+    nuestros = {f"{n}" for n in nombres_openrouter(params)}
+    for linea in lista_con_precios(
+        nuestros & permitidos, precios(datos), ("openai", "anthropic", "google")
+    ):
         print(linea)
     return 0
 
