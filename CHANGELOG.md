@@ -6,6 +6,12 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 (pregunta del usuario: ¿qué modelos deja usar la clave?)
+
+| Pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| Flujo `modelos_clave.yaml` | no existía | solo a mano; pregunta gratis a OpenRouter qué modelos deja usar la clave | Saber si se podrían usar modelos más baratos (p. ej. chinos) sin gastar nada. No cambia el bot |
+
 ## 2026-09-27 noche (decisión del usuario ~22:40: la curva suave entra en las comparaciones)
 
 Motivo: la curva suave (PCHIP) es la única variante con una medición a favor en otro bot, y sin

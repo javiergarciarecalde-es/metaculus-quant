@@ -4,11 +4,17 @@ La lista de modelos de OpenRouter es pública (no hace falta clave ni gasta cré
 Si un modelo desaparece, el bot no daría error rojo: pronosticaría peor o sin noticias.
 Por eso se comprueba al empezar cada ejecución y se avisa en amarillo.
 
-Uso: python -m bot.modelos
+Además (28/09/2026, pedido por el usuario): `--clave` pregunta a OpenRouter qué modelos deja
+usar la clave de créditos (`GET /api/v1/models/user`: la lista filtrada por las preferencias,
+privacidad y restricciones de la cuenta; gratis, no genera nada). Se lanza a mano con el flujo
+`modelos_clave.yaml`. Solo imprime nombres de modelos y empresas, nunca la clave.
+
+Uso: python -m bot.modelos [--clave]
 """
 
 from __future__ import annotations
 
+import os
 import sys
 
 import requests
@@ -17,6 +23,7 @@ from bot import config as cfg
 from bot import params as ajustes
 
 URL_MODELOS = "https://openrouter.ai/api/v1/models"
+URL_MODELOS_CLAVE = "https://openrouter.ai/api/v1/models/user"
 
 
 def nombres_openrouter(params: dict) -> list[str]:
@@ -34,8 +41,71 @@ def faltan(params: dict, disponibles: set[str]) -> list[str]:
     return [n for n in nombres_openrouter(params) if n not in disponibles]
 
 
-def main() -> int:
+def ids_de(respuesta) -> set[str]:
+    """Los nombres de modelo de una respuesta de OpenRouter ({"data": [{"id": ...}]})."""
+    if not isinstance(respuesta, dict) or not isinstance(respuesta.get("data"), list):
+        raise TypeError("la respuesta de OpenRouter no trae «data»")
+    ids = {x.get("id") for x in respuesta["data"] if isinstance(x, dict)}
+    if None in ids or not ids:
+        raise ValueError("la respuesta de OpenRouter trae modelos sin «id»")
+    return ids
+
+
+def por_empresa(ids: set[str]) -> dict[str, list[str]]:
+    """{"openai": [...], "deepseek": [...]} a partir de «empresa/modelo»."""
+    res: dict[str, list[str]] = {}
+    for i in sorted(ids):
+        res.setdefault(i.split("/")[0], []).append(i)
+    return res
+
+
+def informe_clave(permitidos: set[str], publicos: set[str], params: dict) -> list[str]:
+    """Texto en llano: qué empresas deja usar la clave y si están nuestros modelos."""
+    empresas = por_empresa(permitidos)
+    lineas = [
+        f"La clave deja usar {len(permitidos)} modelos de {len(empresas)} empresas "
+        f"(la lista pública tiene {len(publicos)}).",
+        "Por empresa: " + ", ".join(f"{e} ({len(v)})" for e, v in sorted(empresas.items())),
+    ]
+    if permitidos >= publicos:
+        lineas.append(
+            "OJO: la clave no filtra nada (misma lista que la pública). Eso NO prueba que se "
+            "puedan pagar otras empresas con los créditos: la clave gasta con las cuentas de "
+            "Metaculus en cada empresa («byok») y eso no sale en esta lista."
+        )
+    fuera = faltan(params, permitidos)
+    lineas.append(
+        "Nuestros modelos: " + ("todos permitidos." if not fuera else f"NO permitidos: {fuera}")
+    )
+    otras = {e: v for e, v in empresas.items() if e not in ("openai", "anthropic", "google")}
+    for e, v in sorted(otras.items()):
+        lineas.append(f"  {e}: {', '.join(v[:15])}{' …' if len(v) > 15 else ''}")
+    return lineas
+
+
+def consultar_clave(params: dict, get=requests.get) -> int:
+    """Pregunta a OpenRouter qué modelos deja usar la clave (gratis). Solo lee."""
+    if not cfg.hay("OPENROUTER_API_KEY"):
+        print("::notice::Falta OPENROUTER_API_KEY: no hay clave que consultar.")
+        return 0
+    espera = float(ajustes.p("red.tiempo_espera_segundos", params))
+    cab = {"Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY'].strip()}"}
+    r = get(URL_MODELOS_CLAVE, headers=cab, timeout=espera)
+    if r.status_code != 200:  # sin el texto de la respuesta: podría repetir algo de la cuenta
+        print(f"::error::OpenRouter no contestó a la consulta de la clave (HTTP {r.status_code}).")
+        return 1
+    permitidos = ids_de(r.json())
+    publica = get(URL_MODELOS, timeout=espera)
+    publica.raise_for_status()
+    for linea in informe_clave(permitidos, ids_de(publica.json()), params):
+        print(linea)
+    return 0
+
+
+def main(argv=None) -> int:
     params = cfg.cargar_params()
+    if "--clave" in (sys.argv[1:] if argv is None else argv):
+        return consultar_clave(params)
     try:
         r = requests.get(
             URL_MODELOS, timeout=float(ajustes.p("red.tiempo_espera_segundos", params))

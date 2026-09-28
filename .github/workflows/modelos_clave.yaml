@@ -1,0 +1,28 @@
+# Qué modelos deja usar la clave de créditos de OpenRouter (pregunta del usuario del 28/09/2026:
+# ¿se podrían usar modelos más baratos, como los chinos?). Consulta GRATUITA: no genera nada ni
+# gasta créditos. Solo se lanza a mano (Actions → «Modelos de la clave» → Run workflow).
+# Imprime nombres de modelos y empresas; nunca la clave.
+name: Modelos de la clave
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consultar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Preguntar a OpenRouter qué modelos deja usar la clave
+        run: python -m bot.modelos --clave
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}

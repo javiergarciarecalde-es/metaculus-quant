@@ -433,6 +433,15 @@
     }
    }
   },
+  "modelos_clave.yaml": {
+   "horarios": [],
+   "trabajos": {
+    "consultar": {
+     "si": null,
+     "tope_minutos": 10
+    }
+   }
+  },
   "run_bot_on_tournament.yaml": {
    "horarios": [
     "7,27,47 * * * *"
