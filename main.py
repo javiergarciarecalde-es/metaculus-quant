@@ -83,6 +83,7 @@ class QuantBot(ForecastBot):
         modelos_pronostico: list,
         respaldos: list | None = None,
         claude_ejecutar=None,
+        respaldo_busqueda=None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -106,6 +107,8 @@ class QuantBot(ForecastBot):
         # coste de cada parte de cada pregunta, según la librería (orden 26: medir en qué se va
         # el dinero). La búsqueda «:online» sale casi a 0: la librería no la sabe medir.
         self._costes: dict[tuple, list[dict]] = {}
+        # búsqueda de noticias de reserva si la principal falla o sale vacía (28/09/2026)
+        self._respaldo_busqueda = respaldo_busqueda
         # curva numérica suave «en sombra» (mejora 3, orden 26): se guarda, no se envía
         self._sombra: dict[tuple, dict] = {}
         self._tope_pasada = float(ajustes.p("tiempos.tope_pasada_segundos", params))
@@ -345,6 +348,8 @@ class QuantBot(ForecastBot):
                 estado = "tiempo" if isinstance(e, TimeoutError) else "fallo"
             if estado == "ok" and not (research or "").strip():
                 estado = "vacia"
+            if estado != "ok" and self._respaldo_busqueda is not None:
+                research, estado = await self._buscar_con_respaldo(question, prompt, estado)
             self._investigacion.setdefault(_clave(question), {})["base_estado"] = estado
         # La ampliada va FUERA del semáforo: las de varias preguntas no hacen cola entre sí.
         if ajustes.p("investigacion.modo", self.params) == "ampliada":
@@ -352,6 +357,22 @@ class QuantBot(ForecastBot):
                 research = await self._ampliar(question, research)
         logger.info(f"Investigación para {question.page_url}:\n{research[:2000]}")
         return research
+
+    async def _buscar_con_respaldo(self, question, prompt: str, estado: str) -> tuple[str, str]:
+        """Si la búsqueda principal falla, sin tiempo o vacía, la hace el respaldo (28/09/2026).
+        Estado: «respaldo» si él trae noticias; si tampoco, el de la principal + «_sin_respaldo»."""
+        try:
+            with self._medir(question, "busqueda respaldo"):
+                texto = await asyncio.wait_for(
+                    self._respaldo_busqueda.invoke(prompt), timeout=self._tope_busqueda
+                )
+        except Exception as e:
+            logger.warning(f"Búsqueda de respaldo fallida en {question.page_url}: {e!r}")
+            return "", f"{estado}_sin_respaldo"
+        if not (texto or "").strip():
+            return "", f"{estado}_sin_respaldo"
+        logger.warning(f"{question.page_url}: búsqueda principal «{estado}»; noticias del respaldo")
+        return texto, "respaldo"
 
     async def _ampliar(self, question: MetaculusQuestion, research: str) -> str:
         return await inv.ampliar(
@@ -741,6 +762,17 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
             for x in puestos
         ]
         esfuerzo_busqueda = m["investigacion_esfuerzo"]
+        respaldo_busqueda = (
+            _crear_llm(
+                m["investigacion_respaldo"],
+                esfuerzo_busqueda,
+                None,
+                tmax_busqueda,
+                intentos["busqueda"],
+            )
+            if m["investigacion_respaldo"]
+            else None
+        )
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(
@@ -761,6 +793,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         pronosticadores = llms.get("_puestos") or [llms["default"]]
         respaldos = llms.get("_respaldos")
         claude_ejecutar = llms.get("_claude_ejecutar")
+        respaldo_busqueda = llms.get("_respaldo_busqueda")
         llms = {k: v for k, v in llms.items() if not k.startswith("_")}
         for extra in ("director", "buscador"):
             llms.setdefault(extra, llms["default"])
@@ -778,6 +811,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         modelos_pronostico=pronosticadores,
         respaldos=respaldos,
         claude_ejecutar=claude_ejecutar,
+        respaldo_busqueda=respaldo_busqueda,
     )
 
 

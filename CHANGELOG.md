@@ -6,6 +6,20 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 mañana (decisión del usuario: solo Opus 5.5 de Anthropic, GPT-6 Sol/Astra de OpenAI)
+
+**Cambia la investigación** (otro modelo busca las noticias) desde el 28/09/2026 (~07:50 UTC):
+para comparar en el marcador, las preguntas anteriores llevan la búsqueda de GPT-5.6 Sol.
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `modelos.openrouter.investigacion` | `openai/gpt-5.6-sol:online` | `anthropic/claude-opus-5.5:online` | Decisión del usuario: «el de mayor calidad y rigor analítico». Más caro por token (4/20 $ frente a 2/10 $ por millón) |
+| `modelos.openrouter.investigacion_respaldo` (nuevo) | no existía (si fallaba, sin noticias) | `openai/gpt-6-sol:online` | Si la búsqueda principal falla o sale vacía, busca otro |
+| Respaldo del puesto de OpenAI | `openai/gpt-5.6-sol` | `openai/gpt-6-astra` | De OpenAI solo GPT-6 Sol (uso común) y Astra (razonamiento avanzado) |
+| Respaldo del puesto de Anthropic | `anthropic/claude-opus-4.8` | ninguno (Opus 5.5 se reintenta una vez) | De Anthropic solo Opus 5.5 |
+| `modelos.openrouter.buscador` (modo ampliada, apagado) | `openai/gpt-5.6-sol:online` | `anthropic/claude-opus-5.5:online` | Igual que la búsqueda |
+| Lotes («:batch», más baratos) | — | no se usan | Las preguntas están abiertas ~1,5-3 h y la respuesta por lotes puede tardar horas; la librería no los admite |
+
 ## 2026-09-28 mañana (decisión del usuario: Gemini 3.8 Flash)
 
 **Cambia los pronósticos** del puesto de Google desde el 28/09/2026 (~06:50 UTC), el día que abre

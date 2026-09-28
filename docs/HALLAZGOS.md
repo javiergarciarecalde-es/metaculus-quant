@@ -144,3 +144,10 @@ un escéptico por cada mejora candidata). Lo esencial:
   que usábamos: 1,5/9 $). Los nuestros: GPT-6 y GPT-5.6 2/10 $, Opus 5.5 4/20 $, Opus 4.8 5/25 $,
   lector gpt-4o-mini 0,15/0,6 $. El usuario decidió pasar a 3.8 Flash (~06:50 UTC): en el marcador,
   las preguntas anteriores llevan 3.5 Flash.
+- **Modelos elegidos por el usuario** (28/09 ~07:50 UTC): búsqueda con Opus 5.5 `:online` (antes
+  GPT-5.6 Sol), nuevo respaldo de la búsqueda GPT-6 Sol `:online`, respaldo de OpenAI GPT-6 Astra,
+  Anthropic sin respaldo. **Sin verificar en vivo:** que `claude-opus-5.5:online` funcione con la
+  clave de créditos y cuánto cuesta su búsqueda web; si falla, entra el respaldo y el registro lo
+  dice (`base_estado` = «respaldo»). Riesgo anotado: Opus 5.5 busca y también pronostica, así que
+  su visión entra dos veces (el texto de la búsqueda le prohíbe dar pronósticos). Los «:batch» (por
+  lotes, más baratos) no sirven: preguntas abiertas ~1,5-3 h.

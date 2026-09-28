@@ -17,7 +17,9 @@ def test_tres_empresas_da_tres_modelos_distintos(monkeypatch):
     nombres = [p["nombre"] for p in puestos]
     assert len(set(nombres)) == 3
     assert "openrouter/anthropic/claude-opus-5.5" in nombres
-    assert all(p.get("respaldo") for p in puestos)
+    # decisión del usuario del 28/09/2026: de Anthropic solo Opus 5.5, sin otro Claude de respaldo
+    sin_respaldo = [p["nombre"] for p in puestos if not p.get("respaldo")]
+    assert sin_respaldo == ["openrouter/anthropic/claude-opus-5.5"]
 
 
 def test_un_modelo_repite_opus_tres_veces(monkeypatch):

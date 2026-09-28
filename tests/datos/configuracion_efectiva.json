@@ -42,8 +42,8 @@
      }
     },
     "intentos": 1,
-    "model": "openrouter/openai/gpt-5.6-sol:online",
-    "nombre": "openrouter/openai/gpt-5.6-sol:online",
+    "model": "openrouter/anthropic/claude-opus-5.5:online",
+    "nombre": "openrouter/anthropic/claude-opus-5.5:online",
     "reasoning_effort": null,
     "temperature": null,
     "timeout": 180
@@ -86,8 +86,8 @@
      }
     },
     "intentos": 1,
-    "model": "openrouter/openai/gpt-5.6-sol:online",
-    "nombre": "openrouter/openai/gpt-5.6-sol:online",
+    "model": "openrouter/anthropic/claude-opus-5.5:online",
+    "nombre": "openrouter/anthropic/claude-opus-5.5:online",
     "reasoning_effort": null,
     "temperature": null,
     "timeout": 180
@@ -126,8 +126,8 @@
       }
      },
      "intentos": 2,
-     "model": "openrouter/openai/gpt-5.6-sol",
-     "nombre": "openrouter/openai/gpt-5.6-sol",
+     "model": "openrouter/openai/gpt-6-astra",
+     "nombre": "openrouter/openai/gpt-6-astra",
      "reasoning_effort": null,
      "temperature": null,
      "timeout": 600
@@ -140,26 +140,14 @@
        "effort": "high"
       }
      },
-     "intentos": 1,
+     "intentos": 2,
      "model": "openrouter/anthropic/claude-opus-5.5",
      "nombre": "openrouter/anthropic/claude-opus-5.5",
      "reasoning_effort": null,
      "temperature": null,
      "timeout": 600
     },
-    {
-     "extra_body": {
-      "reasoning": {
-       "effort": "high"
-      }
-     },
-     "intentos": 2,
-     "model": "openrouter/anthropic/claude-opus-4.8",
-     "nombre": "openrouter/anthropic/claude-opus-4.8",
-     "reasoning_effort": null,
-     "temperature": null,
-     "timeout": 600
-    }
+    null
    ],
    [
     {
@@ -231,8 +219,8 @@
      }
     },
     "intentos": 1,
-    "model": "openrouter/openai/gpt-5.6-sol:online",
-    "nombre": "openrouter/openai/gpt-5.6-sol:online",
+    "model": "openrouter/anthropic/claude-opus-5.5:online",
+    "nombre": "openrouter/anthropic/claude-opus-5.5:online",
     "reasoning_effort": null,
     "temperature": null,
     "timeout": 180
@@ -275,8 +263,8 @@
      }
     },
     "intentos": 1,
-    "model": "openrouter/openai/gpt-5.6-sol:online",
-    "nombre": "openrouter/openai/gpt-5.6-sol:online",
+    "model": "openrouter/anthropic/claude-opus-5.5:online",
+    "nombre": "openrouter/anthropic/claude-opus-5.5:online",
     "reasoning_effort": null,
     "temperature": null,
     "timeout": 180
