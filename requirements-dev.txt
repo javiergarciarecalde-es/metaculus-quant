@@ -1,6 +1,9 @@
 -r requirements.txt
 pytest>=8.0
 pytest-asyncio>=0.24
+# Solo para comparar la curva suave (bot/sombra.py) con la de referencia; el bot no la usa.
+# Sin ella, esa prueba se saltaba siempre (comunes §6: ninguna prueba se salta). 28/09/2026.
+scipy>=1.14
 # El revisor de estilo lleva tope por arriba a propósito, igual que en los proyectos hermanos:
 # sin tope, una versión nueva de ruff puede estrenar una regla y dejar las pruebas en rojo sobre
 # código que nadie ha tocado.

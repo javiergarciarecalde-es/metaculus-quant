@@ -11,9 +11,11 @@ from bot import marcador as mc
 AHORA = datetime(2026, 10, 20, 12, tzinfo=UTC)
 
 
-def _fila(url, tipo, valor, miembros, horas=48, enviado=True, idq=None):
+def _fila(url, tipo, valor, miembros, horas=48, enviado=True, idq=None, cierra_tras_h=2):
     return {
         "cuando_utc": (AHORA - timedelta(hours=horas)).isoformat(),
+        # como lo escribe el bot: str(close_time)
+        "cierre_utc": str(AHORA - timedelta(hours=horas) + timedelta(hours=cierra_tras_h)),
         "enviado": enviado,
         "url": url,
         "id_pregunta": idq,
@@ -35,6 +37,17 @@ def test_juntar_solo_enviados_de_hace_mas_de_un_dia_y_sin_repetir():
     ]
     urls = [f["url"] for f in mc.juntar(viejas, nuevas, AHORA, horas=24)]
     assert urls == ["https://m/questions/1", "https://m/questions/4"]
+
+
+def test_juntar_nunca_publica_una_pregunta_aun_abierta():
+    """Orden 27: el histórico va a un repositorio público. La 45707 siguió abierta ~11 h después de
+    pronosticarla; una de la temporada podría seguir abierta más de 24 h."""
+    abierta = _fila("https://m/questions/5", "binary", 0.4, [], horas=30, cierra_tras_h=40)
+    sin_cierre = _fila("https://m/questions/6", "binary", 0.4, [], horas=30)
+    sin_cierre["cierre_utc"] = "None"  # así queda si Metaculus no dio hora de cierre
+    cerrada = _fila("https://m/questions/7", "binary", 0.4, [], horas=30, cierra_tras_h=10)
+    urls = [f["url"] for f in mc.juntar([], [abierta, sin_cierre, cerrada], AHORA, horas=24)]
+    assert urls == ["https://m/questions/7"]
 
 
 def test_puntos_binaria_opciones_y_numerica():

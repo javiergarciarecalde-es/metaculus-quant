@@ -72,8 +72,13 @@ class MetaculusFalso:
         self.envios.append(("comentario", a))
 
 
+def sin_historial() -> dict:
+    """Lo que Metaculus manda de una pregunta aún sin pronóstico nuestro (bot/normas.py)."""
+    return {"question": {"my_forecasts": {"history": []}}}
+
+
 def preguntas_ejemplo():
-    return [
+    preguntas = [
         BinaryQuestion(
             question_text="¿Pasará X antes de 2027?",
             id_of_post=1,
@@ -99,6 +104,9 @@ def preguntas_ejemplo():
             unit_of_measure="unidades",
         ),
     ]
+    for q in preguntas:
+        q.api_json = sin_historial()
+    return preguntas
 
 
 @pytest.fixture

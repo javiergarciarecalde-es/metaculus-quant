@@ -202,3 +202,39 @@ un escéptico por cada mejora candidata). Lo esencial:
   pone además 60 s de espera en vez de 40). **AskNews:** cuenta creada y correo enviado por el
   usuario; pendiente de respuesta. Al llegar las claves: no ponerlas sin decidirlo con datos (el
   bot cambiaría al momento de fuente de noticias; pérdida de lectura de las páginas de resolución).
+
+## 28/09/2026 (tarde) — Orden 27: auditoría de normas del torneo (sesión local)
+Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo que salió:
+- **¿Algún cambio desde el 27/09 se decidió viendo pronósticos de preguntas abiertas?** No
+  encontrado. Cada cambio tiene su motivo escrito (gasto, preferencia del usuario sobre modelos,
+  diseño decidido de antemano, averías) y ninguno cita un pronóstico. La única pregunta del torneo
+  pronosticada (45707, del 27/09 19:19 UTC al cierre ~06:00 del 28/09) solo se miró en sus líneas
+  de «enviado» (sesión local de la orden 26, buscado en su conversación). La sesión en la nube no se
+  puede leer desde aquí: queda como «no encontrado», no como «comprobado».
+- **¿Puede la prueba a mano o la vigilancia volver a pronosticar una pregunta?** En la práctica no:
+  en modo torneo el bot salta las ya pronosticadas y, tras enviar la 45707, las ejecuciones de
+  19:32, 19:51 y 20:18 la vieron abierta y no la tocaron (0 enviados). La zona de pruebas sí repite
+  (no puntúa). La vigilancia relanza el bot entero, que solo hace las que faltan: permitido.
+- **Dos agujeros encontrados y cerrados, con pruebas** (`bot/normas.py`, `tests/test_normas.py`):
+  (1) la librería **falla abierta**: si Metaculus dejara de mandar el historial de nuestros
+  pronósticos, daría todas las preguntas por nuevas y el bot las repetiría cada 20 min; ahora esa
+  pregunta no se pronostica y la ejecución sale en rojo. (2) Una pregunta que llegara **repetida**
+  en la lista se pronosticaba dos veces (la foto de configuración pasó de 12 a 6 envíos con la
+  lista duplicada de las pruebas); ahora una vez.
+- **Marcador:** subía al repositorio público los pronósticos «de hace más de 24 h» suponiendo que
+  la pregunta ya había cerrado; la 45707 siguió abierta ~11 h, así que en la temporada podría no
+  bastar. Ahora exige además que su hora de cierre haya pasado. Hasta hoy no se había publicado
+  ninguno (marcador del 28/09: 0 cerrados).
+- **Riesgos que quedan, para el usuario:** (a) el repositorio es público y los registros de GitHub
+  (y los artefactos) muestran investigación y pronósticos mientras la pregunta está abierta: otro
+  podría copiarlos. Las normas no lo prohíben; hacerlo privado gastaría minutos de GitHub
+  compartidos (el bot usa ~100 al día). (b) La comprobación programada de las 09:48 UTC (rutina de
+  la sesión en la nube) lee el registro de preguntas abiertas: mira estados y costes, que es
+  vigilancia, pero con la regla de cambios (CLAUDE.md) no debe mirar pronósticos. (c) La vigilancia
+  enseña a Claude líneas de aviso que podrían incluir un trozo de texto de un modelo; sus arreglos
+  solo pueden tocar infraestructura, así que no ajusta pronósticos.
+- **Otros fallos de método:** 23 commits de la sesión en la nube firmados como «Claude
+  <noreply@anthropic.com>» (comunes §10 pide la dirección anónima del usuario; no es su correo
+  personal y no se reescribe el historial). La prueba de la curva suave frente a scipy se saltaba
+  siempre en GitHub (scipy no estaba instalada): ahora corre y pasa (coincide hasta 1e-12).
+- **Regla de cambios** escrita en CLAUDE.md (orden 27, aprobada por el usuario).

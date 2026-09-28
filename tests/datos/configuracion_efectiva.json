@@ -402,7 +402,7 @@
   },
   "envio=True/tournament/schedule": {
    "codigo": 0,
-   "preguntas_pronosticadas": 12,
+   "preguntas_pronosticadas": 6,
    "torneos_pedidos": [
     "minibench",
     33121

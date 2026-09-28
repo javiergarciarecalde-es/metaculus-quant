@@ -38,7 +38,9 @@ def _dist(valores, q=None) -> NumericDistribution:
 
 
 def test_pchip_igual_que_la_de_referencia():
-    scipy = pytest.importorskip("scipy.interpolate")  # solo en las pruebas, si está instalada
+    # scipy solo está en requirements-dev.txt: sin ella esta prueba falla (antes se saltaba siempre)
+    from scipy import interpolate as scipy
+
     xs = [0.0, 0.1, 0.35, 0.4, 0.7, 1.0]
     ys = [0.0, 0.1, 0.2, 0.6, 0.8, 1.0]
     puntos = np.linspace(0, 1, 201)

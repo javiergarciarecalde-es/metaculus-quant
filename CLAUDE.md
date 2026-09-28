@@ -28,6 +28,21 @@ Aquí solo lo propio de este proyecto.
 5. **Intervenir a mano en los pronósticos está prohibido** por las reglas del torneo: el bot
    pronostica solo. Nunca editar ni enviar un pronóstico concreto a mano.
 
+## Regla de cambios (normas del torneo; orden 27, aprobada por el usuario el 28/09/2026)
+Normas en `docs/FUENTES.md`: se puede actualizar el bot, pero no mirar cómo pronostica preguntas
+abiertas o próximas del torneo y ajustarlo según eso, ni relanzarlo porque no guste un pronóstico;
+un solo pronóstico por pregunta.
+1. Lo que cambie cómo pronostica (textos, modelos, investigación, agregación, límites) se decide
+   solo con preguntas **cerradas** del torneo o de **fuera** (zona de pruebas, web principal).
+   Nunca se prueba sobre preguntas abiertas del torneo.
+2. De las abiertas del torneo solo se mira si las piezas funcionan (estado, errores, tiempo,
+   coste); nunca el pronóstico, el razonamiento ni la investigación. De ahí solo salen arreglos.
+3. Nunca se relanza el bot sobre una pregunta ya pronosticada ni se toca su pronóstico
+   (`bot/normas.py` lo impide). Relanzar el bot entero sí: solo hace las que faltan.
+4. Cada cambio importante, a `CHANGELOG.md` con fecha, motivo y **con qué datos se decidió**: para
+   cobrar hay que describir el bot con sus actualizaciones importantes y aceptar una inspección.
+5. Lo que se sube al repositorio (público) no enseña pronósticos de preguntas abiertas.
+
 ## Puerta de la fase 0 (NO CAMBIAR; copia literal en `config/params.yaml`)
 Se suma la puntuación de pares de todas las rondas de la fase 0: las MiniBench de octubre a
 diciembre de 2026 y la temporada de otoño. El bot sigue solo si supera al mejor bot de Metaculus
@@ -51,6 +66,14 @@ del momento Y su proyección cae entre los 20 primeros de la temporada. Si no, s
 - Cambiar un parámetro a propósito hace fallar `tests/test_configuracion_igual.py` (la foto de la
   configuración): se regenera con `python -m tests.test_configuracion_igual` en el mismo commit que
   la entrada de `CHANGELOG.md`. Si falla sin haber cambiado nada, algo cambió el comportamiento.
+- La librería da por NO pronosticada una pregunta si Metaculus no manda `my_forecasts.history`
+  (falla abierta) y el bot la repetiría cada 20 min: `bot/normas.py` falla cerrada (28/09/2026).
+- Una pregunta de la temporada puede seguir abierta más de 10 h (la 45707, ~11 h): «hace más de
+  24 h» no prueba que esté cerrada; el marcador mira su hora de cierre.
+- El repositorio es público: los registros y artefactos de GitHub del bot (con sus pronósticos)
+  los puede ver cualquiera con cuenta de GitHub, también mientras la pregunta está abierta.
+- Una rutina de Claude que escribe en una conversación existente deja de funcionar si se archiva esa
+  conversación, y su resultado no se ve en la aplicación del usuario (28/09/2026).
 
 ## Estructura
 - `main.py` — punto de entrada (igual que la plantilla oficial de Metaculus).

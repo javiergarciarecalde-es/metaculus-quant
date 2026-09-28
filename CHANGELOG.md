@@ -6,6 +6,21 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 tarde (orden 27 del mando: auditoría de normas del torneo)
+
+Motivo: la norma oficial «only submit one forecast per question» (docs/FUENTES.md, releída el
+28/09). **Con qué datos se decidió:** ninguno de pronósticos; código de la librería y ejecuciones
+reales de GitHub del 27-28/09 (tras enviar la 45707, las siguientes la saltaron). No cambia qué
+pronostica el bot en una pregunta nueva ni ningún número de `config/params.yaml`.
+
+| Pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| Saltar las ya pronosticadas (`bot/normas.py`) | solo `already_forecasted` de la librería, que si Metaculus no manda el historial da la pregunta por nueva | además el historial crudo (`my_forecasts.history`); si no se puede leer, esa pregunta no se pronostica y la ejecución sale en rojo | Fallar cerrada: nunca un segundo pronóstico por un cambio de Metaculus |
+| Pregunta repetida en la misma lista | se pronosticaba tantas veces como viniera (la foto de configuración lo muestra: 12 → 6) | una sola vez | Misma norma |
+| Vigilancia: preguntas olvidadas | `already_forecasted` | la misma regla que el bot | Que no relance por una pregunta ya hecha |
+| Marcador: qué se publica en `datos/` | pronósticos de hace más de 24 h | además, solo si la pregunta ya cerró (`cierre_utc` pasado) | El repositorio es público y la 45707 siguió abierta ~11 h |
+| `requirements-dev.txt` | sin scipy: la prueba de la curva suave se saltaba siempre | con scipy (solo pruebas) | Comunes §6: ninguna prueba se salta |
+
 ## 2026-09-28 mediodía (decisión del usuario: el lector pasa a GPT-6 Sol)
 
 | Parámetro | Antes | Después | Motivo |

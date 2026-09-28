@@ -55,7 +55,7 @@ from forecasting_tools import (  # noqa: E402
 
 from bot import agregacion as ag  # noqa: E402
 from bot import clasificador as clf  # noqa: E402
-from bot import claude_max, presupuesto, registro, sombra  # noqa: E402
+from bot import claude_max, normas, presupuesto, registro, sombra  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
 from bot import params as ajustes  # noqa: E402
@@ -1028,7 +1028,7 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
             "Metaculus sin clave, que el 25/09/2026 no tenían cupo. Lo normal es que falle."
         )
 
-    total = fallos = sin_saldo = 0
+    total = fallos = sin_saldo = ilegibles = 0
     gastado = 0.0  # lo que la librería ha contado en esta ejecución (la clave puede ir por detrás)
     for torneo in torneos:
         preguntas = cliente.get_all_open_questions_from_tournament(torneo)
@@ -1039,13 +1039,19 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
             bot.skip_previously_forecasted_questions = False
             preguntas = preguntas[: int(ajustes.p("pronostico.max_preguntas_ensayo", params))]
         if bot.skip_previously_forecasted_questions:
-            # antes de contar cuántas caben: las ya enviadas no gastan y no deben ocupar sitio
-            preguntas = [q for q in preguntas if not q.already_forecasted]
+            # antes de contar cuántas caben: las ya enviadas no gastan y no deben ocupar sitio.
+            # Norma del torneo: un solo pronóstico por pregunta. Si Metaculus no dice si ya la
+            # pronosticamos, no se pronostica (falla cerrada; orden 27, 28/09/2026).
+            preguntas, avisos = normas.sin_pronostico_nuestro(preguntas)
+            for texto in avisos:
+                print(f"::error::{texto}")
+            ilegibles += len(avisos)
         preguntas = _primero_lo_que_cierra_antes(preguntas)
         if hay_clave and preguntas:
             decision = _decidir_gasto(consulta, params, torneo == temporada and envio, gastado)
             if decision is None:
-                return 0  # no se pudo leer el saldo: se reintenta en la siguiente ejecución
+                # no se pudo leer el saldo: se reintenta en la siguiente ejecución
+                return 1 if ilegibles else 0
             if isinstance(decision, int):
                 return decision  # la respuesta de OpenRouter cambió de forma: error claro
             aviso(decision.motivo)
@@ -1081,6 +1087,13 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
             f"OpenRouter dice que la clave no tiene saldo ({sin_saldo} preguntas sin hacer). "
             "No es un fallo del bot: espera a que Metaculus recargue la clave."
         )
+    if ilegibles:
+        # en rojo para que la vigilancia lo vea: Metaculus cambió su respuesta (orden 27)
+        print(
+            f"::error::{ilegibles} preguntas sin pronosticar porque Metaculus no dice si ya las "
+            "pronosticamos. Hay que revisar la respuesta de su API (bot/normas.py)."
+        )
+        return 1
     if fallos and not total:
         # antes acababa en verde con 0 pronósticos (25/09/2026): un fallo total tiene que verse
         print(

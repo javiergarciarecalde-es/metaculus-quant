@@ -3,8 +3,8 @@ pregunta.
 
 Pasos:
 1. Junta los registros de las ejecuciones (artefactos de GitHub descargados) con el histórico
-   guardado en el repositorio. Al histórico solo pasan pronósticos de hace más de 24 h: la pregunta
-   ya está cerrada (se abren ~1,5-3 h), así no se publica nada mientras se puede pronosticar.
+   guardado en el repositorio. Al histórico solo pasan pronósticos de hace más de 24 h Y de
+   preguntas ya cerradas (su hora de cierre pasó): no se publica nada mientras se puede pronosticar.
 2. Para cada pregunta pide a Metaculus su estado, su resolución y nuestra puntuación oficial
    (score_data de my_forecasts: spot_peer_score = la puntuación de pares que cuenta en el torneo).
 3. Calcula, por modelo, puntuaciones propias (log y Brier) para comparar a los tres miembros.
@@ -67,19 +67,31 @@ def clave(fila: dict) -> tuple:
     return (fila.get("url"), fila.get("id_pregunta"))
 
 
+def _fecha_utc(texto) -> datetime | None:
+    """Fecha del registro (`cuando_utc`, `cierre_utc` = str(close_time)); None si no hay."""
+    try:
+        f = datetime.fromisoformat(str(texto))
+    except (TypeError, ValueError):
+        return None
+    return f if f.tzinfo else f.replace(tzinfo=UTC)
+
+
 def juntar(historico: list[dict], nuevas: list[dict], ahora: datetime, horas: float) -> list[dict]:
-    """Añade al histórico los pronósticos ENVIADOS de hace más de `horas`, sin repetir preguntas."""
+    """Añade al histórico los pronósticos ENVIADOS de hace más de `horas`, sin repetir preguntas,
+    y SOLO si la pregunta ya cerró (`cierre_utc` pasado). El histórico se sube a un repositorio
+    público: un pronóstico de una pregunta abierta no debe verse (orden 27, 28/09/2026: la 45707
+    siguió abierta ~11 h tras pronosticarla; «24 h» sola no bastaba). Sin hora de cierre, no
+    entra."""
     limite = ahora - timedelta(hours=horas)
     vistos = {clave(f) for f in historico}
     salida = list(historico)
     for f in sorted(nuevas, key=lambda f: f.get("cuando_utc", "")):
         if not f.get("enviado") or not f.get("url") or clave(f) in vistos:
             continue
-        try:
-            cuando = datetime.fromisoformat(f["cuando_utc"])
-        except (KeyError, ValueError):
+        cuando, cierre = _fecha_utc(f.get("cuando_utc")), _fecha_utc(f.get("cierre_utc"))
+        if cuando is None or cierre is None:
             continue
-        if cuando <= limite:
+        if cuando <= limite and cierre <= ahora:
             salida.append(f)
             vistos.add(clave(f))
     return salida

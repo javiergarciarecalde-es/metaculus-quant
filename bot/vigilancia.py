@@ -48,8 +48,8 @@ from typing import Any
 
 import requests
 
+from bot import normas, presupuesto
 from bot import params as ajustes
-from bot import presupuesto
 
 API = "https://api.github.com"
 ACTOR_VIGILANCIA = "github-actions[bot]"  # quien lanza con el GITHUB_TOKEN del flujo
@@ -257,7 +257,9 @@ def contar_pendientes(preguntas_por_torneo: list[tuple], params: dict, estado, a
     total = 0
     previsto = 0.0  # lo que gastaría el bot en los torneos anteriores de esta misma cuenta
     for torneo, preguntas in preguntas_por_torneo:
-        sin_hacer = _primero_lo_que_cierra_antes([q for q in preguntas if not q.already_forecasted])
+        # la misma regla que el bot (bot/normas.py): las que no se sabe si ya pronosticamos no
+        # cuentan como olvidadas (el bot sale en rojo por ellas y eso ya lo ve la vigilancia)
+        sin_hacer = _primero_lo_que_cierra_antes(normas.sin_pronostico_nuestro(preguntas)[0])
         if estado is not None and sin_hacer:
             decision = presupuesto.decidir(estado, params, ahora, torneo == temporada, previsto)
             if decision.sin_dinero:

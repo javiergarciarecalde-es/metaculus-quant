@@ -8,6 +8,7 @@ o cambia de forma) y se comprueba qué hace la vigilancia. Nada sale a internet.
 from __future__ import annotations
 
 import io
+import itertools
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -193,8 +194,17 @@ def test_claude_en_pausa_usa_la_misma_pausa_que_la_investigacion():
 # --------------------------------------------------------------------------- preguntas olvidadas
 
 
+_NUMERO = itertools.count(1)
+
+
 def _q(horas_abierta: float, ya=False, cierra_en_h: float = 48):
+    n = next(_NUMERO)
     return SimpleNamespace(
+        id_of_question=n,
+        id_of_post=n,
+        page_url=f"https://ejemplo/{n}",
+        # como la respuesta de Metaculus (bot/normas.py): el historial de nuestros pronósticos
+        api_json={"question": {"my_forecasts": {"history": [{"t": 1}] if ya else []}}},
         already_forecasted=ya,
         open_time=AHORA - timedelta(hours=horas_abierta),
         close_time=AHORA + timedelta(hours=cierra_en_h),
@@ -205,6 +215,17 @@ def test_cuenta_solo_las_viejas_sin_pronostico():
     params = cfg.cargar_params()
     preguntas = [_q(3), _q(3, ya=True), _q(0.5)]  # vieja, ya hecha, recién abierta
     assert vg.contar_pendientes([("minibench", preguntas)], params, None, AHORA) == 1
+
+
+def test_misma_regla_que_el_bot_para_saber_si_ya_esta_pronosticada():
+    """Orden 27: la vigilancia no cuenta como olvidada una pregunta que el historial de Metaculus
+    da por pronosticada aunque la librería diga que no (ni una que no se puede saber)."""
+    params = cfg.cargar_params()
+    hecha = _q(3, ya=True)
+    hecha.already_forecasted = False
+    rara = _q(3)
+    rara.api_json = {"question": {}}
+    assert vg.contar_pendientes([("minibench", [hecha, rara, _q(3)])], params, None, AHORA) == 1
 
 
 def test_las_que_el_tope_deja_a_proposito_no_cuentan():
