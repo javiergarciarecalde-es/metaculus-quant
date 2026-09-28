@@ -1,7 +1,7 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 28/09/2026, 12:55 (hora de Madrid). Sesión local «Metaculus: revisión a
-fondo del bot (orden 27)».
+**Última actualización:** 28/09/2026, 13:05 (hora de Madrid). Sesión local «Metaculus: revisión a
+fondo del bot (orden 27)», cerrada.
 **Fase:** fase 0, compitiendo. El bot está **encendido** y mira cada 20 minutos la MiniBench y la
 temporada de otoño. Desde la mañana del 28/09 **no hay ninguna pregunta abierta** en los dos
 torneos (la única pronosticada, la 45707, cerró hacia las 08:00 de Madrid).
@@ -77,10 +77,7 @@ final, la encuesta y el cobro.
 ## Decisiones pendientes tuyas
 1. **Archivar la conversación de la nube** «Metaculus: encender el bot con los 100 $ (orden 26)»:
    ya puedes (sus tres rutinas están apagadas y la revisión nueva no depende de ella).
-2. **Registros públicos:** el repositorio es público y cualquiera con cuenta de GitHub puede ver en
-   los registros del bot sus pronósticos mientras la pregunta está abierta (y copiarlos). Las normas
-   no lo prohíben. Pasarlo a privado costaría minutos de GitHub que comparten todos tus proyectos
-   (~120 al día solo con el bot y la vigilancia). Recomendación: dejarlo así y vigilarlo.
+2. **Registros públicos:** decidido el 28/09 (13:05): el repositorio sigue público de momento.
 3. **AskNews (noticias gratis):** esperando su respuesta. Cuando lleguen las claves, **no las pongas
    aún** en GitHub (el bot cambiaría de fuente al momento): dímelo y se decide con datos.
 4. **Reparto del dinero** entre MiniBench y temporada: con los datos de la 1.ª semana.
