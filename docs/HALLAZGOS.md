@@ -132,3 +132,10 @@ un escéptico por cada mejora candidata). Lo esencial:
   AskNews: hace falta que el usuario cree su cuenta en my.asknews.app y escriba a rob@asknews.app
   (fuente: plantilla oficial de Metaculus, leída con una búsqueda web el 27/09); ~3.000 consultas al
   mes por bot. El Gmail conectado a la sesión en la nube era otra cuenta: no se usó.
+- **Qué modelos deja usar la clave de créditos** (28/09, 05:09 UTC, flujo «Modelos de la clave»,
+  consulta gratuita `GET /api/v1/models/user`): **156 de 458** modelos públicos, solo de **OpenAI
+  (89), Anthropic (25) y Google (24)**, más alias «~…-latest» de esas tres y 7 enrutadores
+  (`openrouter/auto`, `openrouter/free`…, `typesafe/jev-router`). **Ningún modelo chino** (DeepSeek,
+  Qwen, Kimi…): confirmado lo que decían las notas de nostreambot. Nuestros modelos, todos
+  permitidos. Si se quiere abaratar con los créditos, la vía es un modelo barato de esas tres
+  empresas (se propone tras la 1.ª semana, con el gasto por partes).
