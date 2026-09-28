@@ -183,3 +183,17 @@ un escéptico por cada mejora candidata). Lo esencial:
   cuenta. El primer marcador (28/09) falló por un fallo mío (arreglado) y daba 51 «perdidas» del
   21-24/09, con el bot apagado (arreglado: `marcador.perdidas_desde_utc`). Queda sin red por
   debajo: si el reloj de GitHub se parase del todo, se pararían bot y vigilancia hasta el lunes.
+- **Cierre de la sesión en la nube** (28/09 ~09:05 UTC). Para retomar sin esta conversación:
+  - **Correo para AskNews** (lo manda el usuario desde javiergarciarecalde@gmail.com a
+    rob@asknews.app, tras crear su cuenta en my.asknews.app). Asunto: «AskNews access request for
+    Metaculus Fall 2026 bot tournament – Kyou-bot». Cuerpo: presentación (Javier García Recalde),
+    email de la cuenta de AskNews, bot «Kyou-bot», uso de /news (no /deepnews), ~1 búsqueda por
+    pregunta (300-400 en la temporada más MiniBench), bot autónomo en GitHub Actions con 3 modelos,
+    código abierto en github.com/javiergarciarecalde-es/metaculus-quant, y petición de confirmación
+    de activación, límites y renovación. Con las claves: no ponerlas hasta decidirlo con datos.
+  - **Rutina de revisión semanal** (si hay que rehacerla): cada lunes 09:12 de Madrid; lee
+    docs/MARCADOR.md y datos/marcador.json, comprueba que el marcador salió en verde (si no,
+    arreglarlo con pruebas), resume en español llano (pronósticos, puntos, gasto frente a la
+    línea, perdidas, clasificadores, Max frente a pago), aplica solo las reglas escritas de
+    antemano, revisa la salud (vigilancia, reloj, clave, plan) y propone decisiones al usuario sin
+    cambiar pronósticos, modelos ni parámetros por su cuenta; actualiza ESTADO y HALLAZGOS.

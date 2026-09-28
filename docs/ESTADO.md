@@ -1,6 +1,6 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 28/09/2026, 10:55 (hora de Madrid). Sesión en la nube «tres mejoras antes
+**Última actualización:** 28/09/2026, 11:05 (hora de Madrid). Sesión cerrada. Sesión en la nube «tres mejoras antes
 de la temporada (orden 26)» y cambios de modelos del 28/09.
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
@@ -62,35 +62,23 @@ pararían bot y vigilancia; la revisión del lunes lo detectaría.
 - Pares (Max) frente a impares (búsqueda de pago): reglas escritas antes, en HALLAZGOS del 28/09.
 
 ## Lo que queda por hacer
-1. **Tú:** entra en metaculus.com con tu cuenta y mira el perfil de Kyou-bot (Ajustes → My
-   Forecasting Bots): deben verse pronósticos en la zona de pruebas y uno en la temporada (45707).
-   Yo no puedo verlo: sin tu cuenta, la web no lo enseña.
-2. **Lunes 28/09 y martes:** mirar las primeras ejecuciones del reloj (cada 20 min): que pronostica en
-   MiniBench y temporada, y cuánto gasta de verdad (registro `presupuesto_*.jsonl` en los artefactos).
-3. **Semana del 05/10:** primera revisión: preguntas llegadas y perdidas, gasto de créditos frente a la
-   línea, cupo de Claude, ¿lanza el reloj de GitHub cada 20 min?, primera mirada al clasificador en
-   sombra y a búsqueda con Max frente a la de pago (reglas en HALLAZGOS del 28/09).
+1. **Tú (opcional):** mirar en metaculus.com el perfil de Kyou-bot (Ajustes → My Forecasting Bots).
+2. **Hoy 28/09, 11:48 (automático):** comprobación de las primeras preguntas reales con los cambios
+   del día: búsqueda con Opus 5.5, opción A (Max en las pares), los dos clasificadores y su coste.
+3. **Cada lunes, 09:12, desde el 05/10 (automático):** revisión semanal (rutina de Claude Code).
+   La del 05/10 incluye: primera mirada a clasificadores y a Max frente a búsqueda de pago, gasto
+   por partes frente a la línea, preguntas perdidas, fiabilidad del reloj de GitHub y **propuesta
+   de cambio de modelos** con el gasto medido. Reglas en HALLAZGOS del 28/09.
 4. **Al final de la temporada:** la encuesta del bot (obligatoria para cobrar). Te lo recordaré.
 
 ## Decisiones pendientes tuyas
-1. **Reparto del dinero entre MiniBench y temporada** si no llega más: hoy manda la MiniBench (lo
-   pidió el mando) y la temporada se queda con poco. Alternativa: modelos más baratos en la
-   temporada. Decidir tras la primera semana, con el gasto real.
-2. **Tu correo en el primer commit:** GitHub aún enseña la versión vieja a quien tenga su
+1. **AskNews (noticias gratis):** crear tu cuenta en my.asknews.app y mandar el correo (texto
+   completo en HALLAZGOS del 28/09). Las claves **no se ponen aún** en GitHub: se decide tras la
+   1.ª semana.
+2. **Lector** (GPT-4o mini): ¿pasarlo a GPT-6 Sol? Hoy se queda por barato y probado.
+3. **Reparto del dinero** entre MiniBench y temporada: con los datos de la 1.ª semana.
+4. **Tu correo en el primer commit:** GitHub aún enseña la versión vieja a quien tenga su
    identificador exacto. Para borrarla del todo: soporte de GitHub (opcional).
-3. **Reloj de GitHub poco fiable** (otro participante: solo lanzaba ~22 % de las veces): se mira tras
-   la primera semana.
-4. **Reloj apagado tras 60 días sin cambios** (repositorios públicos): mientras haya sesiones que
-   guarden algo al menos una vez al mes, no pasa.
-5. **Noticias gratis (AskNews), lo pediste el 27/09:** (1) crea tu cuenta en my.asknews.app (tiene
-   que ser tuya: yo no creo cuentas ni acepto condiciones); (2) manda desde tu correo a
-   rob@asknews.app el texto preparado (abajo). Dan ~3.000 consultas al mes por bot. Cuando lleguen
-   las claves, se ponen como secretos `ASKNEWS_CLIENT_ID` y `ASKNEWS_SECRET`; **no se ponen aún**: el
-   bot las usaría al momento en vez de la búsqueda actual. El cambio se decide tras la 1.ª semana,
-   con el gasto medido y en fecha anunciada.
-   Texto: «Hi Rob, I'm registering my bot for the Metaculus Fall 2026 FutureEval bot tournament and
-   MiniBench. AskNews account email: [el de tu cuenta]. Metaculus bot username: Kyou-bot. I plan to
-   use /news. Thanks! [tu nombre]»
 
 ## Normas del torneo que conviene recordar
 - Inscribirse y enviar pronósticos equivale a aceptar las normas.
@@ -106,24 +94,27 @@ pararían bot y vigilancia; la revisión del lunes lo detectaría.
   FutureEval: el bot no entra en esos dos.
 
 ## Cuánto queda sin verificar (de frente)
-- La vigilancia **relanzando** el bot y **despertando a Claude**: probado solo con fallos simulados
-  (40 pruebas). En real solo se ha visto el caso «todo en orden». El permiso de GitHub para relanzar
-  está puesto, pero no se ha ejercido en vivo.
-- Si el reloj de GitHub deja de lanzar **todo**, también se para la vigilancia (usa el mismo reloj).
-  Por eso va dos veces por hora; no hay otra red por debajo.
-- Que los pronósticos enviados aparecen en el perfil: Metaculus contestó «Posted prediction» a los 9,
-  pero nadie lo ha mirado en la web (lo haces tú).
-- Que la pausa de Claude vuelve sola el 28/09 a las 11:00: probado con pruebas simuladas, no en vivo.
-- Que el tope se comporta bien con una ronda entera de MiniBench (solo probado con pruebas simuladas
-  y con la clave real en ensayo).
+- En vivo, con preguntas reales: la búsqueda con Opus 5.5 `:online` y su precio; la opción A (Max
+  en las pares); los clasificadores; Gemini 3.8 Flash contestando. Lo mira la comprobación de hoy
+  a las 11:48; si algo falla, entra un respaldo y el registro lo dice.
+- La vigilancia **relanzando** el bot y **despertando a Claude**: solo con fallos simulados.
+- Si el reloj de GitHub se para del todo, se paran bot y vigilancia hasta la revisión del lunes.
+- El tope de gasto con una ronda entera de MiniBench (solo simulado y en ensayo).
 
-## Para el mando
-- **Pendiente de entregar** (desde la nube no se llega al mando «Mando 26/09/2026 (2)»): orden 26,
-  las tres mejoras hechas y en `main` (vigilancia, gasto por parte, curva en sombra), más la lista de
-  preguntas perdidas, las piezas de GitHub al día y la curva suave entre las 3 comparaciones
-  decididas de antemano; 199 pruebas en verde. «Para leer por el usuario»: «Las tres mejoras de esta
-  noche» y «También hecho esta noche».
-- Orden 26: criterio de terminado cumplido el 27/09 (salvo mirar el perfil en la web, que es del
-  usuario). Parte de cierre pendiente (cierre B, lo decide el usuario).
+## Para el mando (parte de cierre de la sesión en la nube, 28/09/2026 ~11:05)
+- **Hecho (orden 26 y peticiones del usuario del 27-28/09), todo en `main`, 234 pruebas en verde:**
+  vigilancia que reacciona sola; coste por parte y resumen semanal del gasto; curva PCHIP en sombra
+  (entre las 3 comparaciones decididas de antemano); lista de preguntas perdidas; piezas de GitHub
+  sobre Node 24; consulta gratuita de modelos de la clave (solo OpenAI, Anthropic y Google);
+  modelos nuevos (Gemini 3.8 Flash; búsqueda con Opus 5.5 y respaldo GPT-6 Sol; OpenAI Sol/Astra;
+  Anthropic solo Opus 5.5); opción A (Claude Max sustituye a la búsqueda de pago en las pares);
+  dos clasificadores en sombra (Gemini y Opus «xhigh»); arreglo del marcador del 28/09.
+- **Rutinas de Claude Code** (disparan en la conversación de la sesión
+  `session_013btsc97onUdDY6X7v9VEE3`: **no archivarla**): `trig_01X5xNNWkveFfeTSNe6no1xy`
+  (comprobación de hoy 09:48 UTC) y `trig_01Jpv6Pfyp3yo3SxcknZAs4f` (revisión cada lunes 07:12
+  UTC). Si esa sesión se cierra, hay que rehacerlas (texto en HALLAZGOS del 28/09).
+- **Aviso sin entregar:** desde la nube no se llega al mando «Mando 26/09/2026 (2)»; este apartado
+  hace de parte. «Para leer por el usuario»: «Qué va solo» y «Decisiones pendientes tuyas».
+- Fallos míos de la sesión, ya arreglados: un commit subido con una prueba en rojo (07:30 UTC) y la
+  lista de perdidas que tumbó el marcador (06:45 UTC). Ver HALLAZGOS.
 - A las comunes §7 les falta decir qué hacer con un documento propio como `docs/DECISIONES.md`.
-- Gasto del plan: ver la tabla «Tu plan de Claude». El tope semanal está al 90 %.
