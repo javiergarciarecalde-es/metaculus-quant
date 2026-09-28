@@ -45,7 +45,9 @@ def test_consulta_de_la_clave_por_empresa(monkeypatch, capsys):
 
     assert modelos.consultar_clave(params, get=get) == 0
     salida = capsys.readouterr().out
-    assert "deepseek: deepseek/deepseek-v4" in salida and "qwen" not in salida
+    assert "deepseek: deepseek/deepseek-v4" in salida
+    # el listado completo trae también los no permitidos, sin la marca [CLAVE]
+    assert "  qwen/qwen4\n" in salida and "  deepseek/deepseek-v4  [CLAVE]" in salida
     assert "Nuestros modelos: todos permitidos." in salida
     assert "clave-secreta-falsa" not in salida  # la clave nunca se imprime
     assert vistos[0][1]["Authorization"] == "Bearer clave-secreta-falsa"
