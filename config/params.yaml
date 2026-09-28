@@ -51,6 +51,7 @@ modelos:
     investigacion: "openrouter/anthropic/claude-opus-5.5:online"  # decisión del usuario del 28/09/2026 («el de mayor calidad y rigor analítico»); antes gpt-5.6-sol:online
     investigacion_respaldo: "openrouter/openai/gpt-6-sol:online"  # 28/09/2026: si la búsqueda principal falla o sale vacía, busca este (antes se pronosticaba sin noticias). null = sin respaldo
     investigacion_esfuerzo: "low"
+    clasificador: "openrouter/google/gemini-3.8-flash"  # 28/09/2026, en sombra: dice si cada pregunta es fácil/normal/difícil (fracciones de céntimo); no decide nada. null = apagado
     lector: "openrouter/openai/gpt-4o-mini"
     director: "openrouter/anthropic/claude-opus-5.5"      # solo con investigacion.modo = ampliada
     buscador: "openrouter/anthropic/claude-opus-5.5:online"  # solo con investigacion.modo = ampliada (esfuerzo = investigacion_esfuerzo); 28/09/2026: igual que la búsqueda
@@ -61,7 +62,8 @@ modelos:
     un_modelo: {nombre: "metaculus/claude-sonnet-4-5", esfuerzo: null, respaldo: "metaculus/gpt-5"}
     investigacion: "metaculus/gpt-4o-search-preview"
     investigacion_respaldo: null
-    investigacion_esfuerzo: null  # null = sin campo de esfuerzo (antes: el código lo daba por vacío si faltaba)
+    investigacion_esfuerzo: null
+    clasificador: null  # null = sin campo de esfuerzo (antes: el código lo daba por vacío si faltaba)
     lector: "metaculus/gpt-4o-mini"
     director: "metaculus/claude-sonnet-4-5"
     buscador: "metaculus/gpt-4o-search-preview"
@@ -117,7 +119,13 @@ investigacion:
     tope_usd_por_pregunta: 3     # freno de Claude Code (en $ equivalentes de API)
     minutos_minimos_antes_del_cierre: 30  # si la pregunta cierra antes, se salta esta investigación (25/09/2026)
     una_de_cada: 2               # decisión del usuario del 27/09/2026: Claude investiga solo las preguntas de número par (mitad del gasto de su plan) y las impares son el grupo de comparación; 1 = todas
+    sustituye_busqueda: true     # opción A del usuario (28/09/2026): en las preguntas del reparto, Claude investiga EN LUGAR de la búsqueda de pago (ahorra créditos; la de pago solo si Claude no trae nada). false = Claude se suma a la búsqueda de pago, como hasta el 28/09
     pausada_hasta_utc: "2026-09-28T09:00:00+00:00"  # decisión del usuario del 27/09/2026 (21:25): sin Claude hasta que su tope semanal se renueve (11:00 de Madrid); luego vuelve sola. null = sin pausa
+
+# --- Clasificador en sombra (decisión del usuario del 28/09/2026; bot/clasificador.py) ---
+clasificador:
+  tope_segundos: 30              # si tarda más, se sigue sin clasificación (no retrasa la pregunta)
+  max_caracteres: 3000           # letras de la pregunta y sus condiciones que se le pasan
 
 # --- Tiempos (el flujo de GitHub corta a los 60 min; la investigación con Claude Max suma hasta 5) ---
 tiempos:

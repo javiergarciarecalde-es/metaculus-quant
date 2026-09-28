@@ -30,7 +30,7 @@ def nombres_openrouter(params: dict) -> list[str]:
     """Modelos del bloque «openrouter», sin el prefijo `openrouter/` ni sufijos como `:online`."""
     m = ajustes.p("modelos.openrouter", params)
     nombres = [m["investigacion"], m["investigacion_respaldo"], m["lector"], m["director"]]
-    nombres.append(m["buscador"])
+    nombres += [m["buscador"], m["clasificador"]]
     for x in [*m["pronostico"], m["un_modelo"]]:
         puesto = cfg.puesto(x)
         nombres += [puesto["nombre"], puesto["respaldo"]]

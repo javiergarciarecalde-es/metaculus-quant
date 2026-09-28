@@ -1,7 +1,7 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 27/09/2026, 22:45 (hora de Madrid). Sesión en la nube «tres mejoras antes
-de la temporada (orden 26)».
+**Última actualización:** 28/09/2026, 10:20 (hora de Madrid). Sesión en la nube «tres mejoras antes
+de la temporada (orden 26)» y cambios de modelos del 28/09.
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
@@ -14,7 +14,9 @@ automática que hace git después de guardar).
 | Secretos en GitHub (claves guardadas) | `METACULUS_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` y `OPENROUTER_API_KEY` (la clave de créditos de Metaculus, la puso el usuario el 27/09) |
 | Interruptor `ENVIO_REAL` | **`true` desde el 27/09 a las 21:04** (decisión del usuario): envía de verdad |
 | Tope de gasto de los créditos | **puesto y probado** (ver abajo) |
-| Investigación con Claude | **en pausa hasta el 28/09 a las 11:00** (tu tope semanal está al 92 %); luego vuelve sola a **una de cada dos preguntas** (las de número par). Decisiones tuyas del 27/09 |
+| Modelos (tu decisión del 28/09) | pronostican GPT-6 Sol, Claude Opus 5.5 y Gemini 3.8 Flash; busca noticias Opus 5.5 (respaldo GPT-6 Sol). Detalle en CHANGELOG |
+| Investigación con Claude | **en pausa hasta hoy 28/09 a las 11:00**; luego, en las preguntas pares, **sustituye a la búsqueda de pago** (opción A, tu decisión del 28/09) |
+| Clasificador en sombra | fácil/normal/difícil de cada pregunta; **no decide nada**; se revisa la semana del 05/10 |
 | Gastado de los 100 $ | **5,36 $** (pruebas del 27/09); ~0,35 $ por pregunta |
 | Vigilancia que reacciona sola | **encendida** (27/09, 22:20): dos veces por hora; primera ejecución real en verde, «todo en orden» |
 | Pruebas automáticas | **199 de 199 en verde** y ruff (revisor de estilo) sin quejas |
@@ -55,12 +57,10 @@ automática que hace git después de guardar).
 |---|---|
 | Por pregunta, en dinero equivalente de la API | 2,2-2,8 $ |
 | Una tanda de 3 preguntas | ~9-11 % de la ventana de 5 horas y ~1 % del tope semanal (cota alta: esta sesión también gastaba) |
-| Tope semanal hoy | **90 %** (se renueva el 28/09 a las 11:00) |
-| Previsión con «una de cada dos» | ~10 % de la semana en una ronda de MiniBench, y ~4-5 % por semana la temporada |
+| Previsión con la opción A (pares) | ~10 % de tu tope semanal |
 - Si se agota el plan, el bot sigue sin esa investigación, pero **tus otros proyectos se quedan sin
   Claude** hasta que se renueve. Para quitarla del todo: borra el secreto `CLAUDE_CODE_OAUTH_TOKEN`.
-- **Es una suposición que ayude:** no hay datos nuestros. Por eso el reparto par/impar: en enero se
-  compara (reglas escritas antes, en HALLAZGOS del 27/09). Solo se verá si la diferencia es grande.
+- Pares (Max) frente a impares (búsqueda de pago): reglas escritas antes, en HALLAZGOS del 28/09.
 
 ## También hecho esta noche (tu «adelante» de las 22:40)
 - **Lista semanal de preguntas perdidas** en el marcador: las cerradas sin pronóstico nuestro,
@@ -78,7 +78,8 @@ automática que hace git después de guardar).
 2. **Lunes 28/09 y martes:** mirar las primeras ejecuciones del reloj (cada 20 min): que pronostica en
    MiniBench y temporada, y cuánto gasta de verdad (registro `presupuesto_*.jsonl` en los artefactos).
 3. **Semana del 05/10:** primera revisión: preguntas llegadas y perdidas, gasto de créditos frente a la
-   línea, cupo de Claude, ¿lanza el reloj de GitHub cada 20 min?
+   línea, cupo de Claude, ¿lanza el reloj de GitHub cada 20 min?, primera mirada al clasificador en
+   sombra y a búsqueda con Max frente a la de pago (reglas en HALLAZGOS del 28/09).
 4. **Al final de la temporada:** la encuesta del bot (obligatoria para cobrar). Te lo recordaré.
 
 ## Decisiones pendientes tuyas

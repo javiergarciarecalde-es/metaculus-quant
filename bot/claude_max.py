@@ -27,6 +27,8 @@ from bot.investigacion import REGLA_CITAR_MERCADOS, bloque_enlaces
 logger = logging.getLogger(__name__)
 
 CABECERA = "\n\n## Investigación con agentes (Claude Opus 5.5; añadido; puede contener errores)\n"
+# Cuando Claude busca en lugar de la búsqueda de pago (opción A del usuario, 28/09/2026)
+CABECERA_SOLA = "## Investigación con agentes (Claude Opus 5.5; puede contener errores)\n"
 SECRETO = "CLAUDE_CODE_OAUTH_TOKEN"
 ORDEN_CORTA = "Follow the research brief given on stdin. Reply only with the final research notes."
 PALABRAS_CUPO = ("usage limit", "rate limit", "limit reached", "quota")
@@ -53,6 +55,8 @@ def prompt_investigacion(
     # 25/09/2026 (decisión del usuario, mejora 5 de docs/ESTUDIO_BOTS.md): «verificar primero».
     # Sin pedir pronóstico: Opus también es uno de los 3 que pronostican y su opinión no debe
     # colarse en el informe (la mediana contaría dos veces la misma voz).
+    if not informe.strip():
+        return _prompt_desde_cero(pregunta, criterios, letra_pequena, agentes, enlaces)
     return (
         "You lead a small research team for a superforecaster. Do NOT forecast and do NOT give "
         "probabilities.\n"
@@ -73,6 +77,31 @@ def prompt_investigacion(
         f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\n"
         f"Fine print: {letra_pequena}\n\n"
         f"Current research report:\n{informe[:max_caracteres]}"
+    )
+
+
+def _prompt_desde_cero(
+    pregunta: str, criterios: str, letra_pequena: str, agentes: int, enlaces: list[str]
+) -> str:
+    """Sin informe previo: Claude hace la búsqueda entera (opción A del usuario, 28/09/2026: en las
+    preguntas del reparto sustituye a la búsqueda de pago). Mismas reglas: no pronostica."""
+    return (
+        "You lead a small research team for a superforecaster. Do NOT forecast and do NOT give "
+        "probabilities.\n"
+        f"Launch up to {agentes} research subagents IN PARALLEL (Agent tool), each on a different "
+        "angle, using web search and by reading the original pages themselves:\n"
+        "1. What the resolution source currently says/shows: quote the exact sentence or figure "
+        "that decides the question, and how close it is to resolving (dates, exact figures).\n"
+        "2. The most relevant and most RECENT news (with dates), the current status quo and any "
+        "scheduled events before the resolution date.\n"
+        "3. Base rates / historical frequencies of similar events.\n"
+        f"{bloque_enlaces(enlaces)}"
+        "Date every fact. Flag anything that happened BEFORE the question opened (it only counts "
+        "if the resolution criteria say so). "
+        f"{REGLA_CITAR_MERCADOS}\n"
+        "Return brief notes: each fact with its date and source URL. Mark anything uncertain.\n\n"
+        f"Question: {pregunta}\n\nResolution criteria: {criterios}\n\n"
+        f"Fine print: {letra_pequena}"
     )
 
 
@@ -221,4 +250,6 @@ class InvestigadorClaudeMax:
             f"Investigación con Claude Max: {len(notas)} caracteres; "
             f"{coste} $ equivalentes de API. Empieza así: {notas[:600]}"
         )
+        if not informe_base.strip():  # Claude hizo la búsqueda entera (opción A, 28/09/2026)
+            return CABECERA_SOLA + notas
         return informe_base + CABECERA + notas

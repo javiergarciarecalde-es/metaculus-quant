@@ -117,7 +117,8 @@ def test_con_margen_si_hay_claude_y_se_guarda_aparte(monkeypatch, llms):
     assert len(falso.llamadas) == 1 and "https://ejemplo.org/datos" in falso.llamadas[0]["entrada"]
     datos = bot._investigacion[main._clave(q)]
     assert datos["claude_estado"] == "ok" and "NOTAS DE OPUS" in datos["claude"]
-    assert datos["base_estado"] == "ok" and "Noticias simuladas" in datos["base"]
+    # opción A del usuario (28/09/2026): con Claude, no hay búsqueda de pago en esta pregunta
+    assert datos["base_estado"] == "sustituida_por_claude" and datos["base"] == ""
 
 
 def test_estado_de_claude_si_falla(monkeypatch, llms):

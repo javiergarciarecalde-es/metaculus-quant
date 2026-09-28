@@ -54,6 +54,7 @@ from forecasting_tools import (  # noqa: E402
 )
 
 from bot import agregacion as ag  # noqa: E402
+from bot import clasificador as clf  # noqa: E402
 from bot import claude_max, presupuesto, registro, sombra  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
@@ -84,6 +85,7 @@ class QuantBot(ForecastBot):
         respaldos: list | None = None,
         claude_ejecutar=None,
         respaldo_busqueda=None,
+        clasificador=None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -109,6 +111,9 @@ class QuantBot(ForecastBot):
         self._costes: dict[tuple, list[dict]] = {}
         # búsqueda de noticias de reserva si la principal falla o sale vacía (28/09/2026)
         self._respaldo_busqueda = respaldo_busqueda
+        # clasificador en sombra (28/09/2026): dice si la pregunta es fácil o difícil; no decide
+        self._clasificador = clasificador
+        self._clasificacion: dict[tuple, dict] = {}
         # curva numérica suave «en sombra» (mejora 3, orden 26): se guarda, no se envía
         self._sombra: dict[tuple, dict] = {}
         self._tope_pasada = float(ajustes.p("tiempos.tope_pasada_segundos", params))
@@ -260,41 +265,89 @@ class QuantBot(ForecastBot):
             return False
         return datetime.now(UTC) < datetime.fromisoformat(str(hasta))
 
-    async def run_research(self, question: MetaculusQuestion) -> str:
-        base = await self._investigacion_base(question)
-        research = base
-        k = _clave(question)
-        datos = self._investigacion.setdefault(k, {})
-        datos.update({"base": base, "claude": "", "claude_estado": "no_usada"})
-        if ajustes.p("investigacion.modo", self.params) == "claude_max":
-            minimo = float(
-                ajustes.p("investigacion.claude_max.minutos_minimos_antes_del_cierre", self.params)
+    async def _clasificar(self, question: MetaculusQuestion) -> dict:
+        """Clasificador en sombra: nunca tumba la pregunta ni cambia nada de lo que se envía."""
+        if self._clasificador is None:
+            return {"estado": "sin_modelo"}
+        texto_prompt = clf.prompt(
+            getattr(question, "question_type", type(question).__name__),
+            question.question_text,
+            question.resolution_criteria or "",
+            question.fine_print or "",
+            int(ajustes.p("clasificador.max_caracteres", self.params)),
+        )
+        try:
+            with self._medir(question, "clasificador"):
+                texto = await asyncio.wait_for(
+                    self._clasificador.invoke(texto_prompt),
+                    timeout=float(ajustes.p("clasificador.tope_segundos", self.params)),
+                )
+        except Exception as e:
+            estado = "tiempo" if isinstance(e, TimeoutError) else "fallo"
+            return {"estado": estado, "error": registro.resumir(repr(e), 200)}
+        return clf.leer(texto)
+
+    def _estado_reparto_claude(self, question: MetaculusQuestion) -> str | None:
+        """None si a esta pregunta le toca investigación con Claude; si no, el motivo."""
+        if ajustes.p("investigacion.modo", self.params) != "claude_max":
+            return "no_usada"
+        if not self._toca_claude(question):
+            # decisión del usuario del 27/09/2026: una de cada dos, para medir si ayuda
+            return "fuera_del_reparto"
+        if self._claude_en_pausa():
+            return "pausada"
+        minimo = float(
+            ajustes.p("investigacion.claude_max.minutos_minimos_antes_del_cierre", self.params)
+        )
+        quedan = self._minutos_para_cerrar(question)
+        if quedan is not None and quedan < minimo:
+            # mejora 1b: con poco margen, la investigación lenta pondría en riesgo la pregunta
+            logger.warning(
+                f"{question.page_url}: cierra en {quedan:.0f} min; sin investigación de Claude"
             )
-            quedan = self._minutos_para_cerrar(question)
-            if not self._toca_claude(question):
-                # decisión del usuario del 27/09/2026: una de cada dos, para medir si ayuda
-                datos["claude_estado"] = "fuera_del_reparto"
-            elif self._claude_en_pausa():
-                datos["claude_estado"] = "pausada"
-            elif quedan is not None and quedan < minimo:
-                # mejora 1b: con poco margen, la investigación lenta pondría en riesgo la pregunta
-                datos["claude_estado"] = "saltada_poco_tiempo"
-                logger.warning(
-                    f"{question.page_url}: cierra en {quedan:.0f} min; sin investigación de Claude"
-                )
+            return "saltada_poco_tiempo"
+        return None
+
+    async def _investigar_con_claude(self, question: MetaculusQuestion, base: str) -> str:
+        """Claude Max, fuera del turno de preguntas (puede tardar minutos; tiene su propio límite).
+        Con `base` vacía hace la búsqueda entera; si falla, devuelve `base` tal cual."""
+        k = _clave(question)
+        research = await self._claude_max.ampliar(
+            base,
+            question.question_text,
+            question.resolution_criteria or "",
+            question.fine_print or "",
+            clave=str(k),
+            enlaces=self._enlaces(question),
+        )
+        datos = self._investigacion.setdefault(k, {})
+        datos["claude_estado"] = self._claude_max.estados.pop(str(k), "desconocido")
+        if research != base:
+            datos["claude"] = research[len(base) :]
+        return research
+
+    async def run_research(self, question: MetaculusQuestion) -> str:
+        k = _clave(question)
+        # clasificador en sombra (28/09/2026): se guarda, no decide nada
+        self._clasificacion[k] = await self._clasificar(question)
+        datos = self._investigacion.setdefault(k, {})
+        datos.update({"base": "", "claude": "", "claude_estado": "no_usada"})
+        motivo = self._estado_reparto_claude(question)
+        sustituye = bool(ajustes.p("investigacion.claude_max.sustituye_busqueda", self.params))
+        if motivo is None and sustituye:
+            # opción A del usuario (28/09/2026): en las preguntas del reparto, Claude Max (su plan)
+            # hace la búsqueda EN LUGAR de la de pago; la de pago solo si Claude no trae nada
+            research = await self._investigar_con_claude(question, "")
+            if datos["claude_estado"] == "ok":
+                datos["base_estado"] = "sustituida_por_claude"
             else:
-                # fuera del turno de preguntas: puede tardar minutos y va con su propio límite
-                research = await self._claude_max.ampliar(
-                    base,
-                    question.question_text,
-                    question.resolution_criteria or "",
-                    question.fine_print or "",
-                    clave=str(k),
-                    enlaces=self._enlaces(question),
-                )
-                datos["claude_estado"] = self._claude_max.estados.pop(str(k), "desconocido")
-                if research != base:
-                    datos["claude"] = research[len(base) :]
+                research = datos["base"] = await self._investigacion_base(question)
+        else:
+            research = datos["base"] = await self._investigacion_base(question)
+            if motivo is None:
+                research = await self._investigar_con_claude(question, research)
+            else:
+                datos["claude_estado"] = motivo
         tranquilos = ("ok", "no_usada", "sin_secreto", "fuera_del_reparto", "pausada")
         if datos["claude_estado"] not in tranquilos:
             logger.warning(
@@ -773,6 +826,17 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
             if m["investigacion_respaldo"]
             else None
         )
+        clasificador = (
+            _crear_llm(
+                m["clasificador"],
+                None,
+                None,
+                ajustes.p("clasificador.tope_segundos", params),
+                intentos["busqueda"],
+            )
+            if m["clasificador"]
+            else None
+        )
         llms = {
             "default": pronosticadores[0],
             "summarizer": GeneralLlm(
@@ -794,6 +858,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         respaldos = llms.get("_respaldos")
         claude_ejecutar = llms.get("_claude_ejecutar")
         respaldo_busqueda = llms.get("_respaldo_busqueda")
+        clasificador = llms.get("_clasificador")
         llms = {k: v for k, v in llms.items() if not k.startswith("_")}
         for extra in ("director", "buscador"):
             llms.setdefault(extra, llms["default"])
@@ -812,6 +877,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         respaldos=respaldos,
         claude_ejecutar=claude_ejecutar,
         respaldo_busqueda=respaldo_busqueda,
+        clasificador=clasificador,
     )
 
 
@@ -854,6 +920,8 @@ def registrar(informes, torneo, publicado: bool, bot: QuantBot | None = None) ->
                 "coste_partes": bot._costes_de(q) if bot else {},
                 # numéricas: curva suave PCHIP calculada y NO enviada, junto a la enviada (mejora 3)
                 "sombra_pchip": bot._sombra.pop(_clave(q), None) if bot else None,
+                # clasificador en sombra (28/09/2026): fácil/normal/difícil; no decide nada
+                "clasificador": bot._clasificacion.pop(_clave(q), None) if bot else None,
                 # registro completo (mejora 2, 25/09/2026): lo necesario para comparar después
                 "criterios": q.resolution_criteria,
                 "letra_pequena": q.fine_print,

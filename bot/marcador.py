@@ -31,6 +31,7 @@ from pathlib import Path
 
 import requests
 
+from . import clasificador as clf
 from . import comparador as cmp
 from . import gasto, perdidas
 from . import params as ajustes
@@ -386,12 +387,14 @@ def main(argv=None) -> int:
     conf = conf_comparador()
     m = calcular(filas, resueltas, conf)
     m["gasto"] = gasto.resumen(nuevas, ajustes.todos(), ahora)
+    m["clasificador"] = clf.resumir(filas, resueltas, clave)
     m["perdidas"] = perdidas.resumir(_cerradas(token, ahora), nuevas, ajustes.todos())
     SALIDA_JSON.write_text(
         json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8"
     )
     texto = informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf)
-    texto += "\n".join(gasto.informe_md(m["gasto"]) + perdidas.informe_md(m["perdidas"]))
+    extra = gasto.informe_md(m["gasto"]) + perdidas.informe_md(m["perdidas"])
+    texto += "\n".join(extra + clf.informe_md(m["clasificador"]))
     SALIDA_MD.write_text(texto + "\n", encoding="utf-8")
     print(
         f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "

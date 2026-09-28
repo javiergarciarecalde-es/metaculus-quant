@@ -151,3 +151,16 @@ un escéptico por cada mejora candidata). Lo esencial:
   dice (`base_estado` = «respaldo»). Riesgo anotado: Opus 5.5 busca y también pronostica, así que
   su visión entra dos veces (el texto de la búsqueda le prohíbe dar pronósticos). Los «:batch» (por
   lotes, más baratos) no sirven: preguntas abiertas ~1,5-3 h.
+- **Opción A y clasificador en sombra** (decisión del usuario, 28/09 ~08:20 UTC). Reglas escritas
+  ANTES de ver resultados (regla común 3):
+  - **Experimento par/impar redefinido:** desde esta hora, pares = búsqueda de Claude Max (sin la
+    de pago), impares = búsqueda de pago (Opus 5.5 `:online`). Las preguntas anteriores (pares con
+    las dos búsquedas, o con Claude en pausa) quedan fuera de esta comparación. Las pares en las
+    que Claude falló y entró la de pago cuentan en su grupo (par): es lo que pasa de verdad. Misma
+    regla que antes: ≥150 resueltas y ganar en las dos mitades; hasta enero solo se verán
+    diferencias grandes. Para pasar a la opción B basta con que Max **no salga peor** (su ventaja
+    es el dinero) y que el plan del usuario lo aguante.
+  - **Clasificador en sombra:** solo pasa a decidir si las «difíciles» puntúan peor que las
+    «fáciles» por más que el margen del 95 %, con ≥30 resueltas en cada grupo. La discrepancia
+    entre los 3 modelos se mira con la misma regla. Revisión preliminar: semana del 05/10 (con
+    pocas resueltas será solo una primera mirada, no una decisión).

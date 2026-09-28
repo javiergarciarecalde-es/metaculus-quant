@@ -131,7 +131,8 @@ def test_integrado_en_el_bot(con_secreto, llms, modelo):
     # la de número par (12): desde el 27/09/2026 Claude investiga una de cada dos
     [r] = asyncio.run(bot.forecast_questions(preguntas_ejemplo()[1:2]))
     assert len(falso.llamadas) == 1
-    assert modelo.llamadas == 1 + 3  # búsqueda base (créditos) + 3 pasadas
+    # opción A del usuario (28/09/2026): Claude busca EN LUGAR de la búsqueda de pago
+    assert modelo.llamadas == 3  # solo las 3 pasadas
     assert r.prediction is not None
 
 

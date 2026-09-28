@@ -6,6 +6,17 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 mañana (decisión del usuario: opción A con Claude Max y clasificador en sombra)
+
+**Cambia la investigación en las preguntas de número par** desde el 28/09/2026 (~08:20 UTC):
+la hace Claude Max (plan del usuario) en lugar de la búsqueda de pago.
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `investigacion.claude_max.sustituye_busqueda` (nuevo) | Claude se sumaba a la búsqueda de pago | `true`: en las preguntas del reparto (pares) Claude busca desde cero y la búsqueda de pago solo entra si Claude falla, no tiene cupo o no hay tiempo | Opción A del usuario: ~20 % menos gasto de créditos (~70 preguntas más), ~10 % del tope semanal de su plan, y deja comparar búsqueda con Max frente a búsqueda de pago |
+| `modelos.*.clasificador` (nuevo) | no existía | Gemini 3.8 Flash (en el bloque del intermediario de Metaculus: apagado) | Clasificador en sombra: fácil/normal/difícil antes de investigar; no decide nada |
+| `clasificador.tope_segundos` / `max_caracteres` (nuevos) | no existían | 30 s / 3.000 letras | Que nunca retrase la pregunta |
+
 ## 2026-09-28 mañana (decisión del usuario: solo Opus 5.5 de Anthropic, GPT-6 Sol/Astra de OpenAI)
 
 **Cambia la investigación** (otro modelo busca las noticias) desde el 28/09/2026 (~07:50 UTC):
