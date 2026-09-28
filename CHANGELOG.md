@@ -6,6 +6,12 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 (lista de perdidas: solo desde que el bot está encendido)
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `marcador.perdidas_desde_utc` (nuevo) | contaba todas las cerradas en 7 días | solo las que cierran después del 27/09 19:04 UTC (envío encendido) | El primer marcador dio 51 «perdidas sin explicar» que cerraron del 21 al 24/09, con el bot apagado |
+
 ## 2026-09-28 mañana (decisión del usuario: segundo clasificador en sombra con Opus 5.5 «xhigh»)
 
 | Parámetro | Antes | Después | Motivo |

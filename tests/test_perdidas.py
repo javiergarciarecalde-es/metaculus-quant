@@ -155,3 +155,11 @@ def test_una_seccion_rota_no_tumba_el_marcador(tmp_path, monkeypatch):
     assert "Esta semana falló" in md and "En qué se va el dinero" in md
     datos = json.loads((tmp_path / "marcador.json").read_text(encoding="utf-8"))
     assert "error" in datos["perdidas"]
+
+
+def test_las_cerradas_antes_de_encender_el_bot_no_cuentan():
+    antes = _q(3, False)
+    antes.close_time = datetime(2026, 9, 23, tzinfo=UTC)  # el envío se encendió el 27/09
+    r = perdidas.resumir([("minibench", [antes, _q(4, False)])], [], cfg.cargar_params())
+    assert r["cerradas"] == 1 and r["cerradas_antes_de_encender"] == 1
+    assert len(r["perdidas_sin_explicar"]) == 1

@@ -149,6 +149,7 @@ registro:
 marcador:
   horas_de_espera: 24                # solo cuenta pronósticos de hace más de esto (pregunta ya cerrada)
   pausa_entre_preguntas_segundos: 0.5  # sin prisas con la API de Metaculus
+  perdidas_desde_utc: "2026-09-27T19:04:00+00:00"  # envío real encendido (21:04 de Madrid): las preguntas que cerraron antes no cuentan como perdidas (28/09/2026)
   dias_preguntas_perdidas: 7         # lista de preguntas cerradas sin pronóstico nuestro (27/09/2026): días que mira el marcador de cada lunes
   dias_resumen_gasto: 7              # «en qué se va el dinero» (orden 26, 27/09/2026): días que resume el marcador de cada lunes
   # Comparador de formas de juntar a los 3 modelos (decisión del usuario del 25/09/2026).

@@ -69,10 +69,19 @@ def resumir(cerradas: list[tuple] | None, filas: list[dict], params: dict) -> di
     if cerradas is None:
         return {"dias": dias, "consultado": False}
     dejadas, sin_dinero = dejadas_a_proposito(filas)
-    total = hechas = 0
+    # las que cerraron antes de encender el envío real no se podían pronosticar: no cuentan
+    desde = datetime.fromisoformat(str(ajustes.p("marcador.perdidas_desde_utc", params)))
+    total = hechas = antes = 0
     por_tope, sin_explicar = [], []
     for torneo, preguntas in cerradas:
         for q in preguntas:
+            cierre = getattr(q, "close_time", None)
+            if (
+                cierre is not None
+                and (cierre if cierre.tzinfo else cierre.replace(tzinfo=UTC)) < desde
+            ):
+                antes += 1
+                continue
             total += 1
             if q.already_forecasted:
                 hechas += 1
@@ -86,6 +95,7 @@ def resumir(cerradas: list[tuple] | None, filas: list[dict], params: dict) -> di
         "dias": dias,
         "consultado": True,
         "cerradas": total,
+        "cerradas_antes_de_encender": antes,
         "con_pronostico": hechas,
         "perdidas_por_el_tope": por_tope,
         "perdidas_sin_explicar": sin_explicar,
@@ -108,7 +118,7 @@ def informe_md(r: dict) -> list[str]:
         "",
         "| Dato | Valor |",
         "|---|---|",
-        f"| Preguntas cerradas | {r['cerradas']} |",
+        f"| Preguntas cerradas (con el bot ya encendido) | {r['cerradas']} |",
         f"| Con pronóstico nuestro | {r['con_pronostico']} |",
         f"| Perdidas por el tope de gasto (a propósito) | {len(r['perdidas_por_el_tope'])} |",
         f"| **Perdidas sin explicar** | **{len(perdidas)}** |",
