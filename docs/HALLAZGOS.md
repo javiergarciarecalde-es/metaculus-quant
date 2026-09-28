@@ -238,3 +238,30 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
   personal y no se reescribe el historial). La prueba de la curva suave frente a scipy se saltaba
   siempre en GitHub (scipy no estaba instalada): ahora corre y pasa (coincide hasta 1e-12).
 - **Regla de cambios** escrita en CLAUDE.md (orden 27, aprobada por el usuario).
+
+## 28/09/2026 (tarde) — Orden 27: lo que gasta el bot del plan de Claude y su tope
+- **Medido de verdad** (las 11 investigaciones del 27/09 en la zona de pruebas, registro de GitHub):
+  10 salieron bien, entre 1,54 y 2,76 $ equivalentes (media 2,07 $); una se cortó a los 300 s sin
+  decir cuánto gastó. El tope semanal se movió 5-6,6 $ por punto (cota baja: otras sesiones
+  gastaban a la vez). **Sin medir aún:** el clasificador con Opus «xhigh» (se añadió el 28/09 a las
+  08:30 UTC y desde entonces no ha habido preguntas; estimación 0,05-0,3 $ por pregunta), la
+  vigilancia despertando a Claude (nunca ha hecho falta; freno 5 $) y la revisión de los lunes (aún
+  no ha corrido; reserva de 5 $).
+- **Previsión por semana** (20-30 preguntas por semana mientras solo haya 100 $ de créditos; la mitad,
+  pares): investigación 20-30 $, clasificador con Opus 1-9 $, vigilancia 0 (máximo 10 $), revisión
+  ~5 $: **~5-9 % del tope semanal** en una semana normal; en una semana de ronda de MiniBench con
+  muchas preguntas, el tope del 15 % frena primero a Opus y luego a la investigación.
+- **La comprobación encadenada de la nube** (cada 4 h hasta el 05/10, despertando una conversación
+  muy larga) podía gastar más que todo el bot junto: apagada con el «sí» del usuario (12:07).
+- **Tope puesto** (`bot/plan_claude.py`): 15 % del tope semanal = 70 $ equivalentes por semana del
+  plan (5 $ por punto, menos 5 $ de reserva para la revisión). Al 80 % (56 $) se apaga el
+  clasificador con Opus; al 100 %, la investigación con Claude y los despertares de la vigilancia.
+  La vigilancia, además, como mucho 2 despertares por semana. Cada uso apunta su coste en un
+  artefacto `plan-claude-<id>` (orden de la lista de artefactos de GitHub: de más nuevo a más viejo,
+  visto en la respuesta real del 28/09). Si la cuenta no se puede leer, solo se apaga Opus.
+- **Regla escrita antes de ver resultados (experimento par/impar):** las preguntas pares que se
+  queden sin Claude por el tope (`claude_estado` = «tope_plan») se quitan de la comparación, igual
+  que las de la pausa; las impares no se tocan.
+- **Calibrar el «5 $ por punto»:** con la tarjeta de uso de la aplicación (el % semanal) y la tabla
+  «Plan de Claude» del marcador de los lunes. Si sale otra cifra, se cambia en `config/params.yaml`
+  con su entrada en CHANGELOG.

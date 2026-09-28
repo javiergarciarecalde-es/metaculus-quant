@@ -89,6 +89,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           python -m bot.vigilancia claude --errores errores_vigilancia.txt \
             --problemas "La vigilancia relanzó el bot varias veces y el problema sigue"
+      - name: Guardar lo gastado del plan de Claude (tope semanal del plan, orden 27)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: plan-claude-${{ github.run_id }}
+          path: plan/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Comprobar el arreglo (si lo hay) y subirlo a una rama aparte
         id: arreglo
         env:

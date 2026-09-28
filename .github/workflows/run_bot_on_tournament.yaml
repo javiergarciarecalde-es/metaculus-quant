@@ -25,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  actions: read # leer lo gastado del plan de Claude esta semana (plan-claude-*; orden 27)
 
 concurrency:
   group: ${{ github.workflow }}
@@ -80,6 +81,7 @@ jobs:
           ASKNEWS_SECRET: ${{ secrets.ASKNEWS_SECRET }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ENVIO_REAL: ${{ vars.ENVIO_REAL }}
+          GITHUB_TOKEN: ${{ github.token }} # solo lectura: lo gastado del plan (bot/plan_claude.py)
       - name: Guardar el registro de pronósticos
         if: always() && steps.token.outputs.hay == 'si'
         uses: actions/upload-artifact@v6
@@ -88,3 +90,11 @@ jobs:
           path: registro/
           if-no-files-found: ignore
           retention-days: 90
+      - name: Guardar lo gastado del plan de Claude (tope semanal del plan, orden 27)
+        if: always() && steps.token.outputs.hay == 'si'
+        uses: actions/upload-artifact@v6
+        with:
+          name: plan-claude-${{ github.run_id }}
+          path: plan/
+          if-no-files-found: ignore
+          retention-days: 14

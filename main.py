@@ -55,7 +55,7 @@ from forecasting_tools import (  # noqa: E402
 
 from bot import agregacion as ag  # noqa: E402
 from bot import clasificador as clf  # noqa: E402
-from bot import claude_max, normas, presupuesto, registro, sombra  # noqa: E402
+from bot import claude_max, normas, plan_claude, presupuesto, registro, sombra  # noqa: E402
 from bot import config as cfg  # noqa: E402
 from bot import investigacion as inv  # noqa: E402
 from bot import params as ajustes  # noqa: E402
@@ -87,6 +87,7 @@ class QuantBot(ForecastBot):
         respaldo_busqueda=None,
         clasificador=None,
         clasificador_opus=None,
+        plan=None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -131,9 +132,9 @@ class QuantBot(ForecastBot):
         conf_max = ajustes.p("investigacion.claude_max", params)
         caracteres = int(ajustes.p("investigacion.max_caracteres_informe", params))
         self._claude_max = (
-            claude_max.InvestigadorClaudeMax(conf_max, caracteres, claude_ejecutar)
+            claude_max.InvestigadorClaudeMax(conf_max, caracteres, claude_ejecutar, plan=plan)
             if claude_ejecutar
-            else claude_max.InvestigadorClaudeMax(conf_max, caracteres)
+            else claude_max.InvestigadorClaudeMax(conf_max, caracteres, plan=plan)
         )
 
     def _semaforo(self) -> asyncio.Semaphore:
@@ -373,7 +374,7 @@ class QuantBot(ForecastBot):
                 research = await self._investigar_con_claude(question, research)
             else:
                 datos["claude_estado"] = motivo
-        tranquilos = ("ok", "no_usada", "sin_secreto", "fuera_del_reparto", "pausada")
+        tranquilos = ("ok", "no_usada", "sin_secreto", "fuera_del_reparto", "pausada", "tope_plan")
         if datos["claude_estado"] not in tranquilos:
             logger.warning(
                 f"{question.page_url}: investigación de Claude -> {datos['claude_estado']}"
@@ -813,14 +814,18 @@ def _crear_llm(nombre: str, esfuerzo: str | None, temp, tmax, intentos: int) -> 
     return GeneralLlm(model=nombre, temperature=temp, timeout=tmax, allowed_tries=intentos, **extra)
 
 
-def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> QuantBot:
+def construir_bot(params: dict, publicar: bool, llms: dict | None = None, plan=None) -> QuantBot:
+    """`plan`: la cuenta del plan de Claude del usuario (bot/plan_claude.py); sin ella, sin tope
+    (solo en las pruebas: `ejecutar` siempre la pasa)."""
     m = cfg.bloque_modelos(params)
     temp = ajustes.p("modelos.temperatura", params)
     tmax = ajustes.p("modelos.tiempo_max_segundos", params)
     claude_ejecutar = None
     conf_opus = ajustes.p("clasificador.claude", params)
     # clasificador con Opus (plan Max): en las pruebas, solo si se da uno simulado
-    clasificador_opus = clf.ClasificadorClaudeMax(conf_opus) if conf_opus["activo"] else None
+    clasificador_opus = (
+        clf.ClasificadorClaudeMax(conf_opus, plan=plan) if conf_opus["activo"] else None
+    )
     tmax_busqueda = ajustes.p("tiempos.tope_busqueda_segundos", params)
     intentos = ajustes.p("modelos.intentos", params)
     if llms is None:
@@ -888,7 +893,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         respaldo_busqueda = llms.get("_respaldo_busqueda")
         clasificador = llms.get("_clasificador")
         falso = llms.get("_claude_clasificar")
-        clasificador_opus = clf.ClasificadorClaudeMax(conf_opus, falso) if falso else None
+        clasificador_opus = clf.ClasificadorClaudeMax(conf_opus, falso, plan) if falso else None
         llms = {k: v for k, v in llms.items() if not k.startswith("_")}
         for extra in ("director", "buscador"):
             llms.setdefault(extra, llms["default"])
@@ -909,6 +914,7 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None) -> Qua
         respaldo_busqueda=respaldo_busqueda,
         clasificador=clasificador,
         clasificador_opus=clasificador_opus,
+        plan=plan,
     )
 
 
@@ -984,11 +990,15 @@ def aviso(msg: str) -> None:
     print(f"::notice::{msg}")
 
 
-def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, consulta=None) -> int:
+def ejecutar(
+    modo: str, params: dict | None = None, cliente=None, llms=None, consulta=None, plan=None
+) -> int:
     """Devuelve el código de salida (0 = limpio).
 
     `consulta`: función sin argumentos que devuelve el estado de la clave de OpenRouter (en las
-    pruebas, una simulada); si falta, se pregunta a OpenRouter de verdad (gratis)."""
+    pruebas, una simulada); si falta, se pregunta a OpenRouter de verdad (gratis).
+    `plan`: la cuenta del plan de Claude (en las pruebas, una simulada); si falta, se lee de los
+    artefactos de GitHub de esta semana del plan, y solo si hace falta usar Claude."""
     params = params or cfg.cargar_params()
     if not cfg.hay("METACULUS_TOKEN"):
         aviso(
@@ -1002,7 +1012,9 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
         aviso("ENVIO_REAL apagado: la ejecución programada no pronostica ni gasta créditos.")
         return 0
 
-    bot = construir_bot(params, publicar=envio, llms=llms)
+    if plan is None:
+        plan = plan_claude.contador(params, leer=_lector_plan(params))
+    bot = construir_bot(params, publicar=envio, llms=llms, plan=plan)
     if cliente is not None:
         bot.metaculus_client = cliente
     cliente = bot.metaculus_client
@@ -1106,6 +1118,22 @@ def ejecutar(modo: str, params: dict | None = None, cliente=None, llms=None, con
             f"::warning::Fallaron {fallos} preguntas (salieron {total}). Mira los avisos de arriba."
         )
     return 0
+
+
+def _lector_plan(params: dict):
+    """Cómo se lee lo gastado del plan esta semana: de los artefactos «plan-claude-*» de GitHub,
+    con el token de la propia ejecución. Fuera de GitHub no se puede saber (error: el clasificador
+    con Opus se apaga y lo demás sigue con sus frenos)."""
+
+    def leer():
+        repo, token = os.getenv("GITHUB_REPOSITORY"), os.getenv("GITHUB_TOKEN")
+        if not (repo and token):
+            raise RuntimeError("sin GITHUB_REPOSITORY o GITHUB_TOKEN (fuera de GitHub)")
+        desde = plan_claude.inicio_semana(datetime.now(UTC), params)
+        espera = float(ajustes.p("red.tiempo_espera_segundos", params))
+        return plan_claude.leer_de_github(repo, token.strip(), desde, espera)
+
+    return leer
 
 
 def _anotar_dejadas(torneo, preguntas: list, motivo: str) -> None:

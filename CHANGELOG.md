@@ -6,6 +6,25 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 tarde (orden 27 del mando, aprobada por el usuario: tope del plan de Claude)
+
+Motivo: el plan Max del usuario lo comparten todos sus proyectos y el bot no tenía tope semanal.
+**Con qué datos se decidió:** coste de las 10 investigaciones reales del 27/09 (zona de pruebas,
+1,54-2,76 $ equivalentes, media 2,07 $) y lo que movieron el tope semanal (5-6,6 $ por punto); ningún
+pronóstico. **No cambia los pronósticos mientras el bot esté por debajo del tope.** Pasado el tope,
+las preguntas pares van con la búsqueda de pago (lo mismo que ya pasaba si Claude no tenía cupo).
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `plan_claude.tope_fraccion_semanal` (nuevo) | sin tope | 0,15 | Propuesta del mando: el bot no pasa del 15 % del tope semanal |
+| `plan_claude.usd_por_punto_semanal` (nuevo) | — | 5 $ | Medido el 27/09: 5-6,6 $ por punto; la más baja, para frenar antes |
+| `plan_claude.reserva_revision_usd` (nuevo) | — | 5 $ | Para la revisión de los lunes (fuera del bot); estimación |
+| `plan_claude.apagar_opus_desde` (nuevo) | — | 0,8 | Lo primero que se apaga es el clasificador con Opus (no decide nada) |
+| `plan_claude.reinicio_semanal` (nuevo) | — | lunes 09:00 UTC | Visto en la tarjeta de uso de la aplicación el 28/09 |
+| `vigilancia.max_despertares_semana` (nuevo) | hasta 14 por semana (uno cada 12 h) | 2 por semana del plan, y nunca pasado el tope | ≤10 $ equivalentes (~2 % del tope semanal) |
+| Cuenta del plan | ninguna | cada uso apunta su coste en `plan/` (artefacto `plan-claude-<id>`, 14 días); el bot suma la semana antes de usar Claude | Poder frenar solo; el marcador lo resume cada lunes |
+| Estados nuevos | — | `tope_plan` en la investigación y en el clasificador con Opus | Distinguirlo de un fallo |
+
 ## 2026-09-28 tarde (orden 27 del mando: auditoría de normas del torneo)
 
 Motivo: la norma oficial «only submit one forecast per question» (docs/FUENTES.md, releída el

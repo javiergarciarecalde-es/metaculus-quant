@@ -18,8 +18,10 @@ Si hay problema y no hay ya una ejecución del bot en marcha:
 - **Nivel 2:** si ya van `vigilancia.relanzamientos_antes_de_claude` relanzamientos en las últimas
   `vigilancia.ventana_horas_relanzamientos` horas y el problema sigue, despierta a Claude Code (con
   el plan del usuario, topes de turnos y de dinero) para que diagnostique con las líneas de error
-  del registro. Como mucho una vez cada `vigilancia.horas_entre_claude` horas, y nunca mientras la
-  investigación con Claude esté en pausa para cuidar el plan.
+  del registro. Como mucho una vez cada `vigilancia.horas_entre_claude` horas y
+  `vigilancia.max_despertares_semana` veces por semana del plan, nunca mientras la investigación
+  con Claude esté en pausa ni pasado el tope semanal del plan (`bot/plan_claude.py`, orden 27).
+  Lo que gasta cada despertar se apunta en la cuenta del plan.
 
 Lo que Claude NUNCA puede hacer aquí (reglas del torneo y del usuario): pronosticar ni tocar
 pronósticos, cambiar `config/params.yaml` o lo que decide los pronósticos (`RUTAS_PROHIBIDAS`), ni
@@ -36,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import os
 import re
 import subprocess
@@ -48,7 +51,7 @@ from typing import Any
 
 import requests
 
-from bot import normas, presupuesto
+from bot import normas, plan_claude, presupuesto
 from bot import params as ajustes
 
 API = "https://api.github.com"
@@ -173,6 +176,19 @@ def claude_reciente(issues: Any, ahora: datetime, horas: float) -> bool:
     return False
 
 
+def despertares_semana(issues: Any, desde: datetime) -> int:
+    """Cuántas veces se ha despertado a Claude (issues de la vigilancia) desde `desde`."""
+    if not isinstance(issues, list):
+        raise EsquemaGithubError("la lista de issues de GitHub no es una lista")
+    return sum(
+        1
+        for i in issues
+        if isinstance(i, dict)
+        and str(i.get("title", "")).startswith(PREFIJO_ISSUE)
+        and _fecha_github(i.get("created_at")) >= desde
+    )
+
+
 def decidir(
     ejecuciones: list[Ejecucion],
     pendientes: int | None,
@@ -238,7 +254,8 @@ def decidir(
             )
         motivo = (
             f"el problema sigue tras {len(recientes)} relanzamientos; Claude no se despierta "
-            "(sin secreto, en pausa o ya se despertó hace poco): solo se relanza"
+            "(sin secreto, en pausa, ya se despertó hace poco o se llegó al tope semanal de "
+            "despertares o del plan): solo se relanza"
         )
         return Diagnostico("relanzar", problemas, motivo, fallidas)
     return Diagnostico("relanzar", problemas, "se relanza el bot (nivel 1)", fallidas)
@@ -381,6 +398,7 @@ class Github:
     def __init__(self, repo: str, token: str, espera: float, get=requests.get, post=requests.post):
         self.repo, self.espera = repo, espera
         self._get, self._post = get, post
+        self._token = token
         self._cab = {
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
@@ -398,6 +416,10 @@ class Github:
 
     def issues(self) -> Any:
         return self._leer("issues", state="all", per_page=30, sort="created", direction="desc")
+
+    def gastado_plan(self, desde: datetime) -> dict[str, float]:
+        """Lo gastado del plan de Claude desde `desde` (artefactos «plan-claude-*»)."""
+        return plan_claude.leer_de_github(self.repo, self._token, desde, self.espera, self._get)
 
     def relanzar(self, flujo: str, rama: str) -> None:
         """Nivel 1. GitHub contesta 204 sin cuerpo si lo acepta; cualquier otra cosa es un error
@@ -483,10 +505,18 @@ def revisar(
     if hay_claude is None:
         hay_claude = cfg.hay("CLAUDE_CODE_OAUTH_TOKEN")
     horas = float(ajustes.p("vigilancia.horas_entre_claude", params))
+    issues = gh.issues()
+    desde = plan_claude.inicio_semana(ahora, params)
+    # orden 27 (28/09/2026): como mucho N despertares por semana del plan y nunca pasado su tope
+    maximo = int(ajustes.p("vigilancia.max_despertares_semana", params))
     permitido = (
         hay_claude
         and not claude_en_pausa(params, ahora)
-        and not claude_reciente(gh.issues(), ahora, horas)
+        and not claude_reciente(issues, ahora, horas)
+        and despertares_semana(issues, desde) < maximo
+        and plan_claude.contador(params, leer=lambda: gh.gastado_plan(desde)).empezar(
+            "vigilancia", float(ajustes.p("vigilancia.claude.tope_usd", params))
+        )
     )
     diag = decidir(ejecuciones, pendientes, ahora, params, permitido)
     print(f"Vigilancia: {diag.accion}. {diag.motivo}. Problemas: {diag.problemas or 'ninguno'}")
@@ -531,7 +561,19 @@ def despertar_claude(params: dict, diag_texto: str, errores: str, ejecutar=subpr
         timeout=float(ajustes.p("vigilancia.claude.tope_segundos", params)),
     )
     print(f"Claude Code terminó con código {r.returncode}.")
+    # a la cuenta del plan (orden 27): lo que dice Claude Code o, si no lo dice, su freno
+    tope = float(ajustes.p("vigilancia.claude.tope_usd", params))
+    plan_claude.apuntar("vigilancia", _coste_de(getattr(r, "stdout", "")) or tope, "despertar")
     return r.returncode
+
+
+def _coste_de(salida: Any) -> float | None:
+    """`total_cost_usd` de la salida JSON de Claude Code (None si no está)."""
+    try:
+        coste = json.loads(salida or "").get("total_cost_usd")
+    except (TypeError, ValueError, AttributeError):
+        return None
+    return float(coste) if isinstance(coste, (int, float)) else None
 
 
 def main(argv=None) -> int:

@@ -11,6 +11,7 @@ Pasos:
 4. Compara formas de juntar a los 3 modelos (bot/comparador.py).
 5. Resume en qué se va el dinero frente a la línea de ritmo (bot/gasto.py; orden 26, 27/09/2026).
 6. Lista las preguntas que cerraron sin pronóstico nuestro (bot/perdidas.py; 27/09/2026).
+   Y lo gastado del plan de Claude del usuario por semana del plan (bot/plan_claude.py; orden 27).
 7. Escribe docs/MARCADOR.md (en llano) y datos/marcador.json. El texto largo de cada pregunta
    (investigación entera, razonamientos) va aparte, a datos/detalle/, un fichero por pregunta.
 
@@ -33,7 +34,7 @@ import requests
 
 from . import clasificador as clf
 from . import comparador as cmp
-from . import gasto, perdidas
+from . import gasto, perdidas, plan_claude
 from . import params as ajustes
 from .config import RAIZ
 
@@ -406,6 +407,8 @@ def main(argv=None) -> int:
          gasto.informe_md),
         ("perdidas", "Preguntas perdidas",
          lambda: perdidas.resumir(_cerradas(token, ahora), nuevas, arbol), perdidas.informe_md),
+        ("plan_claude", "Plan de Claude del usuario",
+         lambda: plan_claude.resumen(nuevas, arbol, ahora), plan_claude.informe_md),
         ("clasificador_gemini", "Clasificador en sombra: Gemini 3.8 Flash",
          lambda: clf.resumir(filas, resueltas, clave, "clasificador"),
          lambda r: clf.informe_md(r, "Gemini 3.8 Flash")),

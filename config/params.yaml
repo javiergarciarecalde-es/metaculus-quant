@@ -172,6 +172,18 @@ presupuesto:
     fin: "2027-01-06"             # últimos pronósticos de la temporada (docs/MAESTRO.md)
     colchon_inicial: 0.25         # fracción del dinero que se puede llevar gastada desde el primer día (una ronda de MiniBench ~60 preguntas ≈ 20-25 $); el resto, repartido por igual hasta el final
 
+plan_claude:
+  # Tope del plan de Claude del usuario (orden 27 del mando, aprobada por el usuario el 28/09/2026;
+  # bot/plan_claude.py). Cuenta la investigación de las pares, el clasificador con Opus y la
+  # vigilancia cuando despierta a Claude, en $ equivalentes de API por semana del plan.
+  tope_fraccion_semanal: 0.15     # propuesta del mando (orden 27): el bot no pasa del 15 % del tope semanal del plan
+  usd_por_punto_semanal: 5        # $ equivalentes que mueven un 1 % el tope semanal. Medido el 27/09/2026: 5-6,6 $ por punto (con otras sesiones gastando a la vez, así que es cota baja); se toma la más baja para frenar antes
+  reserva_revision_usd: 5         # para la revisión semanal de los lunes (rutina en la nube, fuera del bot): estimación, se corrige al medirla
+  apagar_opus_desde: 0.8          # propuesta del mando: pasado el 80 % del tope se apaga primero el clasificador en sombra con Opus (no decide nada)
+  reinicio_semanal:               # cuándo se renueva el tope semanal del plan: visto en la tarjeta de uso de la aplicación el 28/09/2026 (lunes 09:00 UTC = 11:00 de Madrid)
+    dia: 0                        # 0 = lunes
+    hora_utc: 9
+
 red:
   tiempo_espera_segundos: 30         # espera máxima de cada consulta a Metaculus o a la lista de OpenRouter
 
@@ -186,6 +198,7 @@ vigilancia:
   ventana_horas_relanzamientos: 3           # relanzamientos de la vigilancia que se cuentan para despertar a Claude
   relanzamientos_antes_de_claude: 2         # si ya van estos relanzamientos en la ventana y el problema sigue: nivel 2 (Claude)
   horas_entre_claude: 12                    # como mucho un despertar de Claude (un issue) cada tantas horas, para cuidar el plan del usuario
+  max_despertares_semana: 2                 # orden 27 (28/09/2026): como mucho 2 despertares de Claude por semana del plan (≤10 $ equivalentes, ~2 % del tope semanal); antes podían ser 14
   max_caracteres_errores: 20000             # líneas de error del registro que se le enseñan a Claude
   claude:
     modelo: "claude-opus-5-5"

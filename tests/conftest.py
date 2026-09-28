@@ -140,6 +140,13 @@ def entorno_limpio(monkeypatch, tmp_path):
     monkeypatch.setattr(r, "CARPETA", tmp_path / "registro")
     # Ninguna prueba pregunta a OpenRouter de verdad: la clave simulada tiene 100 $ sin gastar.
     monkeypatch.setattr(presupuesto, "consultar_clave", lambda *a, **k: CLAVE_NUEVA)
+    # Ninguna prueba pregunta a GitHub cuánto se ha gastado del plan de Claude: 0 $ esta semana,
+    # y las líneas del plan van a una carpeta temporal (el tope tiene sus propias pruebas).
+    import bot.plan_claude as plan_claude
+    import main
+
+    monkeypatch.setattr(main, "_lector_plan", lambda params: dict)
+    monkeypatch.setattr(plan_claude, "CARPETA", tmp_path / "plan")
     # Las pausas de Claude con fecha (p. ej. la del 27/09/2026 hasta las 11:00 del 28/09) son
     # temporales: las pruebas no dependen del día en que se ejecutan (la pausa tiene su prueba).
     sin_pausa = copy.deepcopy(ajustes.todos())

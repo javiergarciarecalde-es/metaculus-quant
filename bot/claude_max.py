@@ -10,6 +10,7 @@ Reglas (las mismas que la investigación ampliada):
 - Sin secreto, sin el programa `claude`, con error, sin tiempo o sin cupo -> informe base intacto.
 - Si se agota el cupo de Max, se deja de llamar durante el resto de la ejecución (no insiste).
 - Nunca puede tocar ficheros ni ejecutar órdenes: solo buscar y leer páginas web.
+- Pasado el tope semanal del plan (`bot/plan_claude.py`, orden 27), no se llama: estado «tope_plan».
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ import os
 import shutil
 import tempfile
 
+from bot import plan_claude
 from bot.investigacion import REGLA_CITAR_MERCADOS, bloque_enlaces
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,8 @@ OTRAS_CLAVES = (
     "ASKNEWS_SECRET",
     "OPENAI_API_KEY",
     "ANTHROPIC_API_KEY",
+    "GITHUB_TOKEN",  # el bot lo usa para leer lo gastado del plan (orden 27); Claude no lo necesita
+    "GH_TOKEN",
 )
 
 
@@ -184,7 +188,7 @@ class InvestigadorClaudeMax:
     CAMPOS = ("modelo", "agentes", "max_turnos", "tope_segundos", "simultaneas")
     CAMPOS += ("tope_usd_por_pregunta",)
 
-    def __init__(self, conf: dict, max_caracteres: int, ejecutar=_ejecutar_de_verdad):
+    def __init__(self, conf: dict, max_caracteres: int, ejecutar=_ejecutar_de_verdad, plan=None):
         faltan = [c for c in self.CAMPOS if c not in conf]
         if faltan:
             raise KeyError(f"a investigacion.claude_max le falta {faltan} en config/params.yaml")
@@ -193,6 +197,8 @@ class InvestigadorClaudeMax:
         self._ejecutar = ejecutar
         self._turnos: dict = {}  # un semáforo por bucle (el bot abre uno por torneo)
         self.sin_cupo = False
+        # tope semanal del plan del usuario (orden 27); sin él (pruebas), sin límite
+        self.plan = plan or plan_claude.sin_limite()
         self.costes: dict[str, float | None] = {}  # por pregunta: lo que costaría en $ por API
         # por pregunta: ok | sin_secreto | sin_cupo | tiempo | fallo (mejora 2: saber si falló)
         self.estados: dict[str, str] = {}
@@ -228,11 +234,19 @@ class InvestigadorClaudeMax:
             self.max_caracteres,
             enlaces or [],
         )
+        freno = float(self.conf["tope_usd_por_pregunta"])
+        empezada = False
         try:
             async with self._turno():
                 if self.sin_cupo:
                     self.estados[clave] = "sin_cupo"
                     return informe_base
+                # dentro del turno: lo que acaban las de delante ya está apuntado
+                if not self.plan.empezar("investigacion", freno):
+                    self.estados[clave] = "tope_plan"
+                    logger.warning("Tope semanal del plan de Claude: esta pregunta va sin Claude.")
+                    return informe_base
+                empezada = True
                 env = {k: v for k, v in os.environ.items() if k not in OTRAS_CLAVES}
                 codigo, salida, error = await self._ejecutar(orden(self.conf), entrada, env, tope)
             notas, coste = comprobar_salida(codigo, salida, error)
@@ -243,7 +257,11 @@ class InvestigadorClaudeMax:
                 self.estados[clave] = "sin_cupo"
                 logger.warning("Cupo de Claude Max agotado: se sigue sin esta investigación.")
             logger.warning(f"Investigación con Claude Max descartada: {e!r}"[:500])
+            if empezada:  # gastó plan sin decir cuánto: se apunta el freno (sin cupo: nada)
+                sin_gasto = self.estados[clave] == "sin_cupo"
+                self.plan.terminar("investigacion", freno, 0.0 if sin_gasto else None, clave)
             return informe_base
+        self.plan.terminar("investigacion", freno, coste, clave)
         self.costes[clave] = coste
         self.estados[clave] = "ok"
         logger.info(

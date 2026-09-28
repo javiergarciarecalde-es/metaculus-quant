@@ -31,6 +31,7 @@ import re
 from statistics import mean, stdev
 
 from bot import claude_max as cm
+from bot import plan_claude
 
 DIFICULTAD = {"easy": "facil", "medium": "normal", "hard": "dificil"}
 ESFUERZO = {"low": "bajo", "medium": "medio", "high": "alto"}
@@ -87,7 +88,7 @@ class ClasificadorClaudeMax:
     CAMPOS = ("modelo", "esfuerzo", "max_turnos", "tope_usd", "tope_segundos", "simultaneas")
     ORDEN_CORTA = "Follow the instructions given on stdin. Reply only with the JSON."
 
-    def __init__(self, conf: dict, ejecutar=None):
+    def __init__(self, conf: dict, ejecutar=None, plan=None):
         faltan = [c for c in self.CAMPOS if c not in conf]
         if faltan:
             raise KeyError(f"a clasificador.claude le falta {faltan} en config/params.yaml")
@@ -95,6 +96,8 @@ class ClasificadorClaudeMax:
         self._ejecutar = ejecutar or cm._ejecutar_de_verdad
         self._turnos: dict = {}
         self.sin_cupo = False
+        # tope semanal del plan (orden 27): es lo primero que se apaga (no decide nada)
+        self.plan = plan or plan_claude.sin_limite()
 
     def orden(self) -> list[str]:
         return [
@@ -128,17 +131,26 @@ class ClasificadorClaudeMax:
         if self.sin_cupo:
             return {"estado": "sin_cupo"}
         env = {k: v for k, v in os.environ.items() if k not in cm.OTRAS_CLAVES}
+        freno = float(self.conf["tope_usd"])
+        empezada = False
         try:
             async with self._turno():
+                if not self.plan.empezar("clasificador_opus", freno):
+                    return {"estado": "tope_plan"}
+                empezada = True
                 codigo, salida, error = await self._ejecutar(
                     self.orden(), texto_prompt, env, float(self.conf["tope_segundos"])
                 )
             texto, coste = cm.comprobar_salida(codigo, salida, error)
         except Exception as e:  # nunca tumba la pregunta
-            if any(p in str(e).lower() for p in cm.PALABRAS_CUPO):
+            sin_cupo = any(p in str(e).lower() for p in cm.PALABRAS_CUPO)
+            if empezada:  # gastó plan sin decir cuánto: se apunta el freno (sin cupo: nada)
+                self.plan.terminar("clasificador_opus", freno, 0.0 if sin_cupo else None)
+            if sin_cupo:
                 self.sin_cupo = True
                 return {"estado": "sin_cupo"}
             return {"estado": "tiempo" if isinstance(e, TimeoutError) else "fallo"}
+        self.plan.terminar("clasificador_opus", freno, coste)
         return {**leer(texto), "usd_equivalente": coste}
 
 
