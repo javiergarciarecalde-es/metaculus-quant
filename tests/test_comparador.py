@@ -19,7 +19,7 @@ def _fila(valor, miembros, tipo="binary", cuando="2026-10-01T00:00:00+00:00"):
 TRES = [
     {"modelo": "openrouter/openai/gpt-6-sol", "valor": 0.9},
     {"modelo": "openrouter/anthropic/claude-opus-5.5", "valor": 0.7},
-    {"modelo": "openrouter/google/gemini-3.5-flash", "valor": 0.2},
+    {"modelo": "openrouter/google/gemini-3.8-flash", "valor": 0.2},
 ]
 
 

@@ -139,3 +139,8 @@ un escéptico por cada mejora candidata). Lo esencial:
   Qwen, Kimi…): confirmado lo que decían las notas de nostreambot. Nuestros modelos, todos
   permitidos. Si se quiere abaratar con los créditos, la vía es un modelo barato de esas tres
   empresas (se propone tras la 1.ª semana, con el gasto por partes).
+- **Precios y cambio a Gemini 3.8 Flash** (28/09, consulta gratuita de la clave): Google permitidos
+  incluyen `gemini-3.8-flash` (0,75/3,75 $ por millón de tokens de entrada/salida) y `3.5-flash` (el
+  que usábamos: 1,5/9 $). Los nuestros: GPT-6 y GPT-5.6 2/10 $, Opus 5.5 4/20 $, Opus 4.8 5/25 $,
+  lector gpt-4o-mini 0,15/0,6 $. El usuario decidió pasar a 3.8 Flash (~06:50 UTC): en el marcador,
+  las preguntas anteriores llevan 3.5 Flash.

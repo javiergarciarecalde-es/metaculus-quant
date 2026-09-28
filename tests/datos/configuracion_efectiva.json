@@ -165,8 +165,8 @@
     {
      "extra_body": null,
      "intentos": 1,
-     "model": "openrouter/google/gemini-3.5-flash",
-     "nombre": "openrouter/google/gemini-3.5-flash",
+     "model": "openrouter/google/gemini-3.8-flash",
+     "nombre": "openrouter/google/gemini-3.8-flash",
      "reasoning_effort": null,
      "temperature": null,
      "timeout": 600

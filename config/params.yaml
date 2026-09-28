@@ -42,7 +42,7 @@ modelos:
     pronostico:
       - {nombre: "openrouter/openai/gpt-6-sol", esfuerzo: "high", respaldo: "openrouter/openai/gpt-5.6-sol"}
       - {nombre: "openrouter/anthropic/claude-opus-5.5", esfuerzo: "high", respaldo: "openrouter/anthropic/claude-opus-4.8"}
-      - {nombre: "openrouter/google/gemini-3.5-flash", esfuerzo: null, respaldo: "openrouter/openai/gpt-6-sol"}  # Gemini Pro: sin cuota con la clave donada
+      - {nombre: "openrouter/google/gemini-3.8-flash", esfuerzo: null, respaldo: "openrouter/openai/gpt-6-sol"}  # decisión del usuario del 28/09/2026 (~08:50): Gemini 3.8 Flash en vez de 3.5 Flash (permitido por la clave; la mitad de precio: 0,75/3,75 $ frente a 1,5/9 $ por millón de tokens). Gemini Pro: sin cuota con la clave donada
     # modo "un_modelo": la idea del usuario, un solo modelo potente repetido en los 3 puestos
     un_modelo: {nombre: "openrouter/anthropic/claude-opus-5.5", esfuerzo: "high", respaldo: "openrouter/openai/gpt-6-sol"}
     # Búsqueda de noticias: «:online» = el modelo busca en internet con el buscador de su empresa

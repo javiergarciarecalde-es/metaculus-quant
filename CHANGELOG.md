@@ -6,6 +6,16 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-09-28 mañana (decisión del usuario: Gemini 3.8 Flash)
+
+**Cambia los pronósticos** del puesto de Google desde el 28/09/2026 (~06:50 UTC), el día que abre
+la temporada. Para comparar modelos en el marcador, las preguntas de antes de esa hora llevan
+Gemini 3.5 Flash.
+
+| Parámetro | Antes | Después | Motivo |
+|---|---|---|---|
+| `modelos.openrouter.pronostico[2].nombre` | `openrouter/google/gemini-3.5-flash` | `openrouter/google/gemini-3.8-flash` | Decisión del usuario («funciona mejor que el Pro»). Consulta gratuita del 28/09: la clave lo permite y cuesta 0,75/3,75 $ por millón de tokens frente a 1,5/9 $. Respaldo sin cambios (GPT-6) |
+
 ## 2026-09-28 (pregunta del usuario: ¿qué modelos deja usar la clave?)
 
 | Pieza | Antes | Después | Motivo |
