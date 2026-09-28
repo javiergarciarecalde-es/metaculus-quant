@@ -176,3 +176,10 @@ un escéptico por cada mejora candidata). Lo esencial:
   función. Arreglo: se espera con asyncio; prueba con un cliente simulado asíncrono como el real;
   prueba que avisa si la librería cambia; y cada sección nueva del marcador va aparte: si una
   falla, sale «Esta semana falló» y el resto del marcador (y su commit) sigue.
+- **Automatización revisada** (28/09, pregunta del usuario «¿va todo solo?»): bot, vigilancia y
+  marcador van solos en GitHub. Faltaba la **revisión**: se programó una rutina de Claude Code
+  (cada lunes 09:12 de Madrid, desde el 05/10, en la conversación de esta sesión) que lee el
+  marcador, aplica las reglas escritas y propone decisiones al usuario sin cambiar nada por su
+  cuenta. El primer marcador (28/09) falló por un fallo mío (arreglado) y daba 51 «perdidas» del
+  21-24/09, con el bot apagado (arreglado: `marcador.perdidas_desde_utc`). Queda sin red por
+  debajo: si el reloj de GitHub se parase del todo, se pararían bot y vigilancia hasta el lunes.

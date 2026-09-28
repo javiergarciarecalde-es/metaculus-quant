@@ -1,6 +1,6 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 28/09/2026, 10:20 (hora de Madrid). Sesión en la nube «tres mejoras antes
+**Última actualización:** 28/09/2026, 10:55 (hora de Madrid). Sesión en la nube «tres mejoras antes
 de la temporada (orden 26)» y cambios de modelos del 28/09.
 **Fase:** fase 0, compitiendo. El bot está **encendido** y pronostica solo cada 20 minutos en
 MiniBench y en la temporada de otoño (abre el lunes 28/09).
@@ -21,18 +21,17 @@ automática que hace git después de guardar).
 | Vigilancia que reacciona sola | **encendida** (27/09, 22:20): dos veces por hora; primera ejecución real en verde, «todo en orden» |
 | Pruebas automáticas | **199 de 199 en verde** y ruff (revisor de estilo) sin quejas |
 
-## Las tres mejoras de esta noche (tu decisión de las 21:55; ninguna cambia lo que se envía)
-1. **Vigilancia que reacciona sola, sin avisarte.** Un proceso aparte de GitHub (a :13 y :43 de cada
-   hora) mira si el bot lleva más de 45 min sin terminar bien, si su última ejecución falló o si hay
-   preguntas abiertas hace más de 1 h sin pronóstico que el tope de gasto sí dejaría hacer. Si pasa:
-   **relanza el bot**; si 2 relanzamientos en 3 h no bastan, **despierta a Claude** (tu plan, con
-   topes; una vez cada 12 h como mucho). Claude no pronostica ni toca los parámetros: como mucho deja
-   un arreglo en una rama aparte y un **issue** (una nota en GitHub) para la siguiente sesión.
-2. **Medir en qué se va el dinero.** Cada pregunta guarda cuánto costó cada parte (búsqueda de
-   noticias, cada modelo, el lector). Cada lunes el marcador resume el gasto frente a la línea de
-   ritmo. El cambio de modelos, si lo hay, se te propone con esos datos tras la primera semana.
-3. **Curva suave en sombra** para las preguntas numéricas: se calcula y se guarda junto a la enviada;
-   no se envía. Se compararán con preguntas resueltas (hacen falta ≥150).
+## Qué va solo (sin que tú hagas nada)
+| Qué | Cuándo | Dónde |
+|---|---|---|
+| Pronosticar (MiniBench y temporada, con tope de gasto) | cada 20 min | GitHub |
+| Vigilancia: relanza el bot si se calla o falla; si no basta, despierta a Claude | dos veces por hora | GitHub |
+| Marcador: puntos, gasto, preguntas perdidas, comparaciones, clasificadores | lunes 08:30 | GitHub |
+| **Revisión semanal**: lee el marcador, aplica las reglas escritas y te dice si hay que decidir algo | lunes 09:12, desde el 05/10 | esta conversación de Claude |
+| Pausa de Claude, recarga de la clave por Metaculus, curva suave y clasificadores en sombra | solos | bot |
+**No va solo:** decidir cambios que tocan los pronósticos (te los propone la revisión), AskNews
+(tu cuenta) y, al final, la encuesta y el cobro. Si el reloj de GitHub se parara del todo, se
+pararían bot y vigilancia; la revisión del lunes lo detectaría.
 
 ## El tope de gasto (qué hace ahora el bot que antes no hacía)
 - Antes de cada torneo **pregunta a la clave cuánto queda** (consulta gratuita) y solo empieza las
@@ -61,13 +60,6 @@ automática que hace git después de guardar).
 - Si se agota el plan, el bot sigue sin esa investigación, pero **tus otros proyectos se quedan sin
   Claude** hasta que se renueve. Para quitarla del todo: borra el secreto `CLAUDE_CODE_OAUTH_TOKEN`.
 - Pares (Max) frente a impares (búsqueda de pago): reglas escritas antes, en HALLAZGOS del 28/09.
-
-## También hecho esta noche (tu «adelante» de las 22:40)
-- **Lista semanal de preguntas perdidas** en el marcador: las cerradas sin pronóstico nuestro,
-  separando las que el tope dejó a propósito (el bot ahora las apunta) de las «sin explicar».
-- **Piezas de GitHub actualizadas** (GitHub quitó la versión vieja, Node 20, el 23/09).
-- **La curva suave es ahora una de las 3 comparaciones decididas de antemano** (sustituye a
-  «límites 1-99 %») y el marcador ya la puntúa frente a la curva enviada.
 
 ## Lo que queda por hacer
 1. **Tú:** entra en metaculus.com con tu cuenta y mira el perfil de Kyou-bot (Ajustes → My
