@@ -438,3 +438,25 @@ def test_vigilancia_desfasada_del_bot():
 def test_el_titulo_del_bot_lleva_el_modo():
     # sin esto la vigilancia no distingue una prueba a mano de una ejecución de torneo
     assert "inputs.modo" in _flujo("run_bot_on_tournament.yaml")["run-name"]
+
+
+def test_prueba_manual_relanza_aunque_todo_vaya_bien_pero_nunca_despierta_a_claude(
+    monkeypatch, tmp_path
+):
+    """Orden 27: para comprobar en GitHub de verdad que la vigilancia sabe relanzar el bot."""
+    falso = GithubFalso([_run(15)])
+    salida = tmp_path / "salida.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(salida))
+    gh = vg.Github("yo/repo", "t", 5, get=falso.get, post=falso.post)
+    d = vg.revisar(cfg.cargar_params(), gh, AHORA, "main", contar=lambda: 0, probar=True)
+    assert d.accion == "relanzar" and "prueba manual" in d.motivo
+    [(url, cuerpo)] = falso.posts
+    assert url.endswith("/actions/workflows/run_bot_on_tournament.yaml/dispatches")
+    assert cuerpo == {"ref": "main", "inputs": {"modo": "tournament"}}
+    # con una ejecución del bot en marcha, ni la prueba relanza (se espera)
+    falso = GithubFalso([{**_run(15), "status": "in_progress", "conclusion": None}, _run(15)])
+    gh = vg.Github("yo/repo", "t", 5, get=falso.get, post=falso.post)
+    assert vg.revisar(
+        cfg.cargar_params(), gh, AHORA, "main", contar=lambda: 0, probar=True
+    ).accion in ("nada", "esperar")
+    assert not falso.posts

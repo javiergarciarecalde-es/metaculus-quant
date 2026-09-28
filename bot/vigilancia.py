@@ -486,6 +486,7 @@ def revisar(
     rama: str,
     contar=None,
     hay_claude: bool | None = None,
+    probar: bool = False,
 ) -> Diagnostico:
     """Lo que hace el trabajo «revisar» del flujo: mirar, decidir y (si toca) relanzar.
 
@@ -519,6 +520,13 @@ def revisar(
         )
     )
     diag = decidir(ejecuciones, pendientes, ahora, params, permitido)
+    if probar and diag.accion == "nada":
+        # prueba manual del relanzamiento (orden 27, 28/09/2026): lo mismo que el nivel 1,
+        # sin Claude. Permitido por las normas: el bot solo hace las preguntas que faltan.
+        if any(e.estado in EN_MARCHA for e in ejecuciones):
+            diag = Diagnostico("esperar", [], "prueba manual: hay una ejecución en marcha", [])
+        else:
+            diag = Diagnostico("relanzar", [], "prueba manual del relanzamiento", [])
     print(f"Vigilancia: {diag.accion}. {diag.motivo}. Problemas: {diag.problemas or 'ninguno'}")
     if diag.accion.startswith("relanzar"):
         gh.relanzar(flujo, rama)
@@ -581,6 +589,7 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="orden", required=True)
     r = sub.add_parser("revisar", help="mirar y, si hace falta, relanzar el bot")
     r.add_argument("--rama", required=True)
+    r.add_argument("--probar-relanzamiento", action="store_true")
     e = sub.add_parser("errores", help="bajar las líneas de error de las ejecuciones fallidas")
     e.add_argument("--ids", default="")
     e.add_argument("--salida", required=True)
@@ -598,7 +607,7 @@ def main(argv=None) -> int:
     if args.orden in ("revisar", "errores"):
         gh = Github(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"], espera)
     if args.orden == "revisar":
-        revisar(params, gh, datetime.now(UTC), args.rama)
+        revisar(params, gh, datetime.now(UTC), args.rama, probar=args.probar_relanzamiento)
         return 0
     if args.orden == "errores":
         maximo = int(ajustes.p("vigilancia.max_caracteres_errores", params))
