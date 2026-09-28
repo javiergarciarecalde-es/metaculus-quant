@@ -103,3 +103,55 @@ def test_si_metaculus_falla_el_marcador_sale_igual(tmp_path, monkeypatch):
     monkeypatch.setattr(perdidas, "buscar_cerradas", rota)
     assert mc.main(["--descargas", str(tmp_path / "nada")]) == 0
     assert "No se pudo preguntar" in (tmp_path / "MARCADOR.md").read_text(encoding="utf-8")
+
+
+class ClienteAsincrono:
+    """Como MetaculusClient 0.3.1: `get_questions_matching_filter` es asíncrona. Con un cliente
+    así el marcador del 28/09/2026 habría fallado igual que en GitHub."""
+
+    def __init__(self):
+        self.filtros = []
+
+    async def get_questions_matching_filter(self, filtro):
+        self.filtros.append(filtro)
+        return [_q(9, False)]
+
+
+def test_buscar_cerradas_espera_a_la_libreria():
+    cliente = ClienteAsincrono()
+    desde, hasta = AHORA - timedelta(days=7), AHORA
+    res = perdidas.buscar_cerradas(["minibench", 33121], desde, hasta, cliente=cliente)
+    assert [t for t, _ in res] == ["minibench", 33121]
+    assert all(isinstance(qs, list) and qs[0].id_of_post == 9 for _, qs in res)
+    f = cliente.filtros[0]
+    assert f.allowed_tournaments == ["minibench"] and set(f.allowed_statuses) == {
+        "closed",
+        "resolved",
+    }
+    assert f.close_time_gt == desde and f.close_time_lt == hasta
+
+
+def test_la_libreria_de_verdad_es_asincrona():
+    """Si la librería cambia (deja de ser asíncrona), esta prueba avisa."""
+    import inspect
+
+    from forecasting_tools import MetaculusClient
+
+    assert inspect.iscoroutinefunction(MetaculusClient.get_questions_matching_filter)
+
+
+def test_una_seccion_rota_no_tumba_el_marcador(tmp_path, monkeypatch):
+    for nombre in ("HISTORICO", "RESUELTAS", "SALIDA_JSON", "SALIDA_MD"):
+        monkeypatch.setattr(mc, nombre, tmp_path / getattr(mc, nombre).name)
+    monkeypatch.setenv("METACULUS_TOKEN", "t")
+
+    def rota(*a, **k):
+        raise TypeError("'coroutine' object is not iterable")
+
+    monkeypatch.setattr(perdidas, "buscar_cerradas", lambda *a: [])  # nada de red en las pruebas
+    monkeypatch.setattr(perdidas, "resumir", rota)
+    assert mc.main(["--descargas", str(tmp_path / "nada")]) == 0
+    md = (tmp_path / "MARCADOR.md").read_text(encoding="utf-8")
+    assert "Esta semana falló" in md and "En qué se va el dinero" in md
+    datos = json.loads((tmp_path / "marcador.json").read_text(encoding="utf-8"))
+    assert "error" in datos["perdidas"]

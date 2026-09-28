@@ -386,20 +386,34 @@ def main(argv=None) -> int:
 
     conf = conf_comparador()
     m = calcular(filas, resueltas, conf)
-    m["gasto"] = gasto.resumen(nuevas, ajustes.todos(), ahora)
-    m["clasificador"] = {
-        "gemini": clf.resumir(filas, resueltas, clave, "clasificador"),
-        "opus": clf.resumir(filas, resueltas, clave, "clasificador_opus"),
-    }
-    m["perdidas"] = perdidas.resumir(_cerradas(token, ahora), nuevas, ajustes.todos())
+    arbol = ajustes.todos()
+    # Secciones añadidas el 27-28/09/2026: si una falla, el resto del marcador sale igual (y su
+    # commit semanal, que además evita que GitHub apague el reloj por 60 días sin cambios).
+    secciones = [
+        ("gasto", "En qué se va el dinero", lambda: gasto.resumen(nuevas, arbol, ahora),
+         gasto.informe_md),
+        ("perdidas", "Preguntas perdidas",
+         lambda: perdidas.resumir(_cerradas(token, ahora), nuevas, arbol), perdidas.informe_md),
+        ("clasificador_gemini", "Clasificador en sombra: Gemini 3.8 Flash",
+         lambda: clf.resumir(filas, resueltas, clave, "clasificador"),
+         lambda r: clf.informe_md(r, "Gemini 3.8 Flash")),
+        ("clasificador_opus", "Clasificador en sombra: Claude Opus 5.5",
+         lambda: clf.resumir(filas, resueltas, clave, "clasificador_opus"),
+         lambda r: clf.informe_md(r, "Claude Opus 5.5 (xhigh, plan Max)")),
+    ]  # fmt: skip
+    extra: list[str] = []
+    for nombre, titulo, calcular_seccion, pintar in secciones:
+        try:
+            m[nombre] = calcular_seccion()
+            extra += pintar(m[nombre])
+        except Exception as e:
+            print(f"::warning::La sección «{titulo}» del marcador falló: {e!r}"[:300])
+            m[nombre] = {"error": repr(e)[:300]}
+            extra += ["", f"## {titulo}", "", f"**Esta semana falló:** `{repr(e)[:200]}`"]
     SALIDA_JSON.write_text(
         json.dumps(m, ensure_ascii=False, indent=1, default=str), encoding="utf-8"
     )
-    texto = informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf)
-    extra = gasto.informe_md(m["gasto"]) + perdidas.informe_md(m["perdidas"])
-    extra += clf.informe_md(m["clasificador"]["gemini"], "Gemini 3.8 Flash")
-    extra += clf.informe_md(m["clasificador"]["opus"], "Claude Opus 5.5 (xhigh, plan Max)")
-    texto += "\n".join(extra)
+    texto = informe_md(m, f"{ahora:%d/%m/%Y %H:%M} UTC", conf) + "\n".join(extra)
     SALIDA_MD.write_text(texto + "\n", encoding="utf-8")
     print(
         f"Marcador: {m['pronosticos_enviados']} pronósticos, {m['resueltas']} resueltas, "

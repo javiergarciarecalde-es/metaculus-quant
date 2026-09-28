@@ -170,3 +170,9 @@ un escéptico por cada mejora candidata). Lo esencial:
   antes de ver resultados: se queda el que separe más la puntuación de «difíciles» y «fáciles»
   con la regla del clasificador; si no hay diferencia clara entre los dos, Gemini (no gasta plan).
   Coste en plan de Opus por pregunta: se apunta en `clasificador_opus.usd_equivalente`.
+- **Fallo del marcador del 28/09 (06:45 UTC), arreglado:** la lista de preguntas perdidas llamaba
+  sin esperar a una función asíncrona de la librería (`get_questions_matching_filter`) y el
+  marcador entero salió en rojo, sin su commit semanal. Mi prueba no lo vio porque simulaba esa
+  función. Arreglo: se espera con asyncio; prueba con un cliente simulado asíncrono como el real;
+  prueba que avisa si la librería cambia; y cada sección nueva del marcador va aparte: si una
+  falla, sale «Esta semana falló» y el resto del marcador (y su commit) sigue.

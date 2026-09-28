@@ -12,17 +12,22 @@ lectura) las preguntas de la MiniBench y de la temporada que cerraron en los úl
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 
 from . import params as ajustes
 
 
-def buscar_cerradas(torneos: list, desde: datetime, hasta: datetime) -> list[tuple]:
+def buscar_cerradas(torneos: list, desde: datetime, hasta: datetime, cliente=None) -> list[tuple]:
     """Solo lectura: [(torneo, [preguntas cerradas en el intervalo])]. Necesita METACULUS_TOKEN
-    para saber cuáles pronosticó el bot («already_forecasted»)."""
+    para saber cuáles pronosticó el bot («already_forecasted»).
+
+    OJO: en la librería 0.3.1 `get_questions_matching_filter` es asíncrona (hay que esperarla con
+    asyncio). El 28/09/2026 el marcador falló por llamarla sin esperar: se prueba con un cliente
+    simulado que es asíncrono igual que el de verdad."""
     from forecasting_tools import ApiFilter, MetaculusClient
 
-    cliente = MetaculusClient()
+    cliente = cliente or MetaculusClient()
     res = []
     for t in torneos:
         filtro = ApiFilter(
@@ -32,7 +37,7 @@ def buscar_cerradas(torneos: list, desde: datetime, hasta: datetime) -> list[tup
             close_time_lt=hasta,
             group_question_mode="unpack_subquestions",
         )
-        res.append((t, cliente.get_questions_matching_filter(filtro)))
+        res.append((t, list(asyncio.run(cliente.get_questions_matching_filter(filtro)))))
     return res
 
 
