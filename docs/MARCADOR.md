@@ -1,6 +1,6 @@
 # Marcador del bot (se actualiza solo cada lunes)
 
-**Actualizado:** 28/09/2026 08:47 UTC. Lo genera `bot/marcador.py`; no se toca a mano.
+**Actualizado:** 05/10/2026 06:51 UTC. Lo genera `bot/marcador.py`; no se toca a mano.
 
 Qué es cada cosa:
 - **Puntuación de pares** (spot peer): la que da Metaculus y cuenta en el torneo. Positiva = mejor
@@ -14,7 +14,7 @@ Qué es cada cosa:
 
 | Dato | Valor |
 |---|---|
-| Pronósticos enviados (cerrados) | 0 |
+| Pronósticos enviados (cerrados) | 8 |
 | Preguntas ya resueltas | 0 |
 | Suma de puntuación de pares | 0 (en 0 preguntas) |
 | Media por pregunta | — |
@@ -57,13 +57,24 @@ Dos cifras: lo que dice la **clave** de OpenRouter (la buena: lo que de verdad s
 
 | Dato | Valor |
 |---|---|
-| Preguntas hechas en el periodo | 15 |
-| Gastado en total (clave) | 5.36 $ de 100.0 $ |
-| Línea de ritmo a esta fecha | 25.0 $ (por debajo: -19.64 $) |
-| Gastado en el periodo (clave) | 4.45 $ (~0.297 $ por pregunta) |
-| De eso, medido por la librería | 2.95 $ |
-| Sin medir por la librería (≈ búsqueda) | 1.5 $ |
-| A este ritmo, el dinero llega para | ~20.6 semanas más |
+| Preguntas hechas en el periodo | 26 |
+| Gastado en total (clave) | 10.41 $ de 100.0 $ |
+| Línea de ritmo a esta fecha | 30.45 $ (por debajo: -20.04 $) |
+| Gastado en el periodo (clave) | 4.79 $ (~0.184 $ por pregunta) |
+| De eso, medido por la librería | 4.92 $ |
+| Sin medir por la librería (≈ búsqueda) | 0.0 $ |
+| A este ritmo, el dinero llega para | ~18.1 semanas más |
+
+Por parte (lo que mide la librería, media por pregunta):
+
+| Parte | $ por pregunta | $ en el periodo |
+|---|---|---|
+| busqueda | 0.0 | 0.0 |
+| clasificador | 0.0 | 0.0 |
+| lector | 0.0014 | 0.036 |
+| pronostico openrouter/anthropic/claude-opus-5.5 | 0.0 | 0.0 |
+| pronostico openrouter/google/gemini-3.8-flash | 0.0 | 0.0 |
+| pronostico openrouter/openai/gpt-6-sol | 0.0 | 0.0 |
 
 El cambio de modelos no se hace solo: se propone con estos datos tras la primera semana, en una fecha anunciada.
 
@@ -73,10 +84,22 @@ Una pregunta sin pronóstico vale 0 puntos. «Por el tope» = el bot la dejó a 
 
 | Dato | Valor |
 |---|---|
-| Preguntas cerradas (con el bot ya encendido) | 1 |
-| Con pronóstico nuestro | 1 |
+| Preguntas cerradas (con el bot ya encendido) | 18 |
+| Con pronóstico nuestro | 18 |
 | Perdidas por el tope de gasto (a propósito) | 0 |
 | **Perdidas sin explicar** | **0** |
+
+## Plan de Claude del usuario (lo que gasta el bot)
+
+El bot no pasa del 15.0 % del tope semanal del plan (70.0 $ equivalentes, ya descontada la reserva para la revisión de los lunes). Pasado el 80 %, se apaga el clasificador con Opus; pasado el tope, también la investigación con Claude (las pares van con la búsqueda de pago). «Puntos» = % del tope semanal, estimado a 5.0 $ por punto (medido el 27/09).
+
+| Parte | Semana del plan que acaba ($) | Semana anterior ($) |
+|---|---|---|
+| clasificador_opus | 0.64 | 0 |
+| investigacion | 27.19 | 0 |
+| vigilancia | 0 | 0 |
+| **Total** | **27.83** | **0** |
+| Puntos del tope semanal (≈ %) | 5.6 | 0.0 |
 
 ## Clasificador en sombra: Gemini 3.8 Flash (¿sabe qué preguntas son difíciles?)
 
@@ -84,7 +107,7 @@ Antes de investigar, un modelo dice si cada pregunta es fácil, normal o difíci
 
 | Etiqueta | Preguntas | Discrepancia media de los modelos | Resueltas | Puntos de pares (media) | Margen 95 % |
 |---|---|---|---|---|---|
-| — | 0 | — | 0 | — | — |
+| sin_clasificar | 8 | 0.181 | 0 | — | — |
 
 ## Clasificador en sombra: Claude Opus 5.5 (xhigh, plan Max) (¿sabe qué preguntas son difíciles?)
 
@@ -92,4 +115,5 @@ Antes de investigar, un modelo dice si cada pregunta es fácil, normal o difíci
 
 | Etiqueta | Preguntas | Discrepancia media de los modelos | Resueltas | Puntos de pares (media) | Margen 95 % |
 |---|---|---|---|---|---|
-| — | 0 | — | 0 | — | — |
+| dificil | 7 | 0.09 | 0 | — | — |
+| sin_clasificar | 1 | 0.819 | 0 | — | — |

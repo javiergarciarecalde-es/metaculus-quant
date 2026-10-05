@@ -1,1 +1,58 @@
-{}
+{
+ "('https://www.metaculus.com/questions/45516', 45707)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45847', 46022)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45844', 46019)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45848', 46023)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45868', 46043)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45845', 46020)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45849', 46024)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45846', 46021)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ }
+}

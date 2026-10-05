@@ -1,5 +1,5 @@
 {
- "pronosticos_enviados": 0,
+ "pronosticos_enviados": 8,
  "resueltas": 0,
  "spot_peer_suma": 0,
  "spot_peer_media": null,
@@ -10,32 +10,91 @@
  "peores": [],
  "gasto": {
   "dias": 7.0,
-  "preguntas": 15,
-  "libreria_total": 2.95,
-  "libreria_por_pregunta": 0.197,
-  "por_parte": {},
-  "por_parte_por_pregunta": {},
+  "preguntas": 26,
+  "libreria_total": 4.92,
+  "libreria_por_pregunta": 0.189,
+  "por_parte": {
+   "busqueda": 0.0,
+   "clasificador": 0.0,
+   "lector": 0.036,
+   "pronostico openrouter/anthropic/claude-opus-5.5": 0.0,
+   "pronostico openrouter/google/gemini-3.8-flash": 0.0,
+   "pronostico openrouter/openai/gpt-6-sol": 0.0
+  },
+  "por_parte_por_pregunta": {
+   "busqueda": 0.0,
+   "clasificador": 0.0,
+   "lector": 0.0014,
+   "pronostico openrouter/anthropic/claude-opus-5.5": 0.0,
+   "pronostico openrouter/google/gemini-3.8-flash": 0.0,
+   "pronostico openrouter/openai/gpt-6-sol": 0.0
+  },
   "clave": {
-   "consultas": 3,
-   "gastado_total": 5.36,
+   "consultas": 18,
+   "gastado_total": 10.41,
    "presupuesto": 100.0,
-   "linea_de_ritmo": 25.0,
-   "sobre_la_linea": -19.64,
-   "gastado_en_el_periodo": 4.45,
-   "semanas_que_quedan": 20.6,
-   "sin_medir_por_la_libreria": 1.5
+   "linea_de_ritmo": 30.45,
+   "sobre_la_linea": -20.04,
+   "gastado_en_el_periodo": 4.79,
+   "semanas_que_quedan": 18.1,
+   "sin_medir_por_la_libreria": 0.0
   }
  },
  "perdidas": {
   "dias": 7.0,
   "consultado": true,
-  "cerradas": 1,
-  "cerradas_antes_de_encender": 51,
-  "con_pronostico": 1,
+  "cerradas": 18,
+  "cerradas_antes_de_encender": 0,
+  "con_pronostico": 18,
   "perdidas_por_el_tope": [],
   "perdidas_sin_explicar": [],
   "hubo_momentos_sin_dinero": false
  },
- "clasificador_gemini": {},
- "clasificador_opus": {}
+ "plan_claude": {
+  "tope_usd": 70.0,
+  "tope_puntos": 15.0,
+  "usd_por_punto": 5.0,
+  "semanas": {
+   "esta": {
+    "desde": "2026-09-28T09:00+00:00",
+    "partes": {
+     "clasificador_opus": 0.64,
+     "investigacion": 27.19
+    },
+    "total_usd": 27.83,
+    "puntos_del_tope_semanal": 5.6
+   },
+   "anterior": {
+    "desde": "2026-09-21T09:00+00:00",
+    "partes": {},
+    "total_usd": 0,
+    "puntos_del_tope_semanal": 0.0
+   }
+  }
+ },
+ "clasificador_gemini": {
+  "sin_clasificar": {
+   "preguntas": 8,
+   "discrepancia_media": 0.181,
+   "resueltas": 0,
+   "puntos_media": null,
+   "puntos_margen_95": null
+  }
+ },
+ "clasificador_opus": {
+  "dificil": {
+   "preguntas": 7,
+   "discrepancia_media": 0.09,
+   "resueltas": 0,
+   "puntos_media": null,
+   "puntos_margen_95": null
+  },
+  "sin_clasificar": {
+   "preguntas": 1,
+   "discrepancia_media": 0.819,
+   "resueltas": 0,
+   "puntos_media": null,
+   "puntos_margen_95": null
+  }
+ }
 }
