@@ -103,7 +103,7 @@ pronostico:
 #            suscripción Claude Max del usuario (decisión 25/09/2026). Solo actúa si existe el
 #            secreto CLAUDE_CODE_OAUTH_TOKEN; si no, o si falla o se agota el cupo -> «basica».
 investigacion:
-  modo: "claude_max"            # basica | ampliada | claude_max
+  modo: "basica"                # basica | ampliada | claude_max. Orden 82 (decisión del usuario del 07/10/2026): «basica» = todas las preguntas con la búsqueda de pago, sin el plan de Claude del usuario (antes «claude_max»: Claude investigaba las pares). Para volver: «claude_max»
   max_datos_clave: 2
   tope_total_segundos: 240
   # Estos dos estaban fijos en el código hasta el 25/09/2026 (orden 14); mismos valores.
@@ -127,7 +127,7 @@ clasificador:
   tope_segundos: 30              # si tarda más, se sigue sin clasificación (no retrasa la pregunta)
   max_caracteres: 3000           # letras de la pregunta y sus condiciones que se le pasan
   claude:                        # el mismo clasificador, en paralelo, con Claude Code y el plan Max del usuario (decisión del 28/09/2026); sin herramientas; respeta la pausa de investigacion.claude_max
-    activo: true
+    activo: false                # orden 82 (decisión del usuario del 07/10/2026): apagado para no gastar el plan de Claude del usuario (antes true). Para volver: true
     modelo: "claude-opus-5-5"
     esfuerzo: "xhigh"            # «extra alto», pedido por el usuario (docs de Claude Code: low, medium, high, xhigh, max)
     max_turnos: 2                # sin herramientas basta con 1; 2 de margen
@@ -201,6 +201,7 @@ vigilancia:
   max_despertares_semana: 2                 # orden 27 (28/09/2026): como mucho 2 despertares de Claude por semana del plan (≤10 $ equivalentes, ~2 % del tope semanal); antes podían ser 14
   max_caracteres_errores: 20000             # líneas de error del registro que se le enseñan a Claude
   claude:
+    activo: false                # orden 82 (decisión del usuario del 07/10/2026): la vigilancia ya no despierta a Claude (gastaba el plan del usuario); sigue relanzando el bot y avisando en su resumen. Antes no existía (= encendida). Para volver: true
     modelo: "claude-opus-5-5"
     max_turnos: 40
     tope_usd: 5                  # freno de Claude Code en $ equivalentes de la API (gasta el plan del usuario, no dinero)

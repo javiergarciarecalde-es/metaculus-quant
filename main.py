@@ -893,7 +893,12 @@ def construir_bot(params: dict, publicar: bool, llms: dict | None = None, plan=N
         respaldo_busqueda = llms.get("_respaldo_busqueda")
         clasificador = llms.get("_clasificador")
         falso = llms.get("_claude_clasificar")
-        clasificador_opus = clf.ClasificadorClaudeMax(conf_opus, falso, plan) if falso else None
+        # como fuera de las pruebas, respeta `clasificador.claude.activo` (orden 82, 07/10/2026)
+        clasificador_opus = (
+            clf.ClasificadorClaudeMax(conf_opus, falso, plan)
+            if falso and conf_opus["activo"]
+            else None
+        )
         llms = {k: v for k, v in llms.items() if not k.startswith("_")}
         for extra in ("director", "buscador"):
             llms.setdefault(extra, llms["default"])

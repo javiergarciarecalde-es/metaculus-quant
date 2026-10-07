@@ -61,12 +61,16 @@ jobs:
       - name: Instalar dependencias
         if: steps.token.outputs.hay == 'si'
         run: pip install --retries 10 --timeout 60 -r requirements.txt || (sleep 60 && pip install --retries 10 --timeout 60 -r requirements.txt)
+      - name: ¿Usa el bot el plan de Claude? (config/params.yaml; orden 82, 07/10/2026 = no)
+        id: plan
+        if: steps.token.outputs.hay == 'si'
+        run: python -m bot.plan_claude
       - uses: actions/setup-node@v5
-        if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
+        if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si' && steps.plan.outputs.usa == 'si'
         with:
           node-version: "22"   # Claude Code pide Node 22 o más
-      - name: Instalar Claude Code (solo si está el secreto de Claude Max)
-        if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si'
+      - name: Instalar Claude Code (solo si está el secreto de Claude Max y alguna pieza lo usa)
+        if: steps.token.outputs.hay == 'si' && steps.token.outputs.max == 'si' && steps.plan.outputs.usa == 'si'
         run: npm install -g @anthropic-ai/claude-code && claude --version
       - name: Comprobar que los modelos siguen existiendo (lista pública, gratis)
         if: steps.token.outputs.hay == 'si'
@@ -79,7 +83,8 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ASKNEWS_CLIENT_ID: ${{ secrets.ASKNEWS_CLIENT_ID }}
           ASKNEWS_SECRET: ${{ secrets.ASKNEWS_SECRET }}
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # el secreto sigue en GitHub, pero solo se le pasa al bot si alguna pieza usa el plan
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ steps.plan.outputs.usa == 'si' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           ENVIO_REAL: ${{ vars.ENVIO_REAL }}
           GITHUB_TOKEN: ${{ github.token }} # solo lectura: lo gastado del plan (bot/plan_claude.py)
       - name: Guardar el registro de pronósticos

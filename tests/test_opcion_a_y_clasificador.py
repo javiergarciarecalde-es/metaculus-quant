@@ -13,6 +13,9 @@ from bot import claude_max as cm
 from tests.conftest import MetaculusFalso, ModeloFalso, preguntas_ejemplo
 from tests.test_claude_max import ClaudeFalso
 
+# orden 82 (07/10/2026): config/params.yaml apaga el plan de Claude; aquí se prueba encendido
+pytestmark = pytest.mark.usefixtures("claude_encendido")
+
 
 class ClasificadorFalso(ModeloFalso):
     def __init__(self, respuesta, **kw):

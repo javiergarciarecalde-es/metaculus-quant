@@ -254,8 +254,8 @@ def decidir(
             )
         motivo = (
             f"el problema sigue tras {len(recientes)} relanzamientos; Claude no se despierta "
-            "(sin secreto, en pausa, ya se despertó hace poco o se llegó al tope semanal de "
-            "despertares o del plan): solo se relanza"
+            "(apagada en config/params.yaml, sin secreto, en pausa, ya se despertó hace poco "
+            "o se llegó al tope semanal de despertares o del plan): solo se relanza"
         )
         return Diagnostico("relanzar", problemas, motivo, fallidas)
     return Diagnostico("relanzar", problemas, "se relanza el bot (nivel 1)", fallidas)
@@ -510,8 +510,10 @@ def revisar(
     desde = plan_claude.inicio_semana(ahora, params)
     # orden 27 (28/09/2026): como mucho N despertares por semana del plan y nunca pasado su tope
     maximo = int(ajustes.p("vigilancia.max_despertares_semana", params))
+    # orden 82 (07/10/2026): `vigilancia.claude.activo` = false -> nunca despierta a Claude
     permitido = (
-        hay_claude
+        bool(ajustes.p("vigilancia.claude.activo", params))
+        and hay_claude
         and not claude_en_pausa(params, ahora)
         and not claude_reciente(issues, ahora, horas)
         and despertares_semana(issues, desde) < maximo

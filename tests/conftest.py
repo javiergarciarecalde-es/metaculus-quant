@@ -153,3 +153,22 @@ def entorno_limpio(monkeypatch, tmp_path):
     sin_pausa["investigacion"]["claude_max"]["pausada_hasta_utc"] = None
     monkeypatch.setattr(ajustes, "todos", lambda: sin_pausa)
     yield
+
+
+def encender_claude(params: dict) -> dict:
+    """Los parámetros con las piezas que gastan el plan de Claude encendidas, como hasta el
+    07/10/2026 (orden 82 las apagó en config/params.yaml). Para seguir probando que funcionan
+    por si se vuelven a encender."""
+    params["investigacion"]["modo"] = "claude_max"
+    params["clasificador"]["claude"]["activo"] = True
+    params["vigilancia"]["claude"]["activo"] = True
+    return params
+
+
+@pytest.fixture
+def claude_encendido(monkeypatch):
+    """`cfg.cargar_params()` devuelve los parámetros con el plan de Claude encendido."""
+    from bot import config as cfg
+
+    original = cfg.cargar_params
+    monkeypatch.setattr(cfg, "cargar_params", lambda: encender_claude(original()))

@@ -10,6 +10,9 @@ from bot import claude_max as cm
 from bot import config as cfg
 from tests.conftest import MetaculusFalso, preguntas_ejemplo
 
+# orden 82 (07/10/2026): config/params.yaml apaga el plan de Claude; aquí se prueba encendido
+pytestmark = pytest.mark.usefixtures("claude_encendido")
+
 
 class ClaudeFalso:
     """Hace de `claude -p`: apunta cómo se le llamó y devuelve lo que se le diga."""

@@ -8,6 +8,17 @@ torneos (la única pronosticada, la 45707, cerró hacia las 08:00 de Madrid).
 **Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
 automática que hace git después de guardar).
 
+## Orden 82 EN CURSO (07/10/2026, 23:05 Madrid; sesión «Metaculus: sacar el robot del plan de Claude (orden 82)»)
+- Hecho y en `main`: `investigacion.modo` = `basica`, `clasificador.claude.activo` = false,
+  `vigilancia.claude.activo` = false (nuevo); el flujo del bot ya no instala Claude Code ni pasa el
+  secreto (paso `python -m bot.plan_claude`); rutina de los lunes `trig_01P1NPoMLt4LgerQFDWu4MZ8`
+  apagada (no borrada). CHANGELOG al día. 276 pruebas en verde.
+- Falta: comprobar en una ejecución real del bot posterior al cambio (log: «Plan de Claude del
+  usuario: no lo usa ninguna pieza del bot»; sin paso «Instalar Claude Code»); DECISIONES,
+  HALLAZGOS (corte antes/después) y este ESTADO entero; cuenta de créditos hasta el 06/01/2027
+  (dato: 80,79 $ de 100 $ quedaban el 07/10 a las 20:58 UTC, ejecución 37685740188); aviso al mando.
+- Tabla de abajo: lo del plan de Claude queda viejo hasta reescribir ESTADO.
+
 ## Dónde estamos
 | Pieza | Estado |
 |---|---|

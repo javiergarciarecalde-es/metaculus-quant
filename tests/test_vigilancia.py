@@ -324,6 +324,7 @@ def test_fallo_al_contar_preguntas_no_tumba_la_vigilancia(monkeypatch, tmp_path)
     assert d.accion == "relanzar"
 
 
+@pytest.mark.usefixtures("claude_encendido")  # orden 82: se prueba con Claude encendido
 def test_issue_reciente_evita_despertar_otra_vez_a_claude(monkeypatch, tmp_path):
     reciente = {"title": "[vigilancia] x", "created_at": (AHORA - timedelta(hours=1)).isoformat()}
     runs = [_relanzada(30), _relanzada(60), _run(200, "failure")]

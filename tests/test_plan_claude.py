@@ -25,6 +25,9 @@ from tests.conftest import MetaculusFalso, ModeloFalso, preguntas_ejemplo
 from tests.test_claude_max import ClaudeFalso
 from tests.test_opcion_a_y_clasificador import BUENA
 
+# orden 82 (07/10/2026): config/params.yaml apaga el plan de Claude; aquí se prueba encendido
+pytestmark = pytest.mark.usefixtures("claude_encendido")
+
 LUNES_10 = datetime(2026, 10, 5, 10, 0, tzinfo=UTC)  # lunes, una hora después del reinicio
 
 

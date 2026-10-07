@@ -271,3 +271,40 @@ def leer_de_github(repo: str, token: str, desde: datetime, espera: float, get=re
             break
         pagina += 1
     return sumar(filas, desde)
+
+
+def piezas_encendidas(params: dict) -> list[str]:
+    """Las piezas del bot que gastarían el plan de Claude del usuario según config/params.yaml
+    (orden 82, 07/10/2026: todas apagadas). Vacía = el flujo ni instala Claude Code ni le pasa
+    el secreto al bot."""
+    piezas = []
+    if ajustes.p("investigacion.modo", params) == "claude_max":
+        piezas.append("investigación con Claude (investigacion.modo)")
+    if ajustes.p("clasificador.claude.activo", params):
+        piezas.append("clasificador en sombra con Opus (clasificador.claude.activo)")
+    if ajustes.p("vigilancia.claude.activo", params):
+        piezas.append("vigilancia que despierta a Claude (vigilancia.claude.activo)")
+    return piezas
+
+
+def main() -> int:
+    """`python -m bot.plan_claude`: dice en el registro si el bot usará el plan de Claude y lo
+    deja como salida del paso (`usa=si|no`) para que el flujo decida si instala Claude Code."""
+    import os
+
+    from bot import config as cfg
+
+    piezas = piezas_encendidas(cfg.cargar_params())
+    if piezas:
+        print("Plan de Claude del usuario: lo usan " + "; ".join(piezas) + ".")
+    else:
+        print("Plan de Claude del usuario: no lo usa ninguna pieza del bot (orden 82, 07/10/2026).")
+    salida = os.environ.get("GITHUB_OUTPUT")
+    if salida:
+        with open(salida, "a", encoding="utf-8") as f:
+            f.write(f"usa={'si' if piezas else 'no'}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

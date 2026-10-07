@@ -79,6 +79,7 @@ def test_si_fallan_dos_de_tres_puestos_no_se_envia(llms):
     assert bot.metaculus_client.envios == []
 
 
+@pytest.mark.usefixtures("claude_encendido")  # orden 82: se prueba con Claude encendido
 def test_registro_guarda_cada_miembro(monkeypatch, llms, tmp_path):
     monkeypatch.setenv("METACULUS_TOKEN", "token-de-prueba")
     main.ejecutar("test_questions", cliente=MetaculusFalso(preguntas_ejemplo()), llms=llms)

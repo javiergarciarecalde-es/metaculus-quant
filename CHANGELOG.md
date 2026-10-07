@@ -6,6 +6,23 @@ topes de tiempo): fecha, motivo, valor anterior y posterior. Los parámetros viv
 Lo más nuevo, arriba. Las entradas del 24 y 25/09/2026 se han reconstruido del historial de git
 (el commit va entre corchetes) y de HALLAZGOS el 25/09/2026.
 
+## 2026-10-07 noche (orden 82 del mando; decisión del usuario del 07/10/2026: el bot sale del plan de Claude)
+
+Motivo: guardar el plan de Claude del usuario para YouTube; con 0 preguntas resueltas no se puede
+saber si la investigación con Claude compensa (la comparación pares/impares necesita ≥150 resueltas,
+~enero). **Con qué datos se decidió:** ninguno de pronósticos; solo el gasto del plan (marcador del
+05/10: 27,83 $ equivalentes/semana, 5,6 puntos). Cambio de configuración con fecha anunciada.
+
+| Parámetro o pieza | Antes | Después | Motivo |
+|---|---|---|---|
+| `investigacion.modo` | `claude_max` | `basica` | Todas las preguntas con la búsqueda de pago (créditos de Metaculus) |
+| `clasificador.claude.activo` | `true` | `false` | Clasificador en sombra con Opus (no decidía nada) |
+| `vigilancia.claude.activo` (nuevo) | (encendida) | `false` | La vigilancia relanza el bot pero no despierta a Claude |
+| Flujo del bot | instalaba Claude Code y pasaba el secreto si existía | solo si `python -m bot.plan_claude` dice que alguna pieza lo usa | El secreto sigue en GitHub, sin usar |
+| Rutina «metaculus-quant: revisión semanal (lunes, escribe en el repo)» (`trig_01P1NPoMLt4LgerQFDWu4MZ8`) | encendida | apagada (no borrada) | Gastaba el plan cada lunes |
+
+Para volver: los tres parámetros a su valor anterior y encender la rutina.
+
 ## 2026-09-28 tarde (orden 27 del mando, aprobada por el usuario: tope del plan de Claude)
 
 Motivo: el plan Max del usuario lo comparten todos sus proyectos y el bot no tenía tope semanal.

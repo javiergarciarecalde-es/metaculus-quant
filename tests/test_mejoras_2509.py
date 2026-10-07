@@ -12,6 +12,7 @@ import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from forecasting_tools import BinaryQuestion
 
 import main
@@ -20,6 +21,9 @@ from bot import config as cfg
 from bot import investigacion as inv
 from tests.conftest import MetaculusFalso, ModeloFalso, preguntas_ejemplo
 from tests.test_claude_max import ClaudeFalso
+
+# orden 82 (07/10/2026): config/params.yaml apaga el plan de Claude; aquí se prueba encendido
+pytestmark = pytest.mark.usefixtures("claude_encendido")
 
 
 class ModeloQueApunta(ModeloFalso):
