@@ -292,3 +292,50 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
   conversación de la nube: `trig_01Jpv6Pfyp3yo3SxcknZAs4f` (revisión vieja),
   `trig_01X5xNNWkveFfeTSNe6no1xy` (ya había corrido) y `trig_01392sLyrpnQiigTnsHXj3Qx` (la
   encadenada cada 4 h). Esa conversación ya se puede archivar.
+
+## 07-08/10/2026 — Orden 82: el bot sale del plan de Claude del usuario (cambio con fecha anunciada)
+- **Corte antes/después:** commit `d66176f` en `main`, 07/10/2026 ~21:05 UTC (23:05 Madrid). Primera
+  ejecución del bot con el cambio: `37685740188` era la última sin él (20:55 UTC); todas las de
+  `d66176f` en adelante van sin Claude. Cambio de configuración decidido por el usuario por consumo
+  del plan (ver DECISIONES), **sin mirar ninguna pregunta abierta ni ningún pronóstico**; no se
+  relanzó nada por un resultado. Para comparar antes/después, cortar por esa hora.
+- **Experimento pares/impares: se corta.** Desde el corte, pares e impares van igual (búsqueda de
+  pago, Opus 5.5 `:online`). Las pares con Claude Max van del 28/09 ~09:00 UTC al corte; con 0
+  resueltas al corte, no llegará a 150 por grupo: queda sin conclusión salvo que se reactive.
+  El clasificador con Opus deja de producir filas; el de Gemini sigue.
+- **Piezas que gastaban el plan y cómo se apagaron** (gasto: marcador 05/10, semana 28/09-05/10):
+  | Pieza | Dónde se encendía | Gasto medido | Ahora | Para reactivar |
+  |---|---|---|---|---|
+  | Investigación Claude Max (pares) | `investigacion.modo` = `claude_max` | 27,19 $ eq./semana (~2,07 $/pregunta) | `basica` | `claude_max` |
+  | Clasificador en sombra Opus xhigh | `clasificador.claude.activo` | 0,64 $ eq./semana | `false` | `true` |
+  | Vigilancia nivel 2 (despierta a Claude) | `vigilancia.claude.activo` (nuevo; antes siempre) | 0 (nunca hizo falta) | `false` | `true` |
+  | Revisión semanal de los lunes (rutina en la nube, Sonnet 5.5) | rutina `trig_01P1NPoMLt4LgerQFDWu4MZ8` | 1 vuelta (05/10), sin medir; reserva 5 $ | apagada, no borrada | encenderla (RemoteTrigger `update` `enabled: true`) |
+  | Instalar Claude Code y pasar `CLAUDE_CODE_OAUTH_TOKEN` al bot | `run_bot_on_tournament.yaml` | 0 (no gasta, pero lo hacía posible) | solo si `python -m bot.plan_claude` da `usa=si` | automático al encender cualquiera de las 3 primeras |
+  Total medido 27,83 $ eq./semana ≈ 5,6 puntos del tope semanal. Rutinas de Metaculus encendidas
+  tras el cambio: ninguna (lista de RemoteTrigger del 07/10 ~21:00 UTC).
+- **Verificado en real:** ejecución `37744871699` (08/10 07:40 UTC, `d66176f`, en verde): el paso
+  nuevo escribe «Plan de Claude del usuario: no lo usa ninguna pieza del bot»; `setup-node` e
+  «Instalar Claude Code» salen *skipped*; el bot recibe `CLAUDE_CODE_OAUTH_TOKEN` vacío. 15
+  ejecuciones del bot y la vigilancia de `d66176f` hasta las 07:40 UTC, todas en verde. Sin
+  preguntas nuevas desde el corte hasta el 08/10 07:40 UTC: el coste por pregunta con todo por la
+  búsqueda de pago aún no está medido.
+- **Pruebas:** 276 en verde (`tests/test_orden82.py` nuevo). Las pruebas de las piezas de Claude se
+  conservan con el fixture `claude_encendido` (conftest): siguen probando que funcionan si se
+  reactivan. En `construir_bot` con modelos simulados el clasificador con Opus ahora respeta
+  `clasificador.claude.activo`, como fuera de las pruebas.
+- **Créditos de OpenRouter hasta el 06/01/2027** (punto 4 de la orden): lo que queda según la clave
+  (líneas «Quedan …» del registro): 05/10 04:21 UTC 90,55 $; 05/10 21:19 85,23 $; 06/10 05:36
+  83,53 $; 07/10 06:24 82,03 $; 07/10 20:55 **80,79 $**. Del 05/10 04:21 al 07/10 21:00: 9,76 $ en
+  51 pronósticos enviados (~0,19 $/pregunta, con las pares sin búsqueda de pago). Desde el 28/09
+  ~13:00 (5,36 $ gastados) hasta el 07/10 21:00: 13,85 $ en ~9,6 días = 1,44 $/día. Para llegar al
+  06/01 (90 días desde el 08/10) haría falta ≤0,90 $/día. Proyección de agotamiento sin el freno de
+  ritmo: 1,44 $/día → ~02/12; con las pares pagando búsqueda (+25 % supuesto, sin medir) 1,80 $/día →
+  ~21/11; ritmo del 05-07/10 (3,63 $/día) → ~30/10; ritmo flojo (5 preguntas/día × 0,19) → ~01/01.
+  **No llega al 06/01 salvo con el ritmo más flojo.** El freno de ritmo (`presupuesto.ritmo`) frena
+  la temporada para estirar el dinero; la MiniBench va primero y solo la para la reserva de 3 $.
+  Tope de gasto de la orden: 0 €; no se puso dinero ni claves.
+- **Fallo de método (08/10):** al leer el final del registro de la ejecución `37685740188` para
+  buscar la línea del gasto, salieron en pantalla las probabilidades por opción de una pregunta aún
+  abierta. No se usaron para nada ni se copiaron; desde entonces solo se filtran las líneas
+  «Quedan …» y «Terminado: N pronósticos ENVIADOS». Para mirar el gasto en un registro: `grep` de
+  esas dos líneas, nunca `tail` del paso del bot.

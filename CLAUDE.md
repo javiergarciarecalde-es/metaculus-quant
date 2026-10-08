@@ -75,6 +75,8 @@ del momento Y su proyección cae entre los 20 primeros de la temporada. Si no, s
   24 h» no prueba que esté cerrada; el marcador mira su hora de cierre.
 - El repositorio es público: los registros y artefactos de GitHub del bot (con sus pronósticos)
   los puede ver cualquiera con cuenta de GitHub, también mientras la pregunta está abierta.
+- Para sacar el gasto del registro de una ejecución del bot: `grep` de «Quedan …» y «Terminado: N
+  pronósticos ENVIADOS»; nunca `tail` del paso del bot: enseña pronósticos de preguntas abiertas (08/10/2026).
 - Una rutina de Claude que escribe en una conversación existente deja de funcionar si se archiva esa
   conversación, y su resultado no se ve en la aplicación del usuario (28/09/2026).
 
