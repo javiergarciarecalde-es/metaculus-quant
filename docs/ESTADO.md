@@ -1,7 +1,7 @@
 # ESTADO (siempre «ahora»)
 
-**Última actualización:** 08/10/2026, 10:00 (hora de Madrid). Sesión local «Metaculus: sacar el
-robot del plan de Claude (orden 82)».
+**Última actualización:** 18/10/2026, 11:50 (hora de Madrid): correo de Metaculus, sin créditos extra
+(abajo). Antes: 08/10/2026, sesión local «Metaculus: sacar el robot del plan de Claude (orden 82)».
 **Fase:** fase 0, compitiendo. El bot está **encendido** y mira cada 20 minutos la MiniBench y la
 temporada de otoño, con los 3 modelos de OpenRouter y la búsqueda de pago (créditos de Metaculus).
 **Plan de Claude: 0 desde el 07/10** (23:05 de Madrid, commit `d66176f`): ninguna pieza del bot
@@ -18,7 +18,8 @@ automática que hace git después de guardar).
 | Modelos (tu decisión del 28/09) | pronostican GPT-6 Sol, Claude Opus 5.5 y Gemini 3.8 Flash (por OpenRouter, créditos); busca noticias Opus 5.5 (respaldo GPT-6 Sol); lector GPT-6 Sol |
 | Investigación | **todas las preguntas con la búsqueda de pago** desde el 07/10 (antes las pares, con Claude) |
 | Clasificador en sombra | solo Gemini 3.8 Flash (no decide nada); el de Opus, apagado |
-| Créditos de OpenRouter | quedan **80,79 $ de 100 $** (07/10, 20:55 UTC) — **OJO: a este ritmo no llegan al 06/01** (abajo) |
+| Créditos de OpenRouter | quedan **~72,88 $ de 100 $** (18/10, 01:32 UTC); ritmo 12-18/10: 0,89 $/día, justo lo que llega al 06/01 (≤0,91) |
+| Créditos extra de Metaculus | **denegados** (correo del 18/10, ronda según la MiniBench del 05/10; sin motivo detallado). Sigue con derecho a premios |
 | Pruebas automáticas | **276 de 276 en verde**, ninguna saltada, y ruff (revisor de estilo) sin quejas |
 
 ## Plan de Claude: 0 desde el 07/10 (orden 82; tu decisión, en DECISIONES)
@@ -67,10 +68,10 @@ conteste AskNews y, al final, la encuesta y el cobro.
 | Si el reloj de GitHub se para del todo, se paran bot y vigilancia | marcador de los lunes (ya no hay revisión) |
 
 ## Decisiones pendientes tuyas
-1. **Créditos que no llegan al 06/01** (nuevo): opciones, sin prisa hasta ver el marcador del
-   12/10: (a) no hacer nada: el freno deja preguntas de la temporada sin hacer hacia el final;
-   (b) pedir más créditos a Metaculus (se pidieron 270 $ y dieron 100 $); (c) abaratar el bot
-   (cambiar modelos: se decide con datos, en fecha anunciada). Ninguna cuesta dinero tuyo.
+1. **Créditos hasta el 06/01:** Metaculus **no da más** (correo del 18/10): la opción «pedir más»
+   queda casi descartada. Hoy el ritmo (0,89 $/día) llega justo; si sube, el freno deja preguntas
+   de la temporada sin hacer. Opciones: (a) no hacer nada; (c) abaratar el bot (cambiar modelos: se
+   decide con datos de preguntas cerradas, en fecha anunciada). Ninguna cuesta dinero tuyo.
 2. **AskNews (noticias gratis):** esperando su respuesta. Cuando lleguen las claves, **no las pongas
    aún** en GitHub (el bot cambiaría de fuente al momento): dímelo y se decide con datos.
 3. **Reparto del dinero** entre MiniBench y temporada: con preguntas resueltas.

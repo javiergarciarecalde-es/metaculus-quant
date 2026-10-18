@@ -339,3 +339,24 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
   abierta. No se usaron para nada ni se copiaron; desde entonces solo se filtran las líneas
   «Quedan …» y «Terminado: N pronósticos ENVIADOS». Para mirar el gasto en un registro: `grep` de
   esas dos líneas, nunca `tail` del paso del bot.
+
+## 18/10/2026 — Metaculus no da créditos extra a Kyou-bot (ronda incremental)
+- **Fuente:** correo de ben@metaculus.com, «Incremental credit round», 18/10/2026 06:42 UTC (.eml
+  pasado por el usuario; SPF/DKIM/DMARC de metaculus.com en «pass»). Fila en FUENTES.
+- **Qué dice:** ronda de créditos extra basada en el rendimiento en la MiniBench 2026-10-05; a
+  Kyou-bot no le amplían créditos («factors we evaluated and the available budget», sin cifras ni
+  puesto). Sigue con derecho a premios en los torneos.
+- **Qué invalida:** la vía «sube sola si la MiniBench va por encima de la media, hasta ~775 $» (correo
+  del 27/09, FUENTES) queda descartada en esta ronda; la opción (b) «pedir más créditos» de ESTADO
+  (08/10) pierde casi todo su valor. No se sabe si habrá más rondas. No implica por sí solo que el bot
+  esté bajo la media: el motivo no se da y el marcador del 12/10 tenía 0 preguntas resueltas.
+- **Saldo al 18/10:** registro de la ejecución `39086870846` (18/10 01:32 UTC), línea «Temporada:
+  llevamos 27.12 $ de 40.05 $ permitidos a esta fecha; caben 32 preguntas» → quedan ~72,88 $ de 100 $.
+  Marcador del 12/10 06:55 UTC: 21,96 $. Ritmo 12/10→18/10: 5,16 $ en 5,8 días = **0,89 $/día**;
+  para llegar al 06/01/2027 (80 días) hace falta ≤0,91 $/día → **hoy llega, justo**. Ese ritmo es bajo
+  en parte porque el reloj de GitHub lanzó el bot solo 5-16 veces al día del 12 al 17/10 (de 72
+  posibles; trampa conocida), y con menos preguntas. Si el ritmo vuelve al de 05-07/10 (3,63 $/día),
+  el freno de ritmo dejará preguntas de la temporada sin pronóstico.
+- **Método:** del registro solo se filtraron las líneas de gasto («Quedan …» no sale en las
+  ejecuciones de la temporada; la línea es «Temporada: llevamos …»; trampa de CLAUDE.md ampliada).
+  No se vio ningún pronóstico.
