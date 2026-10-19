@@ -1,56 +1,313 @@
 {
- "pronosticos_enviados": 80,
- "resueltas": 0,
- "spot_peer_suma": 0,
- "spot_peer_media": null,
- "spot_peer_n": 0,
- "por_modelo": {},
- "calibracion": {},
- "comparador": [],
- "peores": [],
+ "pronosticos_enviados": 105,
+ "resueltas": 22,
+ "spot_peer_suma": 36.78,
+ "spot_peer_media": 1.84,
+ "spot_peer_n": 20,
+ "por_modelo": {
+  "openrouter/openai/gpt-6-sol": {
+   "binary:log": {
+    "n": 21,
+    "media": -0.5501
+   },
+   "binary:brier": {
+    "n": 21,
+    "media": 0.1923
+   },
+   "numeric:dentro_80": {
+    "n": 8,
+    "media": 1.0
+   },
+   "discrete:dentro_80": {
+    "n": 8,
+    "media": 1.0
+   },
+   "multiple_choice:log": {
+    "n": 2,
+    "media": -1.2554
+   }
+  },
+  "openrouter/anthropic/claude-opus-5.5": {
+   "binary:log": {
+    "n": 11,
+    "media": -0.6202
+   },
+   "binary:brier": {
+    "n": 11,
+    "media": 0.2232
+   },
+   "numeric:dentro_80": {
+    "n": 4,
+    "media": 1.0
+   },
+   "discrete:dentro_80": {
+    "n": 4,
+    "media": 1.0
+   },
+   "multiple_choice:log": {
+    "n": 1,
+    "media": -1.1087
+   }
+  }
+ },
+ "calibracion": {
+  "0-10 %": {
+   "n": 2,
+   "dijimos": 7.0,
+   "paso": 0.0
+  },
+  "10-20 %": {
+   "n": 1,
+   "dijimos": 11.0,
+   "paso": 0.0
+  },
+  "20-30 %": {
+   "n": 2,
+   "dijimos": 24.0,
+   "paso": 50.0
+  },
+  "30-40 %": {
+   "n": 1,
+   "dijimos": 32.5,
+   "paso": 100.0
+  },
+  "40-50 %": {
+   "n": 1,
+   "dijimos": 40.0,
+   "paso": 100.0
+  },
+  "60-70 %": {
+   "n": 3,
+   "dijimos": 62.0,
+   "paso": 66.7
+  },
+  "80-90 %": {
+   "n": 1,
+   "dijimos": 85.0,
+   "paso": 100.0
+  }
+ },
+ "comparador": [
+  {
+   "variante": "media",
+   "preguntas": 12,
+   "cambio_medio": -0.4,
+   "margen_95": 2.61,
+   "mitad_antigua": 1.68,
+   "mitad_reciente": -1.44,
+   "tipo": "decidida de antemano",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "curva suave (PCHIP)",
+   "preguntas": 4,
+   "cambio_medio": -3.23,
+   "margen_95": 9.61,
+   "mitad_antigua": -3.23,
+   "mitad_reciente": null,
+   "tipo": "decidida de antemano",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "sin anthropic",
+   "preguntas": 12,
+   "cambio_medio": 0.53,
+   "margen_95": 3.81,
+   "mitad_antigua": -0.12,
+   "mitad_reciente": 0.86,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "solo openai",
+   "preguntas": 12,
+   "cambio_medio": 0.53,
+   "margen_95": 3.81,
+   "mitad_antigua": -0.12,
+   "mitad_reciente": 0.86,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "límites 1%-99%",
+   "preguntas": 11,
+   "cambio_medio": 0.0,
+   "margen_95": 0.0,
+   "mitad_antigua": 0.0,
+   "mitad_reciente": 0.0,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "mediana (la actual)",
+   "preguntas": 12,
+   "cambio_medio": 0.0,
+   "margen_95": 0.0,
+   "mitad_antigua": 0.0,
+   "mitad_reciente": 0.0,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "media geométrica de odds",
+   "preguntas": 11,
+   "cambio_medio": -0.78,
+   "margen_95": 2.71,
+   "mitad_antigua": 1.3,
+   "mitad_reciente": -1.97,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "sin openai",
+   "preguntas": 12,
+   "cambio_medio": -3.05,
+   "margen_95": 11.86,
+   "mitad_antigua": 5.94,
+   "mitad_reciente": -7.54,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  },
+  {
+   "variante": "solo anthropic",
+   "preguntas": 12,
+   "cambio_medio": -3.05,
+   "margen_95": 11.86,
+   "mitad_antigua": 5.94,
+   "mitad_reciente": -7.54,
+   "tipo": "exploratoria",
+   "cumple_la_regla": false
+  }
+ ],
+ "peores": [
+  {
+   "pregunta": "Will UODO publish an announcement specifically about the FELG Dent breach by October 16, 2026?",
+   "url": "https://www.metaculus.com/questions/45914",
+   "tipo": "binary",
+   "torneo": "minibench",
+   "resolucion": "no",
+   "spot_peer": -29.33502340498361,
+   "agregado": {
+    "log": -0.9675840262617056,
+    "brier": 0.3844
+   }
+  },
+  {
+   "pregunta": "What will the series score of the 2026 ALCS be after Game 4 (October 16)?",
+   "url": "https://www.metaculus.com/questions/45942",
+   "tipo": "multiple_choice",
+   "torneo": "minibench",
+   "resolucion": "Tied 2-2",
+   "spot_peer": -18.314501789274573,
+   "agregado": {
+    "log": -1.2378743560016174
+   }
+  },
+  {
+   "pregunta": "Will the DFB formally and institutionally come out against Infantino's FIFA presidency before October 16, 2026?",
+   "url": "https://www.metaculus.com/questions/45910",
+   "tipo": "binary",
+   "torneo": "minibench",
+   "resolucion": "yes",
+   "spot_peer": -15.36267405116467,
+   "agregado": {
+    "log": -1.1239300966523995,
+    "brier": 0.45562500000000006
+   }
+  },
+  {
+   "pregunta": "How many confirmed human West Nile virus cases will RIVM report in the Netherlands for 2026 as of its mid-October update?",
+   "url": "https://www.metaculus.com/questions/45920",
+   "tipo": "discrete",
+   "torneo": "minibench",
+   "resolucion": "64.0",
+   "spot_peer": -11.483244580284762,
+   "agregado": {
+    "dentro_80": null
+   }
+  },
+  {
+   "pregunta": "What will Rosstat report as Russia's average retail price of AI-95 gasoline in the weekly fuel-price release covering data through mid-October 2026?",
+   "url": "https://www.metaculus.com/questions/45913",
+   "tipo": "discrete",
+   "torneo": "minibench",
+   "resolucion": "80.92",
+   "spot_peer": -10.264770113570423,
+   "agregado": {
+    "dentro_80": null
+   }
+  }
+ ],
  "gasto": {
   "dias": 7.0,
-  "preguntas": 55,
-  "libreria_total": 9.34,
-  "libreria_por_pregunta": 0.17,
+  "preguntas": 38,
+  "libreria_total": 0.0,
+  "libreria_por_pregunta": 0.0,
   "por_parte": {
    "busqueda": 0.0,
+   "busqueda respaldo": 0.0,
    "clasificador": 0.0,
-   "lector": 0.073,
+   "lector": 0.0,
    "pronostico openrouter/anthropic/claude-opus-5.5": 0.0,
    "pronostico openrouter/google/gemini-3.8-flash": 0.0,
    "pronostico openrouter/openai/gpt-6-sol": 0.0
   },
   "por_parte_por_pregunta": {
    "busqueda": 0.0,
+   "busqueda respaldo": 0.0,
    "clasificador": 0.0,
-   "lector": 0.0013,
+   "lector": 0.0,
    "pronostico openrouter/anthropic/claude-opus-5.5": 0.0,
    "pronostico openrouter/google/gemini-3.8-flash": 0.0,
    "pronostico openrouter/openai/gpt-6-sol": 0.0
   },
   "clave": {
-   "consultas": 50,
-   "gastado_total": 21.96,
+   "consultas": 31,
+   "gastado_total": 31.07,
    "presupuesto": 100.0,
-   "linea_de_ritmo": 35.45,
-   "sobre_la_linea": -13.49,
-   "gastado_en_el_periodo": 11.08,
-   "semanas_que_quedan": 6.8,
-   "sin_medir_por_la_libreria": 1.74
+   "linea_de_ritmo": 41.09,
+   "sobre_la_linea": -10.02,
+   "gastado_en_el_periodo": 8.69,
+   "semanas_que_quedan": 7.6,
+   "sin_medir_por_la_libreria": 8.69
   }
  },
  "perdidas": {
   "dias": 7.0,
   "consultado": true,
-  "cerradas": 64,
+  "cerradas": 43,
   "cerradas_antes_de_encender": 0,
-  "con_pronostico": 63,
+  "con_pronostico": 37,
   "perdidas_por_el_tope": [],
   "perdidas_sin_explicar": [
    {
-    "url": "https://www.metaculus.com/questions/45956",
-    "cierre_utc": "11/10 06:00",
+    "url": "https://www.metaculus.com/questions/46128",
+    "cierre_utc": "19/10 05:21",
+    "torneo": "minibench"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46127",
+    "cierre_utc": "19/10 04:52",
+    "torneo": "minibench"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46056",
+    "cierre_utc": "16/10 09:00",
+    "torneo": "33121"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46005",
+    "cierre_utc": "12/10 16:00",
+    "torneo": "33121"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/45964",
+    "cierre_utc": "13/10 21:00",
+    "torneo": "33121"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/45960",
+    "cierre_utc": "13/10 00:00",
     "torneo": "33121"
    }
   ],
@@ -62,66 +319,60 @@
   "usd_por_punto": 5.0,
   "semanas": {
    "esta": {
-    "desde": "2026-10-05T09:00+00:00",
-    "partes": {
-     "clasificador_opus": 1.93,
-     "investigacion": 44.6
-    },
-    "total_usd": 46.53,
-    "puntos_del_tope_semanal": 9.3
+    "desde": "2026-10-19T09:00+00:00",
+    "partes": {},
+    "total_usd": 0,
+    "puntos_del_tope_semanal": 0.0
    },
    "anterior": {
-    "desde": "2026-09-28T09:00+00:00",
-    "partes": {
-     "clasificador_opus": 0.58,
-     "investigacion": 26.64
-    },
-    "total_usd": 27.22,
-    "puntos_del_tope_semanal": 5.4
+    "desde": "2026-10-12T09:00+00:00",
+    "partes": {},
+    "total_usd": 0,
+    "puntos_del_tope_semanal": 0.0
    }
   }
  },
  "clasificador_gemini": {
   "dificil": {
-   "preguntas": 3,
-   "discrepancia_media": 0.076,
-   "resueltas": 0,
-   "puntos_media": null,
-   "puntos_margen_95": null
+   "preguntas": 10,
+   "discrepancia_media": 0.094,
+   "resueltas": 2,
+   "puntos_media": 3.84,
+   "puntos_margen_95": 37.63
   },
   "sin_clasificar": {
-   "preguntas": 77,
-   "discrepancia_media": 0.104,
-   "resueltas": 0,
-   "puntos_media": null,
-   "puntos_margen_95": null
+   "preguntas": 95,
+   "discrepancia_media": 0.099,
+   "resueltas": 18,
+   "puntos_media": 1.62,
+   "puntos_margen_95": 6.33
   }
  },
  "clasificador_opus": {
   "facil": {
    "preguntas": 1,
    "discrepancia_media": 0.32,
-   "resueltas": 0,
-   "puntos_media": null,
+   "resueltas": 1,
+   "puntos_media": 11.32,
    "puntos_margen_95": null
   },
   "normal": {
    "preguntas": 34,
    "discrepancia_media": 0.1,
-   "resueltas": 0,
-   "puntos_media": null,
-   "puntos_margen_95": null
+   "resueltas": 12,
+   "puntos_media": 3.9,
+   "puntos_margen_95": 8.36
   },
   "dificil": {
    "preguntas": 32,
    "discrepancia_media": 0.08,
-   "resueltas": 0,
-   "puntos_media": null,
-   "puntos_margen_95": null
+   "resueltas": 7,
+   "puntos_media": -3.05,
+   "puntos_margen_95": 10.57
   },
   "sin_clasificar": {
-   "preguntas": 13,
-   "discrepancia_media": 0.15,
+   "preguntas": 38,
+   "discrepancia_media": 0.107,
    "resueltas": 0,
    "puntos_media": null,
    "puntos_margen_95": null
