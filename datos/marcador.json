@@ -1,26 +1,26 @@
 {
- "pronosticos_enviados": 105,
- "resueltas": 22,
- "spot_peer_suma": 36.78,
- "spot_peer_media": 1.84,
- "spot_peer_n": 20,
+ "pronosticos_enviados": 152,
+ "resueltas": 35,
+ "spot_peer_suma": 110.3,
+ "spot_peer_media": 3.34,
+ "spot_peer_n": 33,
  "por_modelo": {
   "openrouter/openai/gpt-6-sol": {
    "binary:log": {
-    "n": 21,
-    "media": -0.5501
+    "n": 41,
+    "media": -0.4519
    },
    "binary:brier": {
-    "n": 21,
-    "media": 0.1923
+    "n": 41,
+    "media": 0.1446
    },
    "numeric:dentro_80": {
-    "n": 8,
+    "n": 10,
     "media": 1.0
    },
    "discrete:dentro_80": {
-    "n": 8,
-    "media": 1.0
+    "n": 12,
+    "media": 0.9167
    },
    "multiple_choice:log": {
     "n": 2,
@@ -29,20 +29,20 @@
   },
   "openrouter/anthropic/claude-opus-5.5": {
    "binary:log": {
-    "n": 11,
-    "media": -0.6202
+    "n": 21,
+    "media": -0.4975
    },
    "binary:brier": {
-    "n": 11,
-    "media": 0.2232
+    "n": 21,
+    "media": 0.1668
    },
    "numeric:dentro_80": {
-    "n": 4,
+    "n": 5,
     "media": 1.0
    },
    "discrete:dentro_80": {
-    "n": 4,
-    "media": 1.0
+    "n": 6,
+    "media": 0.8333
    },
    "multiple_choice:log": {
     "n": 1,
@@ -57,14 +57,14 @@
    "paso": 0.0
   },
   "10-20 %": {
-   "n": 1,
-   "dijimos": 11.0,
+   "n": 3,
+   "dijimos": 14.3,
    "paso": 0.0
   },
   "20-30 %": {
-   "n": 2,
-   "dijimos": 24.0,
-   "paso": 50.0
+   "n": 6,
+   "dijimos": 22.8,
+   "paso": 16.7
   },
   "30-40 %": {
    "n": 1,
@@ -72,14 +72,24 @@
    "paso": 100.0
   },
   "40-50 %": {
+   "n": 3,
+   "dijimos": 43.7,
+   "paso": 33.3
+  },
+  "50-60 %": {
    "n": 1,
-   "dijimos": 40.0,
+   "dijimos": 56.0,
    "paso": 100.0
   },
   "60-70 %": {
    "n": 3,
    "dijimos": 62.0,
    "paso": 66.7
+  },
+  "70-80 %": {
+   "n": 1,
+   "dijimos": 75.0,
+   "paso": 100.0
   },
   "80-90 %": {
    "n": 1,
@@ -89,48 +99,48 @@
  },
  "comparador": [
   {
-   "variante": "media",
-   "preguntas": 12,
-   "cambio_medio": -0.4,
-   "margen_95": 2.61,
-   "mitad_antigua": 1.68,
-   "mitad_reciente": -1.44,
-   "tipo": "decidida de antemano",
-   "cumple_la_regla": false
-  },
-  {
    "variante": "curva suave (PCHIP)",
-   "preguntas": 4,
-   "cambio_medio": -3.23,
-   "margen_95": 9.61,
-   "mitad_antigua": -3.23,
+   "preguntas": 5,
+   "cambio_medio": 1.97,
+   "margen_95": 12.63,
+   "mitad_antigua": 1.97,
    "mitad_reciente": null,
    "tipo": "decidida de antemano",
    "cumple_la_regla": false
   },
   {
+   "variante": "media",
+   "preguntas": 22,
+   "cambio_medio": -0.53,
+   "margen_95": 1.6,
+   "mitad_antigua": -0.95,
+   "mitad_reciente": -0.29,
+   "tipo": "decidida de antemano",
+   "cumple_la_regla": false
+  },
+  {
    "variante": "sin anthropic",
-   "preguntas": 12,
-   "cambio_medio": 0.53,
-   "margen_95": 3.81,
-   "mitad_antigua": -0.12,
-   "mitad_reciente": 0.86,
+   "preguntas": 22,
+   "cambio_medio": 0.1,
+   "margen_95": 2.16,
+   "mitad_antigua": -0.34,
+   "mitad_reciente": 0.36,
    "tipo": "exploratoria",
    "cumple_la_regla": false
   },
   {
    "variante": "solo openai",
-   "preguntas": 12,
-   "cambio_medio": 0.53,
-   "margen_95": 3.81,
-   "mitad_antigua": -0.12,
-   "mitad_reciente": 0.86,
+   "preguntas": 22,
+   "cambio_medio": 0.1,
+   "margen_95": 2.16,
+   "mitad_antigua": -0.34,
+   "mitad_reciente": 0.36,
    "tipo": "exploratoria",
    "cumple_la_regla": false
   },
   {
    "variante": "límites 1%-99%",
-   "preguntas": 11,
+   "preguntas": 21,
    "cambio_medio": 0.0,
    "margen_95": 0.0,
    "mitad_antigua": 0.0,
@@ -140,7 +150,7 @@
   },
   {
    "variante": "mediana (la actual)",
-   "preguntas": 12,
+   "preguntas": 22,
    "cambio_medio": 0.0,
    "margen_95": 0.0,
    "mitad_antigua": 0.0,
@@ -150,31 +160,31 @@
   },
   {
    "variante": "media geométrica de odds",
-   "preguntas": 11,
-   "cambio_medio": -0.78,
-   "margen_95": 2.71,
-   "mitad_antigua": 1.3,
-   "mitad_reciente": -1.97,
+   "preguntas": 21,
+   "cambio_medio": -0.6,
+   "margen_95": 1.61,
+   "mitad_antigua": -1.03,
+   "mitad_reciente": -0.33,
    "tipo": "exploratoria",
    "cumple_la_regla": false
   },
   {
    "variante": "sin openai",
-   "preguntas": 12,
-   "cambio_medio": -3.05,
-   "margen_95": 11.86,
-   "mitad_antigua": 5.94,
-   "mitad_reciente": -7.54,
+   "preguntas": 22,
+   "cambio_medio": -2.5,
+   "margen_95": 7.17,
+   "mitad_antigua": -2.47,
+   "mitad_reciente": -2.51,
    "tipo": "exploratoria",
    "cumple_la_regla": false
   },
   {
    "variante": "solo anthropic",
-   "preguntas": 12,
-   "cambio_medio": -3.05,
-   "margen_95": 11.86,
-   "mitad_antigua": 5.94,
-   "mitad_reciente": -7.54,
+   "preguntas": 22,
+   "cambio_medio": -2.5,
+   "margen_95": 7.17,
+   "mitad_antigua": -2.47,
+   "mitad_reciente": -2.51,
    "tipo": "exploratoria",
    "cumple_la_regla": false
   }
@@ -204,6 +214,17 @@
    }
   },
   {
+   "pregunta": "How many European countries will ECDC report with locally-acquired human West Nile virus cases in the 2026 season as of its mid-October weekly update?",
+   "url": "https://www.metaculus.com/questions/45892",
+   "tipo": "discrete",
+   "torneo": "minibench",
+   "resolucion": "19.0",
+   "spot_peer": -18.0649987220023,
+   "agregado": {
+    "dentro_80": null
+   }
+  },
+  {
    "pregunta": "Will the DFB formally and institutionally come out against Infantino's FIFA presidency before October 16, 2026?",
    "url": "https://www.metaculus.com/questions/45910",
    "tipo": "binary",
@@ -225,27 +246,15 @@
    "agregado": {
     "dentro_80": null
    }
-  },
-  {
-   "pregunta": "What will Rosstat report as Russia's average retail price of AI-95 gasoline in the weekly fuel-price release covering data through mid-October 2026?",
-   "url": "https://www.metaculus.com/questions/45913",
-   "tipo": "discrete",
-   "torneo": "minibench",
-   "resolucion": "80.92",
-   "spot_peer": -10.264770113570423,
-   "agregado": {
-    "dentro_80": null
-   }
   }
  ],
  "gasto": {
   "dias": 7.0,
-  "preguntas": 38,
+  "preguntas": 60,
   "libreria_total": 0.0,
   "libreria_por_pregunta": 0.0,
   "por_parte": {
    "busqueda": 0.0,
-   "busqueda respaldo": 0.0,
    "clasificador": 0.0,
    "lector": 0.0,
    "pronostico openrouter/anthropic/claude-opus-5.5": 0.0,
@@ -254,7 +263,6 @@
   },
   "por_parte_por_pregunta": {
    "busqueda": 0.0,
-   "busqueda respaldo": 0.0,
    "clasificador": 0.0,
    "lector": 0.0,
    "pronostico openrouter/anthropic/claude-opus-5.5": 0.0,
@@ -262,56 +270,476 @@
    "pronostico openrouter/openai/gpt-6-sol": 0.0
   },
   "clave": {
-   "consultas": 31,
-   "gastado_total": 31.07,
+   "consultas": 34,
+   "gastado_total": 39.11,
    "presupuesto": 100.0,
-   "linea_de_ritmo": 41.09,
-   "sobre_la_linea": -10.02,
-   "gastado_en_el_periodo": 8.69,
-   "semanas_que_quedan": 7.6,
-   "sin_medir_por_la_libreria": 8.69
+   "linea_de_ritmo": 43.39,
+   "sobre_la_linea": -4.28,
+   "gastado_en_el_periodo": 13.84,
+   "semanas_que_quedan": 4.2,
+   "sin_medir_por_la_libreria": 13.84
   }
  },
  "perdidas": {
   "dias": 7.0,
   "consultado": true,
-  "cerradas": 43,
+  "cerradas": 81,
   "cerradas_antes_de_encender": 0,
-  "con_pronostico": 37,
+  "con_pronostico": 59,
   "perdidas_por_el_tope": [],
   "perdidas_sin_explicar": [
    {
+    "url": "https://www.metaculus.com/questions/46178",
+    "cierre_utc": "21/10 04:12",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-21T04:12:58+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46172",
+    "cierre_utc": "20/10 18:28",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T18:28:31+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46168",
+    "cierre_utc": "20/10 09:30",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T09:30:33+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46167",
+    "cierre_utc": "20/10 09:09",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T09:09:57+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46166",
+    "cierre_utc": "20/10 09:07",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T09:07:50+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46162",
+    "cierre_utc": "20/10 05:15",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T05:15:02+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46161",
+    "cierre_utc": "20/10 05:07",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T05:07:37+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46160",
+    "cierre_utc": "20/10 04:06",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T04:06:44+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46142",
+    "cierre_utc": "19/10 15:33",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T15:33:05+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46141",
+    "cierre_utc": "19/10 15:19",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T15:19:47+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46140",
+    "cierre_utc": "19/10 15:10",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T15:10:44+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46139",
+    "cierre_utc": "19/10 14:46",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:46:16+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46138",
+    "cierre_utc": "19/10 14:44",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:44:12+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46137",
+    "cierre_utc": "19/10 14:37",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:37:12+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46136",
+    "cierre_utc": "19/10 14:15",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:15:33+00:00"
+   },
+   {
     "url": "https://www.metaculus.com/questions/46128",
     "cierre_utc": "19/10 05:21",
-    "torneo": "minibench"
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T05:21:37+00:00"
    },
    {
     "url": "https://www.metaculus.com/questions/46127",
     "cierre_utc": "19/10 04:52",
-    "torneo": "minibench"
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T04:52:09+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46193",
+    "cierre_utc": "22/10 12:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-22T12:00:00+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46191",
+    "cierre_utc": "21/10 15:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-21T15:00:00+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46069",
+    "cierre_utc": "20/10 15:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-20T15:00:00+00:00"
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46066",
+    "cierre_utc": "19/10 15:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-19T15:00:00+00:00"
    },
    {
     "url": "https://www.metaculus.com/questions/46056",
     "cierre_utc": "16/10 09:00",
-    "torneo": "33121"
-   },
-   {
-    "url": "https://www.metaculus.com/questions/46005",
-    "cierre_utc": "12/10 16:00",
-    "torneo": "33121"
-   },
-   {
-    "url": "https://www.metaculus.com/questions/45964",
-    "cierre_utc": "13/10 21:00",
-    "torneo": "33121"
-   },
-   {
-    "url": "https://www.metaculus.com/questions/45960",
-    "cierre_utc": "13/10 00:00",
-    "torneo": "33121"
+    "torneo": "33121",
+    "cierre_iso": "2026-10-16T09:00:00+00:00"
    }
   ],
   "hubo_momentos_sin_dinero": false
+ },
+ "lanzamientos": {
+  "bot": [
+   {
+    "dia": "2026-10-15",
+    "reloj": 6,
+    "a_mano": 6,
+    "bien": 12,
+    "hueco_max_h": 4.3
+   },
+   {
+    "dia": "2026-10-16",
+    "reloj": 7,
+    "a_mano": 1,
+    "bien": 8,
+    "hueco_max_h": 4.6
+   },
+   {
+    "dia": "2026-10-17",
+    "reloj": 8,
+    "a_mano": 8,
+    "bien": 16,
+    "hueco_max_h": 3.5
+   },
+   {
+    "dia": "2026-10-18",
+    "reloj": 7,
+    "a_mano": 1,
+    "bien": 8,
+    "hueco_max_h": 5.1
+   },
+   {
+    "dia": "2026-10-19",
+    "reloj": 5,
+    "a_mano": 4,
+    "bien": 9,
+    "hueco_max_h": 4.7
+   },
+   {
+    "dia": "2026-10-20",
+    "reloj": 6,
+    "a_mano": 1,
+    "bien": 7,
+    "hueco_max_h": 5.0
+   },
+   {
+    "dia": "2026-10-21",
+    "reloj": 6,
+    "a_mano": 1,
+    "bien": 7,
+    "hueco_max_h": 5.7
+   },
+   {
+    "dia": "2026-10-22",
+    "reloj": 3,
+    "a_mano": 1,
+    "bien": 4,
+    "hueco_max_h": 5.0
+   }
+  ],
+  "vigilancia": [
+   {
+    "dia": "2026-10-15",
+    "reloj": 6,
+    "a_mano": 0,
+    "bien": 6,
+    "hueco_max_h": 5.0
+   },
+   {
+    "dia": "2026-10-16",
+    "reloj": 6,
+    "a_mano": 0,
+    "bien": 6,
+    "hueco_max_h": 5.0
+   },
+   {
+    "dia": "2026-10-17",
+    "reloj": 8,
+    "a_mano": 0,
+    "bien": 8,
+    "hueco_max_h": 4.5
+   },
+   {
+    "dia": "2026-10-18",
+    "reloj": 7,
+    "a_mano": 0,
+    "bien": 7,
+    "hueco_max_h": 5.1
+   },
+   {
+    "dia": "2026-10-19",
+    "reloj": 4,
+    "a_mano": 0,
+    "bien": 4,
+    "hueco_max_h": 7.8
+   },
+   {
+    "dia": "2026-10-20",
+    "reloj": 6,
+    "a_mano": 0,
+    "bien": 6,
+    "hueco_max_h": 5.1
+   },
+   {
+    "dia": "2026-10-21",
+    "reloj": 6,
+    "a_mano": 0,
+    "bien": 6,
+    "hueco_max_h": 5.8
+   },
+   {
+    "dia": "2026-10-22",
+    "reloj": 2,
+    "a_mano": 0,
+    "bien": 2,
+    "hueco_max_h": 5.6
+   }
+  ],
+  "perdidas": [
+   {
+    "url": "https://www.metaculus.com/questions/46178",
+    "cierre_utc": "21/10 04:12",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-21T04:12:58+00:00",
+    "antes": "21/10 00:58",
+    "despues": "21/10 05:54",
+    "hueco_h": 4.9
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46172",
+    "cierre_utc": "20/10 18:28",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T18:28:31+00:00",
+    "antes": "20/10 15:12",
+    "despues": "20/10 19:23",
+    "hueco_h": 4.2
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46168",
+    "cierre_utc": "20/10 09:30",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T09:30:33+00:00",
+    "antes": "20/10 05:19",
+    "despues": "20/10 10:11",
+    "hueco_h": 4.9
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46167",
+    "cierre_utc": "20/10 09:09",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T09:09:57+00:00",
+    "antes": "20/10 05:19",
+    "despues": "20/10 10:11",
+    "hueco_h": 4.9
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46166",
+    "cierre_utc": "20/10 09:07",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T09:07:50+00:00",
+    "antes": "20/10 05:19",
+    "despues": "20/10 10:11",
+    "hueco_h": 4.9
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46162",
+    "cierre_utc": "20/10 05:15",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T05:15:02+00:00",
+    "antes": "20/10 00:40",
+    "despues": "20/10 05:19",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46161",
+    "cierre_utc": "20/10 05:07",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T05:07:37+00:00",
+    "antes": "20/10 00:40",
+    "despues": "20/10 05:19",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46160",
+    "cierre_utc": "20/10 04:06",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-20T04:06:44+00:00",
+    "antes": "20/10 00:40",
+    "despues": "20/10 05:19",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46142",
+    "cierre_utc": "19/10 15:33",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T15:33:05+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46141",
+    "cierre_utc": "19/10 15:19",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T15:19:47+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46140",
+    "cierre_utc": "19/10 15:10",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T15:10:44+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46139",
+    "cierre_utc": "19/10 14:46",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:46:16+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46138",
+    "cierre_utc": "19/10 14:44",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:44:12+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46137",
+    "cierre_utc": "19/10 14:37",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:37:12+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46136",
+    "cierre_utc": "19/10 14:15",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T14:15:33+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46128",
+    "cierre_utc": "19/10 05:21",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T05:21:37+00:00",
+    "antes": "19/10 05:20",
+    "despues": "19/10 07:47",
+    "hueco_h": 2.5
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46127",
+    "cierre_utc": "19/10 04:52",
+    "torneo": "minibench",
+    "cierre_iso": "2026-10-19T04:52:09+00:00",
+    "antes": "19/10 01:45",
+    "despues": "19/10 05:20",
+    "hueco_h": 3.6
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46193",
+    "cierre_utc": "22/10 12:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-22T12:00:00+00:00",
+    "antes": "22/10 07:36",
+    "despues": "22/10 12:27",
+    "hueco_h": 4.9
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46191",
+    "cierre_utc": "21/10 15:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-21T15:00:00+00:00",
+    "antes": "21/10 11:38",
+    "despues": "21/10 16:06",
+    "hueco_h": 4.5
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46069",
+    "cierre_utc": "20/10 15:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-20T15:00:00+00:00",
+    "antes": "20/10 10:11",
+    "despues": "20/10 15:12",
+    "hueco_h": 5.0
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46066",
+    "cierre_utc": "19/10 15:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-19T15:00:00+00:00",
+    "antes": "19/10 10:57",
+    "despues": "19/10 15:37",
+    "hueco_h": 4.7
+   },
+   {
+    "url": "https://www.metaculus.com/questions/46056",
+    "cierre_utc": "16/10 09:00",
+    "torneo": "33121",
+    "cierre_iso": "2026-10-16T09:00:00+00:00",
+    "antes": "16/10 05:01",
+    "despues": "16/10 09:39",
+    "hueco_h": 4.6
+   }
+  ]
  },
  "plan_claude": {
   "tope_usd": 70.0,
@@ -333,19 +761,26 @@
   }
  },
  "clasificador_gemini": {
+  "normal": {
+   "preguntas": 2,
+   "discrepancia_media": 0.135,
+   "resueltas": 0,
+   "puntos_media": null,
+   "puntos_margen_95": null
+  },
   "dificil": {
-   "preguntas": 10,
-   "discrepancia_media": 0.094,
+   "preguntas": 20,
+   "discrepancia_media": 0.077,
    "resueltas": 2,
    "puntos_media": 3.84,
    "puntos_margen_95": 37.63
   },
   "sin_clasificar": {
-   "preguntas": 95,
-   "discrepancia_media": 0.099,
-   "resueltas": 18,
-   "puntos_media": 1.62,
-   "puntos_margen_95": 6.33
+   "preguntas": 130,
+   "discrepancia_media": 0.092,
+   "resueltas": 31,
+   "puntos_media": 3.31,
+   "puntos_margen_95": 4.78
   }
  },
  "clasificador_opus": {
@@ -359,20 +794,20 @@
   "normal": {
    "preguntas": 34,
    "discrepancia_media": 0.1,
-   "resueltas": 12,
-   "puntos_media": 3.9,
-   "puntos_margen_95": 8.36
+   "resueltas": 18,
+   "puntos_media": 3.55,
+   "puntos_margen_95": 6.79
   },
   "dificil": {
    "preguntas": 32,
    "discrepancia_media": 0.08,
-   "resueltas": 7,
-   "puntos_media": -3.05,
-   "puntos_margen_95": 10.57
+   "resueltas": 14,
+   "puntos_media": 2.5,
+   "puntos_margen_95": 7.29
   },
   "sin_clasificar": {
-   "preguntas": 38,
-   "discrepancia_media": 0.107,
+   "preguntas": 85,
+   "discrepancia_media": 0.089,
    "resueltas": 0,
    "puntos_media": null,
    "puntos_margen_95": null

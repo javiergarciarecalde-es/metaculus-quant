@@ -278,5 +278,278 @@
   "spot_peer": null,
   "peer": null,
   "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45894', 46076)": {
+  "estado": "resolved",
+  "resolucion": "yes",
+  "spot_peer": 12.384257013273253,
+  "peer": 10.844394862462146,
+  "baseline": 49.65020960830641
+ },
+ "('https://www.metaculus.com/questions/45892', 46074)": {
+  "estado": "resolved",
+  "resolucion": "19.0",
+  "spot_peer": -18.0649987220023,
+  "peer": -13.92189043561459,
+  "baseline": -78.45738137893962
+ },
+ "('https://www.metaculus.com/questions/45895', 46077)": {
+  "estado": "resolved",
+  "resolucion": "250.0",
+  "spot_peer": -5.4651535210483875,
+  "peer": -5.012698873233685,
+  "baseline": 81.98792117291596
+ },
+ "('https://www.metaculus.com/questions/45896', 46078)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": 1.00787189079023,
+  "peer": 0.821853536623971,
+  "baseline": 70.21653638614501
+ },
+ "('https://www.metaculus.com/questions/45924', 46106)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": 4.158911421423478,
+  "peer": 3.610711384727342,
+  "baseline": 58.848058656895866
+ },
+ "('https://www.metaculus.com/questions/45925', 46107)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": -2.3288536773972677,
+  "peer": -1.9517964037574476,
+  "baseline": 57.34007078100745
+ },
+ "('https://www.metaculus.com/questions/45875', 46056)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45926', 46108)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": -7.29481687228628,
+  "peer": -6.838241757725031,
+  "baseline": 2.7560240382361108
+ },
+ "('https://www.metaculus.com/questions/45927', 46109)": {
+  "estado": "resolved",
+  "resolucion": "yes",
+  "spot_peer": 19.402155611015786,
+  "peer": 17.967409240853577,
+  "baseline": 14.612025964337535
+ },
+ "('https://www.metaculus.com/questions/45928', 46110)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": 8.793760028026592,
+  "peer": 8.14735664297611,
+  "baseline": 61.13740850625091
+ },
+ "('https://www.metaculus.com/questions/45929', 46111)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": -1.5719219022496707,
+  "peer": -1.0827536933197028,
+  "baseline": 15.637137442551978
+ },
+ "('https://www.metaculus.com/questions/45930', 46112)": {
+  "estado": "resolved",
+  "resolucion": "15.0",
+  "spot_peer": 27.532574500054377,
+  "peer": 23.4368275708921,
+  "baseline": 65.26722491634739
+ },
+ "('https://www.metaculus.com/questions/45931', 46113)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": 27.96953100050915,
+  "peer": 28.465260030088498,
+  "baseline": 71.45327363178215
+ },
+ "('https://www.metaculus.com/questions/45932', 46114)": {
+  "estado": "resolved",
+  "resolucion": "no",
+  "spot_peer": 6.994920430505293,
+  "peer": 6.911519150793953,
+  "baseline": 58.959170720532406
+ },
+ "('https://www.metaculus.com/questions/46004', 46188)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46003', 46187)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45884', 46066)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45957', 46139)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/45958', 46140)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46061', 46299)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46045', 46284)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46062', 46300)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46124', 46353)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46125', 46354)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46123', 46352)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46126', 46355)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46130', 46359)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46131', 46360)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46129', 46358)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46150', 46379)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46151', 46380)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46153', 46382)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46067', 46305)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46159', 46388)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46158', 46387)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46157', 46386)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46068', 46306)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46164', 46393)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
+ },
+ "('https://www.metaculus.com/questions/46163', 46392)": {
+  "estado": "closed",
+  "resolucion": null,
+  "spot_peer": null,
+  "peer": null,
+  "baseline": null
  }
 }
