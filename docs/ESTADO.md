@@ -5,6 +5,10 @@
 **Fase:** fase 0, compitiendo. El bot está **encendido**; debería mirar cada 20 minutos la MiniBench
 y la temporada de otoño, pero **desde el 10/10 GitHub solo lo lanza cada 3-5 horas** (abajo).
 Pronostica con los 3 modelos de OpenRouter y la búsqueda de pago (créditos de Metaculus).
+**Plan de Claude: 0 desde el 07/10** (23:05 de Madrid, commit `d66176f`): ninguna pieza del bot
+usa tu suscripción de Claude.
+**Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
+automática que hace git después de guardar).
 
 ## Quién está tocando qué
 | Sesión | Qué | Estado |
@@ -16,14 +20,12 @@ Pronostica con los 3 modelos de OpenRouter y la búsqueda de pago (créditos de 
   tandas cada 3-5 h, el bot y la vigilancia a la vez. No es un fallo nuestro: le pasa a otros
   proyectos de la cuenta. Cambiar los minutos del reloj no sirve (detalle en HALLAZGOS 22/10).
 - **Qué cuesta:** una pregunta que abre y cierra entre dos tandas se pierde (0 puntos). Perdidas:
-  1 de 64 en la semana al 12/10 (la 45956) y 6 de 43 en la semana al 19/10. Todas por eso.
+  1 de 64 en la semana al 12/10 (la 45956) y **22 de 81 del 15 al 22/10** (17 de la MiniBench).
+  Todas cerraron en un hueco de 2,5-5 h sin lanzar el bot.
 - **Hecho:** el marcador de los lunes enseña ahora cuántas veces se lanzó el bot cada día y, por
-  cada pregunta perdida, cuántas horas estuvo sin lanzarse alrededor de su cierre.
+  cada pregunta perdida, cuántas horas estuvo sin lanzarse alrededor de su cierre (comprobado en
+  GitHub el 22/10 con un marcador lanzado a mano).
 - **Falta tu decisión** (punto 1 de «Decisiones pendientes»).
-**Plan de Claude: 0 desde el 07/10** (23:05 de Madrid, commit `d66176f`): ninguna pieza del bot
-usa tu suscripción de Claude.
-**Rama:** todo está en `main` en GitHub. Cada commit se sube solo (gancho `post-commit` = una orden
-automática que hace git después de guardar).
 
 ## Dónde estamos
 | Pieza | Estado |
@@ -64,8 +66,10 @@ ninguna pieza del bot», no instala Claude Code y no recibe la clave de la suscr
 - **Lo que significa:** cada ronda de MiniBench (cada 2 semanas) cuesta ~10-14 $, casi toda la
   subida de la línea. Desde ya, el freno dejará **casi todas las preguntas de la temporada sin
   pronóstico** hasta el 06/01 (0 puntos cada una; la puerta de la fase 0 suma la temporada).
-- Que GitHub lance más el bot apenas cambia esto: +≤0,1 $/día de MiniBench; la temporada la frena
-  la línea igual.
+- **Si GitHub lanzara bien el bot** (decisión 1): se harían las ~60 preguntas de cada ronda de
+  MiniBench (hoy ~43) → ~1,0 $/día solo en MiniBench, más que la línea: el dinero se acabaría hacia
+  el **19/12** (3 semanas antes del 06/01). Sin arreglarlo, llega al 06/01 perdiendo ~17 preguntas
+  de MiniBench por ronda. En los dos casos la temporada casi no recibe dinero.
 
 ## Qué va solo (sin que tú hagas nada)
 | Qué | Cuándo | Dónde |
@@ -87,13 +91,14 @@ conteste AskNews y, al final, la encuesta y el cobro.
 ## Decisiones pendientes tuyas
 1. **El reloj de GitHub** (recomendación primero):
    - **(C) Recomendada: un servicio de reloj gratuito en internet** que cada 20 min le pida a GitHub
-     lanzar el bot. Va de día y de noche (las perdidas cierran de madrugada). 0 €, 0 minutos de
-     GitHub (repositorio público), no gasta más créditos que ahora. Pide que **tú** crees la cuenta en
-     ese servicio y un permiso (token) de GitHub limitado a lanzar este bot; te guío paso a paso.
-     Riesgo: si alguien robara ese permiso solo podría lanzar el bot más veces (no cambia nada).
+     lanzar el bot. Va de día y de noche. 0 €, 0 minutos de GitHub (repositorio público). Pide que
+     **tú** crees la cuenta en ese servicio y un permiso (token) de GitHub limitado a lanzar este
+     bot; te guío paso a paso. Riesgo: si alguien robara ese permiso solo podría lanzar el bot más
+     veces (no gasta más: solo hace preguntas pendientes). **Pero gasta antes:** los créditos se
+     acabarían hacia el 19/12 (tabla de créditos); conviene decidirla junto con la 2.
    - (B) El Programador de tareas de Windows de tu ordenador lo lanza cada 20 min. 0 €, nada que
      crear, pero solo con el ordenador encendido (de noche seguiría perdiendo). Necesita tu «sí».
-   - (A) Dejarlo así: ~6 preguntas perdidas por semana (unos 10 de cada 70).
+   - (A) Dejarlo así: ~22 preguntas perdidas por semana (1 de cada 4), pero el dinero llega al 06/01.
    - Descartada: un truco dentro de GitHub que se relanza solo; choca con sus condiciones de uso y
      podría afectar a toda tu cuenta (todos los proyectos).
 2. **Créditos hasta el 06/01:** Metaculus **no da más** (correo del 18/10). Con la MiniBench costando
@@ -121,6 +126,6 @@ conteste AskNews y, al final, la encuesta y el cobro.
 
 ## Para el mando (orden 174, 22/10/2026)
 - Hecho y en `main`: medición del reloj de GitHub (HALLAZGOS 22/10), causa de la 45956 y de las 6
-  del 19/10 (huecos de 3,6-9,9 h sin lanzar), tabla nueva en el marcador, FUENTES y trampas.
+  del 19/10; 22 perdidas de 81 del 15 al 22/10 (huecos de 2,5-9,9 h), tabla nueva en el marcador (comprobada en GitHub), FUENTES y trampas.
 - No aplicado: el arreglo del reloj (sale de GitHub: decide el usuario, decisión 1) ni nada que
   toque el gasto. Visto de paso: la librería ya no mide el coste por pieza (marcador: 0,0 $).

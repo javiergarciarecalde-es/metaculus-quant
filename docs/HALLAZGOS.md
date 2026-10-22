@@ -225,3 +225,17 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
 - **Visto de paso (no arreglado):** en el marcador del 19/10 «medido por la librería» = 0,0 $ en
   todas las partes (antes medía ~40 %): la librería ya no mide el coste de los modelos. No afecta al
   tope (usa la clave). Gemini 3.8 Flash dio `RateLimitError` de OpenRouter en `39204044175`.
+
+## 22/10/2026 (tarde) — Orden 174: marcador a mano en GitHub; 22 perdidas de 81 en 7 días
+- **Crudo:** ejecución `39783847831` de `marcador.yaml` (lanzada a mano 13:05 UTC, en verde; commit
+  `e12230f` con `docs/MARCADOR.md`). La sección nueva sale bien en Actions (GH_TOKEN funciona).
+- **Perdidas sin explicar 15-22/10:** 22 de 81 cerradas (27 %): 17 MiniBench (ronda del 19/10:
+  46127-46178) y 5 temporada (46056, 46066, 46069, 46191, 46193). Todas con hueco de 2,5-5,0 h sin
+  lanzamientos alrededor del cierre: las ventanas de la MiniBench son más cortas que los huecos.
+  Corrige la cifra de la entrada anterior (6 de 43 era la semana al 19/10).
+- **Gasto con el arreglo del reloj (B/C):** ronda MiniBench ≈ 60 preguntas × 0,23 $ ≈ 14 $ cada 14
+  días ≈ 1,0 $/día (hoy ~0,72: se pescan ~43 de 60). La línea de ritmo sube 0,75 $/día y la
+  MiniBench no tiene freno: con el arreglo, MiniBench sola > línea → el dinero útil (57,89 $ =
+  60,89 − 3 de reserva) se acaba hacia el **19/12/2026** y la temporada no recibe nada salvo el margen
+  actual (4,28 $). Sin el arreglo: llega al 06/01 pero pierde ~17 MiniBench por ronda y la
+  temporada también recibe ~0. Lo decide el usuario (no se aplica nada que cambie el gasto).
