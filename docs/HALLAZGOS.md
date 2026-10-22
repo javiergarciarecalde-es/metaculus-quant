@@ -239,3 +239,27 @@ Normas releídas en la página oficial (docs/FUENTES.md). Lo que se miró y lo q
   60,89 − 3 de reserva) se acaba hacia el **19/12/2026** y la temporada no recibe nada salvo el margen
   actual (4,28 $). Sin el arreglo: llega al 06/01 pero pierde ~17 MiniBench por ronda y la
   temporada también recibe ~0. Lo decide el usuario (no se aplica nada que cambie el gasto).
+
+## 22/10/2026 (15:20 Madrid) — ¿Merece la pena seguir? Clasificaciones oficiales frente a la puerta
+- **Pregunta del usuario (22/10):** si merece la pena seguir, si acierta y qué probabilidad hay de
+  ganar algo, o si se aparca/cierra.
+- **Crudo:** clasificaciones públicas de Metaculus leídas con el navegador de la aplicación (sin
+  sesión, modo «advanced»), 22/10 ~15:15 Madrid. robots.txt: `Allow: /`.
+  | Torneo | Kyou-bot | Puesto 20 | Mejor bot de Metaculus | Participantes con puesto |
+  |---|---|---|---|---|
+  | Temporada `fall-futureeval-2026` (84 preguntas publicadas) | **185.º** (IC 95 % 136-185), 0,5 | 53 (Graumagier-bot) | metac-azimuth 53 | 253 |
+  | MiniBench `minibench-2026-10-05` (59 preguntas) | **83.º** (IC 95 % 37-156), 146 | 420 (laertes) | metac-azimuth 505 | 211 |
+  Temporada: 1.º 68 ($1.072), 10.º 59 ($793); Community Prediction 31. MiniBench 05/10: 1.º
+  664 ($111), 10.º 482 ($58), 15 puestos con premio; Community Prediction 346.
+- **Lectura:** la MiniBench del 05/10 es la prueba más limpia (cobertura casi completa: marcador
+  12/10, 63 de 64). Ni el extremo bueno del intervalo (37.º) entra en los 20 primeros, y el mejor bot
+  de Metaculus saca 3,5 veces nuestra puntuación. Puerta de la fase 0 (`puerta_fase0`): exige superar
+  al mejor bot de Metaculus Y proyección top 20 → hoy no se cumple ninguna de las dos, con margen.
+- **Por qué el marcador parecía bueno:** su media de pares (+3,34 por pregunta, 33 resueltas) es
+  correcta pero mide «mejor que el bot medio»; con 211 bots, la media incluye muchos flojos. Los del
+  premio sacan ~8-11 por pregunta (MiniBench: 482-664 en 59). Kyou-bot: ~2,5.
+- **Además:** créditos sin ampliar (18/10), temporada casi sin dinero por el freno, reloj de GitHub
+  perdiendo ~1 de cada 4 preguntas, y cualquier premio no se podría cobrar hasta Fremap (comunes
+  §13). Coste para el usuario: 0 € (créditos de Metaculus, repo público); sí gasta plan de Claude en
+  cada orden.
+- **No se ha decidido nada:** seguir/aparcar/cerrar es del usuario (comunes §2).

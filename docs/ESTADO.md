@@ -13,7 +13,7 @@ automática que hace git después de guardar).
 ## Quién está tocando qué
 | Sesión | Qué | Estado |
 |---|---|---|
-| «Metaculus: revisar el robot (orden 174)» | medir el reloj de GitHub, preguntas perdidas, opciones | hecho y en `main`; espera tu decisión del reloj. Arranque A 12 %, leído L 2 % → relevo al 27 % |
+| «Metaculus: revisar el robot (orden 174)» | medir el reloj de GitHub, preguntas perdidas, opciones | hecho y en `main`; espera tu decisión 1 (seguir, aparcar o cerrar). Arranque A 12 %, leído L 2 % → relevo al 27 % |
 
 ## El reloj de GitHub (orden 174, 22/10)
 - **Qué pasa:** desde el 10/10 GitHub lanza el bot **3-8 veces al día de 72** (cada 20 min), en
@@ -25,7 +25,7 @@ automática que hace git después de guardar).
 - **Hecho:** el marcador de los lunes enseña ahora cuántas veces se lanzó el bot cada día y, por
   cada pregunta perdida, cuántas horas estuvo sin lanzarse alrededor de su cierre (comprobado en
   GitHub el 22/10 con un marcador lanzado a mano).
-- **Falta tu decisión** (punto 1 de «Decisiones pendientes»).
+- **Falta tu decisión** (puntos 1 y 2 de «Decisiones pendientes»).
 
 ## Dónde estamos
 | Pieza | Estado |
@@ -89,29 +89,27 @@ conteste AskNews y, al final, la encuesta y el cobro.
 | Si el reloj de GitHub se para del todo, se paran bot y vigilancia | marcador de los lunes |
 
 ## Decisiones pendientes tuyas
-1. **El reloj de GitHub** (recomendación primero):
-   - **(C) Recomendada: un servicio de reloj gratuito en internet** que cada 20 min le pida a GitHub
-     lanzar el bot. Va de día y de noche. 0 €, 0 minutos de GitHub (repositorio público). Pide que
-     **tú** crees la cuenta en ese servicio y un permiso (token) de GitHub limitado a lanzar este
-     bot; te guío paso a paso. Riesgo: si alguien robara ese permiso solo podría lanzar el bot más
-     veces (no gasta más: solo hace preguntas pendientes). **Pero gasta antes:** los créditos se
-     acabarían hacia el 19/12 (tabla de créditos); conviene decidirla junto con la 2.
-   - (B) El Programador de tareas de Windows de tu ordenador lo lanza cada 20 min. 0 €, nada que
-     crear, pero solo con el ordenador encendido (de noche seguiría perdiendo). Necesita tu «sí».
-   - (A) Dejarlo así: ~22 preguntas perdidas por semana (1 de cada 4), pero el dinero llega al 06/01.
-   - Descartada: un truco dentro de GitHub que se relanza solo; choca con sus condiciones de uso y
-     podría afectar a toda tu cuenta (todos los proyectos).
-2. **Créditos hasta el 06/01:** Metaculus **no da más** (correo del 18/10). Con la MiniBench costando
-   ~10-14 $ cada dos semanas, el freno dejará sin hacer casi toda la temporada desde ya (tabla de
-   arriba). Opciones: (a) no hacer nada; (c) abaratar el bot (cambiar modelos: se decide con datos
-   de preguntas cerradas, en fecha anunciada); (d) repartir el dinero entre MiniBench y temporada
-   (punto 4). Ninguna cuesta dinero tuyo.
-3. **AskNews (noticias gratis):** esperando su respuesta. Cuando lleguen las claves, **no las pongas
+1. **¿Seguir, aparcar o cerrar?** (revisión del 22/10, HALLAZGOS). Hoy el bot va **185.º de 253 en
+   la temporada** (el 20.º tiene 53 puntos; nosotros 0,5) y quedó **83.º de 211 en la MiniBench del
+   05/10** (mejor bot de Metaculus: 505; nosotros 146). La puerta de la fase 0 pide ganar al mejor
+   bot de Metaculus y estar entre los 20 primeros: hoy lejos de las dos. Opciones:
+   - **(a) Recomendada: aparcar.** El bot sigue solo, sin más trabajo de Claude ni arreglos; el
+     marcador de los lunes sigue. En enero se cierra según la puerta. 0 € para ti.
+   - (b) Cerrar ya: apagar `ENVIO_REAL` y archivar. 0 €; se pierde la pequeña opción de remontar.
+   - (c) Seguir mejorándolo: arreglar el reloj, abaratar, cambiar modelos. Mucho trabajo de Claude
+     para una distancia muy grande.
+2. **El reloj de GitHub** (solo si eliges seguir mejorando): servicio de reloj externo gratuito
+   (cuenta y permiso que creas tú) o tu ordenador cada 20 min. Hace que se pierdan menos preguntas,
+   pero los créditos se acabarían hacia el 19/12 (tabla de créditos). Detalle en HALLAZGOS 22/10.
+3. **Créditos hasta el 06/01:** Metaculus **no da más** (correo del 18/10); el freno dejará casi toda
+   la temporada sin hacer. Opciones (si sigues): abaratar el bot o repartir el dinero entre
+   MiniBench y temporada. Ninguna cuesta dinero tuyo.
+4. **AskNews (noticias gratis):** esperando su respuesta. Cuando lleguen las claves, **no las pongas
    aún** en GitHub (el bot cambiaría de fuente al momento): dímelo y se decide con datos.
-4. **Reparto del dinero** entre MiniBench y temporada: con preguntas resueltas.
-5. **Archivar la conversación de la nube** «Metaculus: encender el bot con los 100 $ (orden 26)»:
+5. **Reparto del dinero** entre MiniBench y temporada: con preguntas resueltas.
+6. **Archivar la conversación de la nube** «Metaculus: encender el bot con los 100 $ (orden 26)»:
    ya puedes.
-6. **Tu correo en el primer commit:** GitHub aún enseña la versión vieja a quien tenga su
+7. **Tu correo en el primer commit:** GitHub aún enseña la versión vieja a quien tenga su
    identificador exacto. Para borrarla del todo: soporte de GitHub (opcional).
 
 ## Normas del torneo que conviene recordar
