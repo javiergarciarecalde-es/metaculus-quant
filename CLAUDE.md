@@ -60,7 +60,11 @@ del momento Y su proyección cae entre los 20 primeros de la temporada. Si no, s
 - En Windows el reloj avanza a saltos de ~15 ms: una prueba que mida tiempos muy cortos puede dar
   0 y fallar solo aquí.
 - El reloj de GitHub Actions no es fiable (a otro participante solo lanzó ~22 % de las veces) y en
-  repositorios públicos se apaga tras 60 días sin commits.
+  repositorios públicos se apaga tras 60 días sin commits. Desde el 10/10/2026 lanza el bot y la
+  vigilancia a la vez, en tandas cada 3-5 h (3-8 de 72 al día): cambiar minutos del `cron` no sirve;
+  `workflow_dispatch` sí llega al momento. Lo cuenta el marcador (HALLAZGOS 22/10/2026).
+- La API de Metaculus ya no responde sin token (22/10/2026): desde las sesiones no se puede
+  consultar una pregunta; las horas salen de los registros de GitHub (`gh run list`).
 
 - La clave de créditos de Metaculus gasta como «byok»: en OpenRouter `usage` da 0 y lo gastado sale en
   `byok_usage`. Quien mire solo `usage` creerá que no se gasta nada (visto el 27/09/2026).
