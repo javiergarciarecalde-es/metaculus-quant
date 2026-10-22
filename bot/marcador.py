@@ -35,7 +35,9 @@ import requests
 from . import clasificador as clf
 from . import comparador as cmp
 from . import gasto, perdidas, plan_claude
+from . import lanzamientos as lanz
 from . import params as ajustes
+from . import vigilancia as vg
 from .config import RAIZ
 
 HISTORICO = RAIZ / "datos" / "registro_historico.jsonl"
@@ -360,6 +362,23 @@ def _cerradas(token: str | None, ahora: datetime) -> list | None:
         return None
 
 
+def _lanzamientos(perdidas_res: dict, ahora: datetime, github=None) -> dict:
+    """Lanzamientos del bot y la vigilancia de los mismos días que las preguntas perdidas (orden
+    174). Con el GITHUB_TOKEN del flujo (`GH_TOKEN`, permiso `actions: read`)."""
+    if github is None:
+        token = (os.getenv("GH_TOKEN") or "").strip()
+        repo = (os.getenv("GITHUB_REPOSITORY") or "").strip()
+        if not token or not repo:
+            raise RuntimeError("sin GH_TOKEN o GITHUB_REPOSITORY: no se pueden contar")
+        github = vg.Github(repo, token, float(ajustes.p("red.tiempo_espera_segundos")))
+    dias = float(ajustes.p("marcador.dias_preguntas_perdidas"))
+    desde = (ahora - timedelta(days=dias)).replace(hour=0, minute=0, second=0, microsecond=0)
+    bot = github.ejecuciones_desde(ajustes.p("vigilancia.flujo_bot"), desde)
+    vigilancia = github.ejecuciones_desde(lanz.FLUJO_VIGILANCIA, desde)
+    perdidas_lista = perdidas_res.get("perdidas_sin_explicar") or []
+    return lanz.resumir(bot, vigilancia, perdidas_lista, desde, ahora)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--descargas", default=str(RAIZ / "registro_descargas"))
@@ -407,6 +426,8 @@ def main(argv=None) -> int:
          gasto.informe_md),
         ("perdidas", "Preguntas perdidas",
          lambda: perdidas.resumir(_cerradas(token, ahora), nuevas, arbol), perdidas.informe_md),
+        ("lanzamientos", "Cuántas veces lanzó GitHub el bot",
+         lambda: _lanzamientos(m.get("perdidas") or {}, ahora), lanz.informe_md),
         ("plan_claude", "Plan de Claude del usuario",
          lambda: plan_claude.resumen(nuevas, arbol, ahora), plan_claude.informe_md),
         ("clasificador_gemini", "Clasificador en sombra: Gemini 3.8 Flash",

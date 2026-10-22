@@ -414,6 +414,20 @@ class Github:
     def ejecuciones(self, flujo: str, cuantas: int) -> list[Ejecucion]:
         return leer_ejecuciones(self._leer(f"actions/workflows/{flujo}/runs", per_page=cuantas))
 
+    def ejecuciones_desde(self, flujo: str, desde: datetime) -> list[Ejecucion]:
+        """Todas las creadas desde `desde`, página a página (docs.github.com, 22/10/2026:
+        `created` con la sintaxis de búsqueda, `per_page` máx. 100, como mucho 1.000 resultados)."""
+        res: list[Ejecucion] = []
+        for pagina in range(1, 11):
+            lote = leer_ejecuciones(
+                self._leer(f"actions/workflows/{flujo}/runs", per_page=100, page=pagina,
+                           created=f">={desde:%Y-%m-%dT%H:%M:%SZ}")
+            )  # fmt: skip
+            res += lote
+            if len(lote) < 100:
+                break
+        return sorted(res, key=lambda e: e.creada, reverse=True)
+
     def issues(self) -> Any:
         return self._leer("issues", state="all", per_page=30, sort="created", direction="desc")
 

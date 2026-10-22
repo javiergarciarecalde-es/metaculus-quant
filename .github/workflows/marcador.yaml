@@ -49,6 +49,7 @@ jobs:
       - name: Calcular el marcador
         env:
           METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
+          GH_TOKEN: ${{ github.token }} # cuántas veces lanzó GitHub el bot (actions: read)
         run: python -m bot.marcador --descargas registro_descargas
       - name: Guardar el marcador en el repositorio
         run: |

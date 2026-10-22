@@ -87,6 +87,10 @@ def resumir(cerradas: list[tuple] | None, filas: list[dict], params: dict) -> di
                 hechas += 1
                 continue
             item = {"url": q.page_url, "cierre_utc": _fecha(q), "torneo": str(torneo)}
+            if cierre is not None:  # para cruzarla con los lanzamientos (bot/lanzamientos.py)
+                item["cierre_iso"] = (
+                    cierre if cierre.tzinfo else cierre.replace(tzinfo=UTC)
+                ).isoformat()
             if (q.id_of_post, q.id_of_question) in dejadas:
                 por_tope.append(item)
             else:
