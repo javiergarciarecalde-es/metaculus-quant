@@ -3,6 +3,8 @@
 Bot que participa solo (sin intervención humana) en los torneos de pronósticos para bots
 de Metaculus (FutureEval / AI Benchmark y MiniBench). No se apuesta dinero: son premios.
 Proyecto coordinado por «mando-quant». Qué es y cómo debe ser: `docs/MAESTRO.md`.
+**APARCADO Y ARCHIVADO desde el 22/10/2026 (decisión del usuario, DECISIONES):** flujos de GitHub
+desactivados y `ENVIO_REAL=false`. Ninguna sesión trabaja en él salvo orden expresa del usuario.
 
 Reglas comunes a todos los proyectos: `C:\Users\Administrador\Proyectos\CLAUDE.md` (se cargan solas).
 Aquí solo lo propio de este proyecto.
